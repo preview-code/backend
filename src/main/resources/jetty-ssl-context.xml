@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "http://www.eclipse.org/jetty/configure_9_3.dtd">
+
+<!-- ============================================================= -->
+<!-- SSL ContextFactory configuration                              -->
+<!-- ============================================================= -->
+<Configure id="Server" class="org.eclipse.jetty.server.Server">
+    <New id="sslContextFactory" class="org.eclipse.jetty.util.ssl.SslContextFactory">
+      <Set name="KeyStorePath">./src/main/resources/keystore.jks</Set>
+      <Set name="KeyStorePassword">[your keystore password here]</Set>
+      <Set name="TrustStorePath">./src/main/resources/keystore.jks</Set>
+      <Set name="TrustStorePassword">[your keystore password here]</Set>
+  </New>
+</Configure>

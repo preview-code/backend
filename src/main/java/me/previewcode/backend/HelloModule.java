@@ -12,7 +12,7 @@ public class HelloModule implements Module
 {
 	public void configure(final Binder binder)
 	{
-		 binder.bind(MessageRestService.class);
+		binder.bind(MessageRestService.class);
 		FileInputStream file = null;
 		try {
 			file = new FileInputStream("src/main/resources/firebase-auth.json");
@@ -25,5 +25,5 @@ public class HelloModule implements Module
 		.setDatabaseUrl("https://preview-code.firebaseio.com/")
 		.build();
 		FirebaseApp.initializeApp(options);
-	}
+	}	
 }
