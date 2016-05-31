@@ -1,0 +1,43 @@
+# Created by https://www.gitignore.io
+
+### Maven ###
+target/
+
+### Eclipse ###
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+local.properties
+.settings/
+.loadpath
+
+# Eclipse Core
+.project
+
+# Locally stored "Eclipse launch configurations"
+*.launch
+
+# JDT-specific (Eclipse Java Development Tools)
+.classpath
+
+
+### Java ###
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+### AppEngine ###
+appengine-generated/
+
+### Intellij ###
+*.iml
+.idea/
+/out/
