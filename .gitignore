@@ -41,3 +41,7 @@ appengine-generated/
 *.iml
 .idea/
 /out/
+
+
+### Firebase ###
+firebase-auth.json

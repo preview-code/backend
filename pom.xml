@@ -23,6 +23,12 @@
 
     <dependencies>
         <!-- Compile/runtime dependencies -->
+        <!-- firebase -->
+        <dependency>
+          <groupId>com.google.firebase</groupId>
+          <artifactId>firebase-server-sdk</artifactId>
+          <version>[3.0.0,)</version>
+        </dependency>
 
         <!-- JAX-RS -->
         <dependency>
