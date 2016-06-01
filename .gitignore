@@ -43,7 +43,13 @@ appengine-generated/
 /out/
 
 
-### autehtication ###
+### authentication ###
 firebase-auth.json
 jetty-ssl-context.xml
 *.jks
+
+### certificates ###
+server.crt
+server.csr
+server.key
+server.pkcs12

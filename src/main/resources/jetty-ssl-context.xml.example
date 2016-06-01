@@ -7,8 +7,8 @@
 <Configure id="Server" class="org.eclipse.jetty.server.Server">
     <New id="sslContextFactory" class="org.eclipse.jetty.util.ssl.SslContextFactory">
       <Set name="KeyStorePath">./src/main/resources/keystore.jks</Set>
-      <Set name="KeyStorePassword">[your keystore password here]</Set>
+      <Set name="KeyStorePassword">[SET YOUR KEYSTORE PASSWORD HERE]</Set>
       <Set name="TrustStorePath">./src/main/resources/keystore.jks</Set>
-      <Set name="TrustStorePassword">[your keystore password here]</Set>
+      <Set name="TrustStorePassword">[SET YOUR KEYSTORE PASSWORD HERE]</Set>
   </New>
 </Configure>
