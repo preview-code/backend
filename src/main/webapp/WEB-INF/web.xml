@@ -5,7 +5,7 @@
 
     <context-param>
         <param-name>resteasy.guice.modules</param-name>
-        <param-value>me.previewcode.backend.HelloModule</param-value>
+        <param-value>me.previewcode.backend.MainModule</param-value>
     </context-param>
 
     <listener>
@@ -34,5 +34,26 @@
     <filter-mapping>
         <filter-name>guiceFilter</filter-name>
         <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <filter>
+      <filter-name>cross-origin</filter-name>
+      <filter-class>org.eclipse.jetty.servlets.CrossOriginFilter</filter-class>
+      <init-param>
+          <param-name>allowedOrigins</param-name>
+          <param-value>*</param-value>
+      </init-param>
+      <init-param>
+          <param-name>allowedMethods</param-name>
+          <param-value>GET,POST,HEAD</param-value>
+      </init-param>
+      <init-param>
+          <param-name>allowedHeaders</param-name>
+          <param-value>X-Requested-With,Content-Type,Accept,Origin</param-value>
+      </init-param>
+    </filter>
+    <filter-mapping>
+      <filter-name>cross-origin</filter-name>
+      <url-pattern>/*</url-pattern>
     </filter-mapping>
 </web-app>
