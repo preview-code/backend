@@ -1,4 +1,4 @@
-package me.previewcode.backend;
+package me.previewcode.backend.api.v1;
 
 import java.io.IOException;
 
@@ -11,9 +11,11 @@ import javax.ws.rs.core.MediaType;
 import me.previewcode.backend.DTO.StatusBody;
 
 import com.google.firebase.database.DatabaseReference;
+import me.previewcode.backend.FirebaseConnection;
 
 @Path("/pr")
 public class PullRequestAPI extends FirebaseConnection {
+
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{owner}/{name}/{branch}/status/")
@@ -27,4 +29,5 @@ public class PullRequestAPI extends FirebaseConnection {
                 .child("status").setValue(data.status);
         return data;
     }
+
 }
