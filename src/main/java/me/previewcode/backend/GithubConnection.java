@@ -2,15 +2,17 @@ package me.previewcode.backend;
 
 import java.io.IOException;
 
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import org.kohsuke.github.GitHub;
 
 public abstract class GithubConnection {
 
-    protected GitHub github;
+    protected Provider<GitHub> githubProvider;
 
-    public GithubConnection() throws IOException {
-
-        // this needs to be GitHub.connect(OATHToken);
-        github = GitHub.connect();
+    @Inject
+    protected GithubConnection(@Named("github.user") final Provider<GitHub> gitHubProvider) throws IOException {
+        githubProvider = gitHubProvider;
     }
 }

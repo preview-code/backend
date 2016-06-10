@@ -1,4 +1,4 @@
-package me.previewcode.backend;
+package me.previewcode.backend.api.v1;
 
 import java.io.IOException;
 
@@ -8,19 +8,25 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import me.previewcode.backend.DTO.PRbody;
 import me.previewcode.backend.DTO.PrNumber;
 import me.previewcode.backend.DTO.StatusBody;
 
+import me.previewcode.backend.GithubConnection;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GitHub;
 
 @Path("/project/{owner}/{name}")
 public class GithubAPI extends GithubConnection {
-    GHRepository repo;
+    private GHRepository repo;
 
-    public GithubAPI() throws IOException {
-        super();
+    @Inject
+    public GithubAPI(@Named("github.user") Provider<GitHub> gitHubProvider) throws IOException {
+        super(gitHubProvider);
     }
 
     @POST
@@ -31,7 +37,7 @@ public class GithubAPI extends GithubConnection {
             @PathParam("base") String base, PRbody body) throws IOException {
         PrNumber number = new PrNumber();
         try {
-            repo = github.getRepository(owner.toLowerCase() + "/"
+            repo = this.githubProvider.get().getRepository(owner.toLowerCase() + "/"
                     + name.toLowerCase());
             GHPullRequest pr = repo.createPullRequest(body.title, head, base,
                     body.description);
@@ -43,8 +49,7 @@ public class GithubAPI extends GithubConnection {
             number.number = pr.getNumber();
             return number;
         } catch (IOException e) {
-            number.number = 0;
-            return number;
+            throw new IllegalArgumentException(e);
         }
     }
 }
