@@ -1,7 +1,5 @@
 package me.previewcode.backend.api.v1;
 
-import java.io.IOException;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -21,12 +19,22 @@ public class PullRequestAPI extends FirebaseConnection {
     @Path("/{owner}/{name}/{branch}/status/")
     public StatusBody setStatus(@PathParam("owner") String owner,
             @PathParam("name") String name, @PathParam("branch") String number,
-            StatusBody data) throws IOException {
+            StatusBody data) {
         owner = owner.toLowerCase();
         name = name.toLowerCase();
         DatabaseReference projectRef = this.ref;
         projectRef.child(owner).child(name).child("pulls").child(number)
                 .child("status").setValue(data.status);
         return data;
+    }
+
+    public void setComments(String owner, String name, int number,
+            Integer commentID, String id) {
+        owner = owner.toLowerCase();
+        name = name.toLowerCase();
+        DatabaseReference projectRef = this.ref;
+        projectRef.child(owner).child(name).child("pulls")
+                .child(Integer.toString(number)).child("groupcomments")
+                .child(Integer.toString(commentID)).setValue(id);
     }
 }
