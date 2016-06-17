@@ -23,6 +23,7 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
 
     private static final String CURRENT_USER_NAME = "github.user";
 
+ 
     @Override
     public void filter(ContainerRequestContext containerRequestContext) throws IOException {
         final MultivaluedMap<String, String> parameters = containerRequestContext.getUriInfo()

@@ -1,5 +1,12 @@
 package me.previewcode.backend.DTO;
 
+/**
+ * The data for a group comment
+ *
+ */
 public class PRGroupComment extends PRComment {
-    public String id;
+    /**
+     * The id of the group in which the comment is located
+     */
+    public String groupID;
 }
