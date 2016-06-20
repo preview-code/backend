@@ -11,6 +11,7 @@ import com.google.inject.servlet.RequestScoped;
 import com.google.inject.servlet.ServletModule;
 
 import me.previewcode.backend.api.filter.GitHubAccessTokenFilter;
+import me.previewcode.backend.api.v1.AssigneesAPI;
 import me.previewcode.backend.api.v1.CommentsAPI;
 import me.previewcode.backend.api.v1.StatusAPI;
 import me.previewcode.backend.api.v1.PullRequestAPI;
@@ -37,7 +38,7 @@ public class MainModule extends ServletModule {
         this.bind(StatusAPI.class);
         this.bind(PullRequestAPI.class);
         this.bind(CommentsAPI.class);
-        
+        this.bind(AssigneesAPI.class);
         try {
             FileInputStream file = new FileInputStream("src/main/resources/firebase-auth.json");
             // Initialize the app with a service account, granting admin privileges
