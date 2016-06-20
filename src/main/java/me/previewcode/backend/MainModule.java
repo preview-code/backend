@@ -39,6 +39,7 @@ public class MainModule extends ServletModule {
         this.bind(PullRequestAPI.class);
         this.bind(CommentsAPI.class);
         this.bind(AssigneesAPI.class);
+        
         try {
             FileInputStream file = new FileInputStream("src/main/resources/firebase-auth.json");
             // Initialize the app with a service account, granting admin privileges

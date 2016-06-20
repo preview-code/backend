@@ -12,7 +12,10 @@ import me.previewcode.backend.DTO.Approve;
 import me.previewcode.backend.services.firebase.AssigneesService;
 
 import com.google.inject.Inject;
-
+/**
+ * API endpoint for approving hunks
+ *
+ */
 @Path("{owner}/{name}/pulls/{number}/approve")
 public class AssigneesAPI {
 
@@ -33,9 +36,8 @@ public class AssigneesAPI {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public Approve setApprove (@PathParam("owner") String owner,
-            @PathParam("name") String name,@PathParam("number") String number, Approve body) throws IOException {
+            @PathParam("name") String name,@PathParam("number") String number, Approve body) {
             assigneesService.setLGTM(owner, name, number, body);
-        
         return body;
     }
 }
