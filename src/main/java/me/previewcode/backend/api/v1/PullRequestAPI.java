@@ -1,7 +1,5 @@
 package me.previewcode.backend.api.v1;
 
-import java.io.IOException;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -10,7 +8,9 @@ import javax.ws.rs.core.MediaType;
 
 import me.previewcode.backend.DTO.PRbody;
 import me.previewcode.backend.DTO.PrNumber;
-import me.previewcode.backend.services.github.PullRequestService;
+import me.previewcode.backend.DTO.StatusBody;
+import me.previewcode.backend.services.FirebaseService;
+import me.previewcode.backend.services.GithubService;
 
 import com.google.inject.Inject;
 
@@ -18,7 +18,11 @@ import com.google.inject.Inject;
 public class PullRequestAPI {
 
     @Inject
-    private PullRequestService pullRequestService;
+    private GithubService githubService;
+
+    @Inject
+    private FirebaseService firebaseService;
+
 
     /**
      * Creates a pull request
@@ -34,8 +38,13 @@ public class PullRequestAPI {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public PrNumber createPR(@PathParam("owner") String owner,
-            @PathParam("name") String name, PRbody body) throws IOException {
-
-        return pullRequestService.createPullRequest(owner, name, body);
+            @PathParam("name") String name, PRbody body){
+        PrNumber number = githubService.createPullRequest(owner, name, body);
+        firebaseService.setOrdering(owner, name, number, body.ordering);       
+        StatusBody statusBody = new StatusBody();
+        statusBody.status = "No reviewer assigned";
+        firebaseService.setStatus(owner, name,
+                Integer.toString(number.number), statusBody.status);    
+        return number;
     }
 }

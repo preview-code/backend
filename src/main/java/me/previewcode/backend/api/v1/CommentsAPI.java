@@ -14,7 +14,8 @@ import me.previewcode.backend.DTO.PRComment;
 import me.previewcode.backend.DTO.PRGroupComment;
 import me.previewcode.backend.DTO.PRresponseComment;
 import me.previewcode.backend.DTO.User;
-import me.previewcode.backend.services.github.GithubCommentsService;
+import me.previewcode.backend.services.FirebaseService;
+import me.previewcode.backend.services.GithubService;
 
 import com.google.inject.Inject;
 
@@ -26,7 +27,10 @@ import com.google.inject.Inject;
 public class CommentsAPI {
 
     @Inject
-    private GithubCommentsService commentsService;
+    private GithubService commentsService;
+    
+    @Inject
+    private FirebaseService firebaseService;
 
     /**
      * Sets the standard pull request comments
@@ -69,7 +73,10 @@ public class CommentsAPI {
     public PRresponseComment postGroupComment(@PathParam("owner") String owner,
             @PathParam("name") String name, @PathParam("number") int number,
             PRGroupComment comment) {
-        return setResponseComment(commentsService.setGroupComment(owner, name, number, comment));
+       GHIssueComment newComment = commentsService.postComment(owner, name, number, comment);
+       firebaseService.setComments(owner, name, number, newComment.getId(),
+               comment.groupID);
+        return setResponseComment(newComment);
     }
     
     private PRresponseComment setResponseComment(GHIssueComment comment) {

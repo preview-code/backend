@@ -7,7 +7,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 
 import me.previewcode.backend.DTO.StatusBody;
-import me.previewcode.backend.services.firebase.StatusService;
+import me.previewcode.backend.services.FirebaseService;
 
 import com.google.inject.Inject;
 
@@ -18,7 +18,7 @@ import com.google.inject.Inject;
 public class StatusAPI {
 
     @Inject
-    private StatusService statusService;
+    private FirebaseService firebaseService;
 
     /**
      * Sets the status of a pull request
@@ -38,7 +38,7 @@ public class StatusAPI {
     public StatusBody setStatus(@PathParam("owner") String owner,
             @PathParam("name") String name, @PathParam("branch") String number,
             StatusBody body) {
-        statusService.setStatus(owner.toLowerCase(), name.toLowerCase(),
+        firebaseService.setStatus(owner.toLowerCase(), name.toLowerCase(),
                 number, body.status);
 
         return body;

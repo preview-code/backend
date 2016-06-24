@@ -10,4 +10,9 @@ public class PrNumber {
      */
     public int number;
 
+    
+    @Override
+    public String toString(){
+        return Integer.toString(number);
+     }
 }
