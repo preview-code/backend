@@ -10,6 +10,7 @@ import com.google.inject.name.Named;
 import com.google.inject.servlet.RequestScoped;
 import com.google.inject.servlet.ServletModule;
 
+import me.previewcode.backend.api.exceptionmapper.IllegalArgumentExceptionMapper;
 import me.previewcode.backend.api.filter.GitHubAccessTokenFilter;
 import me.previewcode.backend.api.v1.AssigneesAPI;
 import me.previewcode.backend.api.v1.CommentsAPI;
@@ -39,6 +40,7 @@ public class MainModule extends ServletModule {
         this.bind(PullRequestAPI.class);
         this.bind(CommentsAPI.class);
         this.bind(AssigneesAPI.class);
+        this.bind(IllegalArgumentExceptionMapper.class);
         
         try {
             FileInputStream file = new FileInputStream("src/main/resources/firebase-auth.json");

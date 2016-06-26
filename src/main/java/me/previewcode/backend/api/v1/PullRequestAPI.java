@@ -39,6 +39,9 @@ public class PullRequestAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     public PrNumber createPR(@PathParam("owner") String owner,
             @PathParam("name") String name, PRbody body){
+        if (body.title.isEmpty() || body.description.isEmpty()) {
+            throw new IllegalArgumentException("Title or body is empty");
+        }
         PrNumber number = githubService.createPullRequest(owner, name, body);
         firebaseService.setOrdering(owner, name, number, body.ordering);       
         StatusBody statusBody = new StatusBody();
