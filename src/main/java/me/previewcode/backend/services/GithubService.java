@@ -11,10 +11,7 @@ import me.previewcode.backend.DTO.PRComment;
 import me.previewcode.backend.DTO.PRbody;
 import me.previewcode.backend.DTO.PrNumber;
 
-import org.kohsuke.github.GHIssueComment;
-import org.kohsuke.github.GHPullRequest;
-import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.GitHub;
+import org.kohsuke.github.*;
 
 /**
  * An abstract class that connects with github
@@ -40,6 +37,10 @@ public class GithubService {
     protected GithubService(@Named("github.user") final Provider<GitHub> gitHubProvider)
             throws IOException {
         githubProvider = gitHubProvider;
+    }
+
+    public GHMyself getLoggedInUser() throws IOException {
+        return this.githubProvider.get().getMyself();
     }
 
     /**

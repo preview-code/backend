@@ -10,6 +10,11 @@ import me.previewcode.backend.DTO.Approve;
 import me.previewcode.backend.services.FirebaseService;
 
 import com.google.inject.Inject;
+import me.previewcode.backend.services.GithubService;
+import org.kohsuke.github.GHMyself;
+
+import java.io.IOException;
+
 /**
  * API endpoint for approving hunks
  *
@@ -19,6 +24,9 @@ public class AssigneesAPI {
 
     @Inject
     private FirebaseService firebaseService;
+
+    @Inject
+    private GithubService githubService;
 
     /**
      * Creates a pull request
@@ -34,8 +42,14 @@ public class AssigneesAPI {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public Approve setApprove(@PathParam("owner") String owner,
-            @PathParam("name") String name,@PathParam("number") String number, Approve body) {
-            firebaseService.setApproved(owner, name, number, body);
+                              @PathParam("name") String name,
+                              @PathParam("number") String number,
+                              Approve body) throws IOException {
+        GHMyself user = githubService.getLoggedInUser();
+        if (body.githubLogin != user.getId()) {
+            throw new IllegalArgumentException("Can not set approve status of other user");
+        }
+        firebaseService.setApproved(owner, name, number, body);
         return body;
     }
 }
