@@ -2,6 +2,8 @@ package me.previewcode.backend.services;
 
 import java.io.IOException;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
@@ -65,7 +67,17 @@ public class GithubService {
             number.number = pr.getNumber();
             return number;
         } catch (IOException e) {
-            throw new IllegalArgumentException(e);
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+                JsonNode response = mapper.readTree(e.getMessage());
+                JsonNode errors = response.get("errors");
+                if (errors.isArray()) {
+                    String error = errors.get(0).get("message").asText();
+                    throw new IllegalArgumentException(error);
+                }
+            } catch (IOException ignored) {
+            }
+            throw new IllegalArgumentException("Unable to process request");
         }
     }
 
