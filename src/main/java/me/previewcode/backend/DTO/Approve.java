@@ -15,7 +15,7 @@ public class Approve {
     /**
      * Which user approves this hunk
      */
-    public String githubLogin;
+    public int githubLogin;
     
     
 }
