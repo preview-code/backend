@@ -66,6 +66,11 @@ public class GithubService {
             GHPullRequest pr = repo.createPullRequest(body.title, body.head,
                     body.base, body.description);
             number.number = pr.getNumber();
+            if (body.metadata) {
+                pr.setBody(body.description + "\n\n---\n" +
+                        "Review this pull request [on Preview Code](https://preview-code.com/" +
+                        owner + "/" + name + "/pulls/" + number.number + "/overview).");
+            }
             return number;
         } catch (IOException e) {
             ObjectMapper mapper = new ObjectMapper();

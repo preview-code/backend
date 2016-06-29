@@ -19,5 +19,9 @@ public class PRbody extends TitleDescription{
      * The ordering of the changes of the pull request
      */
     public List<Ordering> ordering;
+    /**
+     * If the description should include metadata.
+     */
+    public boolean metadata;
 
 }
