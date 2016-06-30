@@ -29,6 +29,11 @@ public class FirebaseService {
     protected DatabaseReference ref;
 
     /**
+     * Recursion count for the transaction
+     */
+    private static final int RECURSION_COUNT = 5;
+    
+    /**
      * Making a connection with the database
      */
     public FirebaseService() {
@@ -83,7 +88,7 @@ public class FirebaseService {
      * @param handler
      *                  The function that is executed in order to do the transaction
      */
-    private void doTransaction(final DatabaseReference path, final Function<MutableData,Transaction.Result> handler){
+    private void doTransaction(final DatabaseReference path, final Function<MutableData,Transaction.Result> handler, int recursion){
         final DatabaseReference infoRef = this.ref.child(".info").child("connected");
 
         infoRef.addValueEventListener(new ValueEventListener() {
@@ -99,7 +104,11 @@ public class FirebaseService {
                         public void onComplete(DatabaseError error, boolean isCommited, DataSnapshot currentData) {
                             infoRef.removeEventListener(that);
                             if (error != null) {
-                                throw new RuntimeException(error.toException());
+                                if (recursion > 0) {
+                                    FirebaseService.this.doTransaction(path, handler, recursion - 1);
+                                } else {
+                                    throw new RuntimeException(error.toException());
+                                }
                             }
                         }
 
@@ -138,7 +147,7 @@ public class FirebaseService {
             data.child("lastChanged").setValue(System.currentTimeMillis());
             data.child("groups").setValue(orderings);
             return Transaction.success(data);
-        });
+        }, RECURSION_COUNT);
     }
 
     /**
