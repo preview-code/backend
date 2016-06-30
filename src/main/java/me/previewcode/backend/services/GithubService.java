@@ -29,11 +29,11 @@ public class GithubService {
 
     /**
      * Making a connection with GitHub
-     * 
+     *
      * @param gitHubProvider
      *            The provider for GitHub data
      * @throws IOException
-     * 
+     *
      */
     @Inject
     protected GithubService(@Named("github.user") final Provider<GitHub> gitHubProvider)
@@ -47,7 +47,7 @@ public class GithubService {
 
     /**
      * A method to create a pull request
-     * 
+     *
      * @param owner
      *            The owner of the repository on which the pull request is
      *            created
@@ -68,7 +68,7 @@ public class GithubService {
             number.number = pr.getNumber();
             if (body.metadata) {
                 pr.setBody(body.description + "\n\n---\n" +
-                        "Review this pull request [on Preview Code](https://preview-code.com/" +
+                        "Review this pull request [on Preview Code](https://preview-code.com/projects/" +
                         owner + "/" + name + "/pulls/" + number.number + "/overview).");
             }
             return number;
@@ -89,7 +89,7 @@ public class GithubService {
 
     /**
      * Posts the comment to GitHub
-     * 
+     *
      * @param owner
      *            The owner of the repository where the comment is placed
      * @param name
