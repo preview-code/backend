@@ -37,6 +37,8 @@ public class AssigneesAPI {
      *            The owner of the repository on which the pull request is created
      * @param body
      *            The body of the pull request
+     * @param number
+     *            The number of the pull request
      * @return The number of the newly made pull request
      */
     @POST

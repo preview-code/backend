@@ -1,5 +1,6 @@
 package me.previewcode.backend.services;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -32,7 +33,7 @@ public class FirebaseService {
      * Recursion count for the transaction
      */
     private static final int RECURSION_COUNT = 5;
-    
+
     /**
      * Making a connection with the database
      */
@@ -55,7 +56,7 @@ public class FirebaseService {
      */
     public void setApproved(String owner, String name, String number, Approve LGTM) {
         this.ref.child(owner).child(name).child("pulls").child(number)
-        .child("hunkApprovals").child(LGTM.hunkId).child(String.valueOf(LGTM.githubLogin)).setValue(LGTM.isApproved);
+                .child("hunkApprovals").child(LGTM.hunkId).child(String.valueOf(LGTM.githubLogin)).setValue(LGTM.isApproved);
     }
 
     /**
@@ -73,22 +74,23 @@ public class FirebaseService {
      *            The id of the group
      */
     public void setComments(String owner, String name, int number,
-            Integer commentID, String groupID) {
+                            Integer commentID, String groupID) {
         owner = owner.toLowerCase();
         name = name.toLowerCase();
         this.ref.child(owner).child(name).child("pulls")
-        .child(Integer.toString(number)).child("groupcomments")
-        .child(Integer.toString(commentID)).setValue(groupID);
+                .child(Integer.toString(number)).child("groupcomments")
+                .child(Integer.toString(commentID)).setValue(groupID);
     }
 
     /**
      * Makes the transaction this is a workaround as stated in: https://groups.google.com/forum/#!msg/firebase-talk/u1mgEEODF-o/v55dOFZiAAAJ
+     *
      * @param path
      *                  The path where the transaction takes place
      * @param handler
      *                  The function that is executed in order to do the transaction
      */
-    private void doTransaction(final DatabaseReference path, final Function<MutableData,Transaction.Result> handler, int recursion){
+    private void doTransaction(final DatabaseReference path, final Function<MutableData, Transaction.Result> handler, int recursion) {
         final DatabaseReference infoRef = this.ref.child(".info").child("connected");
 
         infoRef.addValueEventListener(new ValueEventListener() {
@@ -129,6 +131,7 @@ public class FirebaseService {
 
     /**
      * Sets the ordering of a pull request on firebase
+     *
      * @param owner
      *            The owner of the repository where the pull request is located
      * @param name
@@ -139,7 +142,7 @@ public class FirebaseService {
      *            The ordering of the pull request
      */
     public void setOrdering(final String owner, final String name, final PrNumber number,
-            List<Ordering> orderings) {
+                            List<Ordering> orderings) {
 
         DatabaseReference path = this.ref.child(owner).child(name).child("pulls").child(number.toString()).child("ordering");
 
@@ -164,6 +167,40 @@ public class FirebaseService {
      */
     public void setStatus(String owner, String name, String number, String status) {
         this.ref.child(owner).child(name).child("pulls").child(number)
-        .child("status").setValue(status);
+                .child("status").setValue(status);
+    }
+
+    /**
+     * Checks if there is stored information in firebase about this pull request
+     *
+     * @param owner
+     *            The owner of the repository where the pull request is located
+     * @param name
+     *            The name of the repository where the pull request is located
+     * @param number
+     *            The number of the pull request
+     * @param ordering
+     *            The ordering of the pull request
+     */
+    public void hasInformation(String owner, String name, String number, Ordering ordering) {
+        FirebaseService that = this;
+        this.ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                if (!snapshot.hasChild(owner + "/" + name + "/pulls/" + number + "/status")) {
+                    DatabaseReference Ref = that.ref.child(owner).child(name).child("pulls").child(number);
+                    Ref.child("status").setValue("No status yet");
+                    List<Ordering> orderings = new ArrayList<Ordering>();
+                    orderings.add(ordering);
+                    PrNumber prNumber = new PrNumber();
+                    prNumber.number = Integer.parseInt(number);
+                    that.setOrdering(owner, name, prNumber, orderings);
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError error) {
+                throw new RuntimeException(error.toException());
+            }
+        });
     }
 }
