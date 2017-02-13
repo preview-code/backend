@@ -29,7 +29,7 @@ public class StatusAPI {
      *            The owner of the repository where the pull request is located
      * @param number
      *            The number of the pull request
-     * @param data
+     * @param body
      *            The body in which the status is saved
      * @return The body of the status
      */
