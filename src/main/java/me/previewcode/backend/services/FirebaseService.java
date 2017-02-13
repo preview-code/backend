@@ -188,8 +188,7 @@ public class FirebaseService {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 if (!snapshot.hasChild(owner + "/" + name + "/pulls/" + number + "/status")) {
-                    DatabaseReference Ref = that.ref.child(owner).child(name).child("pulls").child(number);
-                    Ref.child("status").setValue("No status yet");
+                    that.ref.child(owner).child(name).child("pulls").child(number).child("status").setValue("No status yet");
                     List<Ordering> orderings = new ArrayList<Ordering>();
                     orderings.add(ordering);
                     PrNumber prNumber = new PrNumber();
