@@ -54,6 +54,7 @@ public class PullRequestAPI {
 
      /**
      * Checks if there is information stored of this pull request
+     *    If not, add the data via a default template
      *
      * @param owner
      *          The owner of the repository on which the pull request is created
@@ -67,11 +68,11 @@ public class PullRequestAPI {
     @POST
     @Path("{branch}/check")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void checkInformation(@PathParam("owner") String owner,
-                                 @PathParam("name") String name, @PathParam("branch") String number,
-                                 Ordering ordering) {
+    public void isInformationPresent(@PathParam("owner") String owner,
+                                     @PathParam("name") String name, @PathParam("branch") String number,
+                                     Ordering ordering) {
         if (!ordering.diff.isEmpty()) {
-            firebaseService.hasInformation(owner.toLowerCase(), name.toLowerCase(),
+            firebaseService.addDefaultData(owner.toLowerCase(), name.toLowerCase(),
                     number, ordering);
         }
     }

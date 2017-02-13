@@ -171,7 +171,7 @@ public class FirebaseService {
     }
 
     /**
-     * Checks if there is stored information in firebase about this pull request
+     * Adds default information about a pull request, as there is no data present in our service.
      *
      * @param owner
      *            The owner of the repository where the pull request is located
@@ -182,7 +182,7 @@ public class FirebaseService {
      * @param ordering
      *            The ordering of the pull request
      */
-    public void hasInformation(String owner, String name, String number, Ordering ordering) {
+    public void addDefaultData(String owner, String name, String number, Ordering ordering) {
         FirebaseService that = this;
         this.ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
