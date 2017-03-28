@@ -10,6 +10,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import me.previewcode.backend.DTO.PRComment;
+import me.previewcode.backend.DTO.PRLineComment;
 import me.previewcode.backend.DTO.PRbody;
 import me.previewcode.backend.DTO.PrNumber;
 
@@ -111,4 +112,30 @@ public class GithubService {
                     throw new IllegalArgumentException(e);
                 }
             }
+
+
+    /**
+     * Posts the comment to GitHub
+     *
+     * @param owner
+     *            The owner of the repository where the comment is placed
+     * @param name
+     *            The name of the repository where the comment is placed
+     * @param number
+     *            The number of the pull request
+     * @param comment
+     *            The comment that is placed.
+     * @return The comment to be displayed in the frontend
+     */
+    public GHPullRequestReviewComment postLineComment(String owner, String name, int number,
+                                      PRLineComment comment) {
+        try {
+            GHRepository repo = this.githubProvider.get().getRepository(
+                    owner.toLowerCase() + "/" + name.toLowerCase());
+            GHPullRequest pr = repo.getPullRequest(number);
+            return pr.createReviewComment(comment.body, comment.sha, comment.path, comment.position);
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
 }
