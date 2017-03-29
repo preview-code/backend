@@ -19,7 +19,6 @@ import me.previewcode.backend.services.FirebaseService;
 import me.previewcode.backend.services.GithubService;
 
 import com.google.inject.Inject;
-import org.kohsuke.github.GHPullRequestReviewComment;
 
 /**
  * API endpoint for comments
@@ -92,17 +91,14 @@ public class CommentsAPI {
      *            The number of the pull request
      * @param comment
      *            The comment that is placed.
-     * @return The comment to be displayed in the frontend
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("line")
-    public GHPullRequestReviewComment postLineComment(@PathParam("owner") String owner,
+    public void postLineComment(@PathParam("owner") String owner,
                                               @PathParam("name") String name, @PathParam("number") int number,
                                               PRLineComment comment) {
-        GHPullRequestReviewComment newComment = commentsService.postLineComment(owner, name, number, comment);
-
-        return newComment;
+        commentsService.postLineComment(owner, name, number, comment);
     }
     
     private PRresponseComment setResponseComment(GHIssueComment comment) {
