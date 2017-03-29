@@ -1,4 +1,4 @@
-package me.previewcode.backend.api.exceptionmapper;
+package previewcode.backend.api.exceptionmapper;
 
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 

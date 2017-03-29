@@ -1,4 +1,4 @@
-package me.previewcode.backend.services;
+package previewcode.backend.services;
 
 import java.io.IOException;
 
@@ -9,10 +9,10 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import me.previewcode.backend.DTO.PRComment;
-import me.previewcode.backend.DTO.PRLineComment;
-import me.previewcode.backend.DTO.PRbody;
-import me.previewcode.backend.DTO.PrNumber;
+import previewcode.backend.DTO.PRComment;
+import previewcode.backend.DTO.PRLineComment;
+import previewcode.backend.DTO.PRbody;
+import previewcode.backend.DTO.PrNumber;
 
 import org.kohsuke.github.*;
 

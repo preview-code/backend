@@ -1,12 +1,12 @@
-package me.previewcode.backend.services;
+package previewcode.backend.services;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import me.previewcode.backend.DTO.Approve;
-import me.previewcode.backend.DTO.Ordering;
-import me.previewcode.backend.DTO.PrNumber;
+import previewcode.backend.DTO.Approve;
+import previewcode.backend.DTO.Ordering;
+import previewcode.backend.DTO.PrNumber;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;

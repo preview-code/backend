@@ -1,4 +1,4 @@
-package me.previewcode.backend.api.v1;
+package previewcode.backend.api.v1;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -6,12 +6,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 
-import me.previewcode.backend.DTO.Ordering;
-import me.previewcode.backend.DTO.PRbody;
-import me.previewcode.backend.DTO.PrNumber;
-import me.previewcode.backend.DTO.StatusBody;
-import me.previewcode.backend.services.FirebaseService;
-import me.previewcode.backend.services.GithubService;
+import previewcode.backend.DTO.Ordering;
+import previewcode.backend.DTO.PRbody;
+import previewcode.backend.DTO.PrNumber;
+import previewcode.backend.DTO.StatusBody;
+import previewcode.backend.services.FirebaseService;
+import previewcode.backend.services.GithubService;
 
 import com.google.inject.Inject;
 

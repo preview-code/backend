@@ -1,4 +1,4 @@
-package me.previewcode.backend.DTO;
+package previewcode.backend.DTO;
 
 /**
  * The data of the status of a pull request

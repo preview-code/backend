@@ -1,4 +1,4 @@
-package me.previewcode.backend.api.exceptionmapper;
+package previewcode.backend.api.exceptionmapper;
 
 import java.util.UUID;
 
