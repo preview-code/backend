@@ -1,4 +1,4 @@
-package me.previewcode.backend;
+package previewcode.backend;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -10,12 +10,12 @@ import com.google.inject.name.Named;
 import com.google.inject.servlet.RequestScoped;
 import com.google.inject.servlet.ServletModule;
 
-import me.previewcode.backend.api.exceptionmapper.IllegalArgumentExceptionMapper;
-import me.previewcode.backend.api.filter.GitHubAccessTokenFilter;
-import me.previewcode.backend.api.v1.AssigneesAPI;
-import me.previewcode.backend.api.v1.CommentsAPI;
-import me.previewcode.backend.api.v1.StatusAPI;
-import me.previewcode.backend.api.v1.PullRequestAPI;
+import previewcode.backend.api.exceptionmapper.IllegalArgumentExceptionMapper;
+import previewcode.backend.api.filter.GitHubAccessTokenFilter;
+import previewcode.backend.api.v1.AssigneesAPI;
+import previewcode.backend.api.v1.CommentsAPI;
+import previewcode.backend.api.v1.StatusAPI;
+import previewcode.backend.api.v1.PullRequestAPI;
 
 import org.jboss.resteasy.plugins.guice.ext.JaxrsModule;
 import org.kohsuke.github.GitHub;

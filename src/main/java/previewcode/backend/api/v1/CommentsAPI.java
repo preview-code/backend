@@ -1,4 +1,4 @@
-package me.previewcode.backend.api.v1;
+package previewcode.backend.api.v1;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -8,11 +8,11 @@ import javax.ws.rs.core.MediaType;
 
 import org.kohsuke.github.GHIssueComment;
 
-import me.previewcode.backend.DTO.PRComment;
-import me.previewcode.backend.DTO.PRGroupComment;
-import me.previewcode.backend.DTO.PRLineComment;
-import me.previewcode.backend.services.FirebaseService;
-import me.previewcode.backend.services.GithubService;
+import previewcode.backend.DTO.PRComment;
+import previewcode.backend.DTO.PRGroupComment;
+import previewcode.backend.DTO.PRLineComment;
+import previewcode.backend.services.FirebaseService;
+import previewcode.backend.services.GithubService;
 
 import com.google.inject.Inject;
 

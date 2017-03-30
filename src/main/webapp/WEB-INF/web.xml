@@ -5,7 +5,7 @@
 
     <context-param>
         <param-name>resteasy.guice.modules</param-name>
-        <param-value>me.previewcode.backend.MainModule</param-value>
+        <param-value>previewcode.backend.MainModule</param-value>
     </context-param>
 
     <listener>

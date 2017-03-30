@@ -1,4 +1,4 @@
-package me.previewcode.backend.api.v1;
+package previewcode.backend.api.v1;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -6,11 +6,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 
-import me.previewcode.backend.DTO.Approve;
-import me.previewcode.backend.services.FirebaseService;
+import previewcode.backend.DTO.Approve;
+import previewcode.backend.services.FirebaseService;
 
 import com.google.inject.Inject;
-import me.previewcode.backend.services.GithubService;
+import previewcode.backend.services.GithubService;
 import org.kohsuke.github.GHMyself;
 
 import java.io.IOException;

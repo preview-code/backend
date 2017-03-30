@@ -1,4 +1,4 @@
-package me.previewcode.backend.api.filter;
+package previewcode.backend.api.filter;
 
 import com.google.common.base.Strings;
 import com.google.inject.Key;
