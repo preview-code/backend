@@ -12,6 +12,7 @@ import org.kohsuke.github.GHIssueComment;
 
 import me.previewcode.backend.DTO.PRComment;
 import me.previewcode.backend.DTO.PRGroupComment;
+import me.previewcode.backend.DTO.PRLineComment;
 import me.previewcode.backend.DTO.PRresponseComment;
 import me.previewcode.backend.DTO.User;
 import me.previewcode.backend.services.FirebaseService;
@@ -77,6 +78,27 @@ public class CommentsAPI {
        firebaseService.setComments(owner, name, number, newComment.getId(),
                comment.groupID);
         return setResponseComment(newComment);
+    }
+
+    /**
+     * Sets the the group comments
+     *
+     * @param owner
+     *            The owner of the repository where the comment is placed
+     * @param name
+     *            The name of the repository where the comment is placed
+     * @param number
+     *            The number of the pull request
+     * @param comment
+     *            The comment that is placed.
+     */
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("line")
+    public void postLineComment(@PathParam("owner") String owner,
+                                              @PathParam("name") String name, @PathParam("number") int number,
+                                              PRLineComment comment) {
+        commentsService.postLineComment(owner, name, number, comment);
     }
     
     private PRresponseComment setResponseComment(GHIssueComment comment) {
