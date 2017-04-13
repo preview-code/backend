@@ -138,4 +138,28 @@ public class GithubService {
             throw new IllegalArgumentException(e);
         }
     }
+
+    /**
+     * Checks if user is owner of pullrequest
+     * @param owner
+     *      The owner of the base repository
+     * @param name
+     *      The name of the base repository
+     * @param number
+     *      The number of the pull request
+     * @return
+     *     if the user is the owner
+     */
+    public Boolean isOwner(String owner, String name, int number){
+        try {
+            GHRepository repo = this.githubProvider.get().getRepository(
+                    owner.toLowerCase() + "/" + name.toLowerCase());
+
+            return repo.getPullRequest(number).getUser().getLogin().equals(this.getLoggedInUser().getLogin());
+        }
+        catch  (IOException e){
+            return false;
+        }
+
+    }
 }
