@@ -15,6 +15,8 @@ import previewcode.backend.services.GithubService;
 
 import com.google.inject.Inject;
 
+import java.util.List;
+
 @Path("{owner}/{name}/pulls/")
 public class PullRequestAPI {
 
@@ -50,6 +52,31 @@ public class PullRequestAPI {
         firebaseService.setStatus(owner, name,
                 Integer.toString(number.number), statusBody.status);
         return number;
+    }
+
+
+    /**
+     * Updates the ordering
+     *
+     * @param owner
+     *            The owner of the repository where the pull request was made
+     * @param name
+     *            The owner of the repository where the pull request was made
+     * @param number
+     *            The number of the pull request
+     * @param body
+     *            The new ordering of the pull request
+     * @return The number of the newly made pull request
+     */
+    @POST
+    @Path("{number}/ordering")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void updateOrdering(@PathParam("owner") String owner,
+                             @PathParam("name") String name,
+                             @PathParam("number") PrNumber number, List<Ordering> body){
+        if(githubService.isOwner(owner, name,  number.number)) {
+            firebaseService.setOrdering(owner, name, number, body);
+        }
     }
 
      /**
