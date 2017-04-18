@@ -73,11 +73,9 @@ public class PullRequestAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     public void updateOrdering(@PathParam("owner") String owner,
                              @PathParam("name") String name,
-                             @PathParam("number") String number, List<Ordering> body){
-        PrNumber prnumber = new PrNumber();
-        prnumber.number = Integer.parseInt(number);
-        if(githubService.isOwner(owner, name,  prnumber.number)) {
-            firebaseService.setOrdering(owner, name, prnumber, body);
+                             @PathParam("number") PrNumber number, List<Ordering> body){
+        if(githubService.isOwner(owner, name,  number.number)) {
+            firebaseService.setOrdering(owner, name, number, body);
         }
     }
 
