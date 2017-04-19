@@ -1,26 +1,35 @@
 package previewcode.backend;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-
+import com.auth0.jwt.algorithms.Algorithm;
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.inject.Provides;
 import com.google.inject.name.Named;
 import com.google.inject.servlet.RequestScoped;
 import com.google.inject.servlet.ServletModule;
-
+import org.jboss.resteasy.plugins.guice.ext.JaxrsModule;
+import org.jboss.resteasy.util.Base64;
+import org.kohsuke.github.GitHub;
 import previewcode.backend.api.exceptionmapper.IllegalArgumentExceptionMapper;
 import previewcode.backend.api.filter.GitHubAccessTokenFilter;
 import previewcode.backend.api.v1.AssigneesAPI;
 import previewcode.backend.api.v1.CommentsAPI;
-import previewcode.backend.api.v1.StatusAPI;
 import previewcode.backend.api.v1.PullRequestAPI;
-
-import org.jboss.resteasy.plugins.guice.ext.JaxrsModule;
-import org.kohsuke.github.GitHub;
+import previewcode.backend.api.v1.StatusAPI;
+import previewcode.backend.api.v1.WebhookAPI;
 
 import javax.ws.rs.NotAuthorizedException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URL;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 
 /**
  * The main module of the backend
@@ -41,7 +50,8 @@ public class MainModule extends ServletModule {
         this.bind(CommentsAPI.class);
         this.bind(AssigneesAPI.class);
         this.bind(IllegalArgumentExceptionMapper.class);
-        
+        this.bind(WebhookAPI.class);
+
         try {
             FileInputStream file = new FileInputStream("src/main/resources/firebase-auth.json");
             // Initialize the app with a service account, granting admin privileges
@@ -52,6 +62,27 @@ public class MainModule extends ServletModule {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    private static String RSA_PRIVATE_KEY;
+
+    /**
+     * Provides the signing algorithm to sign JWT keys destined for authenticating
+     * with GitHub Integrations.
+     */
+    @Provides
+    public Algorithm provideJWTSigningAlgo() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        if (RSA_PRIVATE_KEY == null) {
+            URL url = Resources.getResource("integration.private-key.pem");
+            RSA_PRIVATE_KEY = Resources.toString(url, Charsets.UTF_8)
+                    .replace("-----END PRIVATE KEY-----", "")
+                    .replace("-----BEGIN PRIVATE KEY-----", "")
+                    .replaceAll("\n", "");
+        }
+
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(Base64.decode(RSA_PRIVATE_KEY));
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        return Algorithm.RSA256((RSAPrivateKey) kf.generatePrivate(keySpec));
     }
 
     /**
