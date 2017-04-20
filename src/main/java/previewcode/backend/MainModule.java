@@ -19,6 +19,7 @@ import previewcode.backend.api.v1.CommentsAPI;
 import previewcode.backend.api.v1.PullRequestAPI;
 import previewcode.backend.api.v1.StatusAPI;
 import previewcode.backend.api.v1.WebhookAPI;
+import previewcode.backend.api.v1.TrackerAPI;
 
 import javax.ws.rs.NotAuthorizedException;
 import java.io.FileInputStream;
@@ -49,6 +50,7 @@ public class MainModule extends ServletModule {
         this.bind(PullRequestAPI.class);
         this.bind(CommentsAPI.class);
         this.bind(AssigneesAPI.class);
+        this.bind(TrackerAPI.class);
         this.bind(IllegalArgumentExceptionMapper.class);
         this.bind(WebhookAPI.class);
 

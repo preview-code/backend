@@ -18,6 +18,7 @@ import com.google.firebase.database.Transaction.Handler;
 import com.google.firebase.database.Transaction.Result;
 import com.google.firebase.database.ValueEventListener;
 import com.google.inject.Singleton;
+import previewcode.backend.DTO.Track;
 
 /**
  * An abstract class that connects with firebase
@@ -168,6 +169,12 @@ public class FirebaseService {
     public void setStatus(String owner, String name, String number, String status) {
         this.ref.child(owner).child(name).child("pulls").child(number)
                 .child("status").setValue(status);
+    }
+
+    public void addTracker(Track data) {
+        DatabaseReference path = this.ref.child("users").child(data.userID).child("tracker").child(data.time);
+        path.child("new").setValue(data.newPath);
+        path.child("old").setValue(data.oldPath);
     }
 
     /**
