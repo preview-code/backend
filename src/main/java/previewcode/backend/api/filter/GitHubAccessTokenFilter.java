@@ -26,7 +26,9 @@ import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Calendar;
@@ -82,7 +84,8 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
     private void checkForWehbook(ContainerRequestContext context) throws IOException {
         String userAgent = context.getHeaderString("User-Agent");
         if (userAgent != null && userAgent.startsWith(GITHUB_WEBHOOK_USER_AGENT_PREFIX)) {
-            String requestBody = IOUtils.toString(context.getEntityStream(), "UTF-8");
+            String requestBody = readRequestBody(context);
+
             try {
                 verifyGitHubWebhookSecret(context, requestBody);
             } catch (Exception e) {
@@ -98,6 +101,17 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
 
             context.setProperty(Key.get(GithubService.TokenBuilder.class, Names.named(CURRENT_TOKEN_BUILDER)).toString(), builder);
         }
+    }
+
+    /**
+     * Reads the request body and sets it back in the request to ensure the stream can still be read by API endpoints.
+     * @return The request body
+     * @throws IOException if the entity stream cannot be read.
+     */
+    private String readRequestBody(ContainerRequestContext context) throws IOException {
+        String requestBody = IOUtils.toString(context.getEntityStream(), "UTF-8");
+        context.setEntityStream(new ByteArrayInputStream(requestBody.getBytes(StandardCharsets.UTF_8)));
+        return requestBody;
     }
 
     /**

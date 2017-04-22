@@ -9,7 +9,6 @@ import previewcode.backend.DTO.PRComment;
 import previewcode.backend.services.GithubService;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -26,22 +25,15 @@ public class WebhookAPI {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     private static final String GITHUB_WEBHOOK_EVENT_HEADER = "X-GitHub-Event";
-    private static final String GITHUB_WEBHOOK_SECRET_HEADER = "X-Hub-Signature";
 
     private static final Response BAD_REQUEST = Response.status(Response.Status.BAD_REQUEST).build();
     private static final Response OK = Response.ok().build();
 
     @Inject
-    @Named("github.installation.token")
-    private String installation_token;
-
-    @Inject
     private GithubService githubService;
 
     @POST
-    public Response onWebhookPost(String postData,
-                                  @HeaderParam(GITHUB_WEBHOOK_EVENT_HEADER) String eventType,
-                                  @HeaderParam(GITHUB_WEBHOOK_SECRET_HEADER) String hash)
+    public Response onWebhookPost(String postData, @HeaderParam(GITHUB_WEBHOOK_EVENT_HEADER) String eventType)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException {
 
         // Respond to different webhook events
@@ -54,7 +46,6 @@ public class WebhookAPI {
 
                 PRComment comment = new PRComment(constructMarkdownComment(repo, pullRequest));
                 OrderingStatus pendingStatus = new OrderingStatus(pullRequest, repo);
-
                 githubService.placePullRequestComment(pullRequest, comment);
                 githubService.setOrderingStatus(pullRequest, pendingStatus);
             }

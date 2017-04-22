@@ -11,6 +11,7 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 import org.kohsuke.github.GHIssueComment;
 import org.kohsuke.github.GHMyself;
 import org.kohsuke.github.GHPullRequest;
@@ -23,6 +24,7 @@ import previewcode.backend.DTO.PRComment;
 import previewcode.backend.DTO.PRLineComment;
 import previewcode.backend.DTO.PRbody;
 import previewcode.backend.DTO.PrNumber;
+import previewcode.backend.DTO.PullRequestIdentifier;
 
 import java.io.IOException;
 
@@ -181,6 +183,21 @@ public class GithubService {
 
     }
 
+    /**
+     * GET a pull request from GitHub.
+     *
+     * @param identifier The identifier object containing owner, name and number of the pull to fetch.
+     * @throws IOException when the request fails
+     */
+    public GitHubPullRequest fetchPullRequest(PullRequestIdentifier identifier) throws IOException {
+        Request getPull = tokenBuilder.addToken(new Request.Builder())
+                .url(identifier.toGitHubURL())
+                .get()
+                .build();
+        Response response = OK_HTTP_CLIENT.newCall(getPull).execute();
+        return fromJson(response, GitHubPullRequest.class);
+    }
+
 
     /**
      * Sends a request to GitHub to place a comment at the given pull request.
@@ -213,21 +230,24 @@ public class GithubService {
         OK_HTTP_CLIENT.newCall(createStatus).execute();
     }
 
+    public OrderingStatus getOrderingStatus(GitHubPullRequest pullRequest) throws IOException {
+        Request getStatus = tokenBuilder.addToken(new Request.Builder())
+                .url(pullRequest.links.statuses)
+                .get()
+                .build();
+
+        Response response = OK_HTTP_CLIENT.newCall(getStatus).execute();
+        return null; //TODO
+    }
+
     private RequestBody toJson(Object value) throws JsonProcessingException {
         return RequestBody.create(MediaType.parse("application/json"), mapper.writeValueAsString(value));
     }
 
-//    public OrderingStatus getOrderingStatus(String owner, String name, int number) throws IOException {
-        // /repos/:owner/:repo/pulls/:number
-//        Request createStatus = new Request.Builder()
-//                .url(pullRequest.links.statuses)
-//                .addHeader("Accept", "application/vnd.github.machine-man-preview+json")
-//                .addHeader("Authorization", "token " + token)
-//                .get()
-//                .build();
-//
-//        OK_HTTP_CLIENT.newCall(createStatus).execute();
-//    }
+    private <T> T fromJson(Response response, Class<T> destClass) throws IOException {
+        return mapper.readValue(response.body().string(), destClass);
+    }
+
     public interface TokenBuilder {
         Request.Builder addToken(Request.Builder builder);
     }

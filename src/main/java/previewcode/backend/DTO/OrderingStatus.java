@@ -16,7 +16,7 @@ public class OrderingStatus {
     public final String url;
 
     private static final String PENDING_DESCRIPTION = "Waiting for author to order changes.";
-    private static final String SUCCESS_DESCRIPTION = "The author of this pull request has re-arraged their changes";
+    private static final String SUCCESS_DESCRIPTION = "Changes have been ordered by the author.";
 
     public OrderingStatus(GitHubPullRequest pullRequest, GitHubRepository repository) {
         this.state = "pending";
