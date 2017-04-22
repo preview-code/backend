@@ -13,6 +13,7 @@ import okhttp3.RequestBody;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 import org.kohsuke.github.GitHub;
+import previewcode.backend.services.GithubService;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -42,6 +43,7 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
     private static final String CURRENT_USER_NAME = "github.user";
     private static final String CURRENT_INSTALLATION_TOKEN = "github.installation.token";
     private static final String CURRENT_USER_TOKEN = "github.user.token";
+    private static final String CURRENT_TOKEN_BUILDER = "github.token.builder";
 
     private static final String GITHUB_WEBHOOK_USER_AGENT_PREFIX = "GitHub-Hookshot/";
     private static final String GITHUB_WEBHOOK_SECRET_HEADER = "X-Hub-Signature";
@@ -70,7 +72,8 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
      * Is so, the call is verified against a shared webhook secret.
      * When the call is verified to originate from GitHub,
      * a request is made to receive a fresh Installation token.
-     * This token is then bound to `github.installation.token` for usage with @Inject and @Named.
+     * This token is then bound to `github.installation.token` and
+     * `github.token.builder` for usage with @Inject and @Named.
      *
      * Aborts the pending request with a 401 Unauthorized error if verification of the shared secret fails.
      *
@@ -88,6 +91,12 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
             }
             String installationToken = getGitHubInstallationToken(requestBody);
             context.setProperty(Key.get(String.class, Names.named(CURRENT_INSTALLATION_TOKEN)).toString(), installationToken);
+            GithubService.TokenBuilder builder = (Request.Builder request) ->
+                    request
+                        .header("Authorization", "token " + installationToken)
+                        .addHeader("Accept", "application/vnd.github.machine-man-preview+json");
+
+            context.setProperty(Key.get(GithubService.TokenBuilder.class, Names.named(CURRENT_TOKEN_BUILDER)).toString(), builder);
         }
     }
 
@@ -152,9 +161,9 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
      * This method aborts the pending request with a 401 Unauthorized error
      * if the token is invalid.
      *
-     * If the token is valid, the token will be bound to `github.user.token`, and
-     * the GitHub object will be bound to `github.user`. These bindings can be used
-     * with Guice @Inject and @Named annotations.
+     * If the token is valid, the token will be bound to `github.user.token`,
+     * the GitHub object will be bound to `github.user` and `github.token.builder`.
+     * These bindings can be used with Guice @Inject and @Named annotations.
      *
      * @throws IOException when unable to connect to GitHub with the provided token.
      */
@@ -168,6 +177,9 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
                 final GitHub user = GitHub.connectUsingOAuth(token);
                 context.setProperty(Key.get(GitHub.class, Names.named(CURRENT_USER_NAME)).toString(), user);
                 context.setProperty(Key.get(String.class, Names.named(CURRENT_USER_TOKEN)).toString(), token);
+
+                GithubService.TokenBuilder builder = (Request.Builder b) -> b.header("Authorization", "token " + token);
+                context.setProperty(Key.get(GithubService.TokenBuilder.class, Names.named(CURRENT_TOKEN_BUILDER)).toString(), builder);
             } catch (final NotAuthorizedException e) {
                 context.abortWith(UNAUTHORIZED);
             }
