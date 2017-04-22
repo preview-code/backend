@@ -1,7 +1,6 @@
 package previewcode.backend.api.v1;
 
 import com.google.inject.Inject;
-import okhttp3.OkHttpClient;
 import previewcode.backend.DTO.Ordering;
 import previewcode.backend.DTO.PRbody;
 import previewcode.backend.DTO.PrNumber;
@@ -24,8 +23,6 @@ public class PullRequestAPI {
 
     @Inject
     private FirebaseService firebaseService;
-
-    private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
 
 
     /**
@@ -74,7 +71,7 @@ public class PullRequestAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     public void updateOrdering(@PathParam("owner") String owner,
                              @PathParam("name") String name,
-                             @PathParam("number") PrNumber number, List<Ordering> body){
+                             @PathParam("number") PrNumber number, List<Ordering> body) {
         if(githubService.isOwner(owner, name,  number.number)) {
             firebaseService.setOrdering(owner, name, number, body);
         }
