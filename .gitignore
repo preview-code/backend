@@ -54,3 +54,4 @@ server.csr
 server.key
 server.pkcs12
 *.pem
+*.txt
