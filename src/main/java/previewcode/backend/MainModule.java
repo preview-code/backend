@@ -20,6 +20,7 @@ import previewcode.backend.api.v1.PullRequestAPI;
 import previewcode.backend.api.v1.StatusAPI;
 import previewcode.backend.api.v1.TrackerAPI;
 import previewcode.backend.api.v1.WebhookAPI;
+import previewcode.backend.services.GithubService;
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.ws.rs.NotAuthorizedException;
@@ -103,7 +104,7 @@ public class MainModule extends ServletModule {
 
     /**
      * Method to declare Named key "github.user" to obtain the current GitHub instance
-     * @Throws an exception if key was not set
+     * @throws Exception if key was not set
      */
     @Provides
     @Named("github.user")
@@ -114,12 +115,34 @@ public class MainModule extends ServletModule {
 
     /**
      * Method to declare Named key "github.installation.token" to obtain the current GitHub Installation token
-     * @Throws an exception if key was not set
+     * @throws Exception if key was not set
      */
     @Provides
     @Named("github.installation.token")
     @RequestScoped
     public String provideGitHubInstallationToken() {
         throw new NotAuthorizedException("Installation token must be received via an authorization call to the GitHub API.");
+    }
+
+    /**
+     * Method to declare Named key "github.user.token" to obtain the current GitHub user OAuth token
+     * @throws Exception if token was not set
+     */
+    @Provides
+    @Named("github.user.token")
+    @RequestScoped
+    public String provideGitHubUserToken() {
+        throw new NotAuthorizedException("User token must be received via request query parameter.");
+    }
+
+    /**
+     * Method to declare Named key "github.token.builder" to ammend a OKHTTP Request with authorization info.
+     * @throws Exception if not set via GitHubAccessTokenFilter.
+     */
+    @Provides
+    @Named("github.token.builder")
+    @RequestScoped
+    public GithubService.TokenBuilder provideGitHubTokenBuilder() {
+        throw new NotAuthorizedException("User token must be received via request query parameter.");
     }
 }

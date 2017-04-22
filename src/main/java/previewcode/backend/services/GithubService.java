@@ -1,17 +1,24 @@
 package previewcode.backend.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import org.kohsuke.github.GHIssueComment;
 import org.kohsuke.github.GHMyself;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestReviewComment;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
+import previewcode.backend.DTO.GitHubPullRequest;
+import previewcode.backend.DTO.OrderingStatus;
 import previewcode.backend.DTO.PRComment;
 import previewcode.backend.DTO.PRLineComment;
 import previewcode.backend.DTO.PRbody;
@@ -25,6 +32,14 @@ import java.io.IOException;
  */
 @Singleton
 public class GithubService {
+
+    private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
+    private static final ObjectMapper mapper = new ObjectMapper();
+
+
+    @Inject
+    @Named("github.token.builder")
+    private TokenBuilder tokenBuilder;
 
     /**
      * The GitHub provider.
@@ -166,6 +181,42 @@ public class GithubService {
 
     }
 
+
+    /**
+     * Sends a request to GitHub to place a comment at the given pull request.
+     *
+     * @param pullRequest The PR to place the comment on
+     * @param comment The comment to place
+     * @throws IOException when the request fails
+     */
+    public void placePullRequestComment(GitHubPullRequest pullRequest, PRComment comment) throws IOException {
+        Request postComment = tokenBuilder.addToken(new Request.Builder())
+                .url(pullRequest.links.comments)
+                .post(toJson(comment))
+                .build();
+
+        OK_HTTP_CLIENT.newCall(postComment).execute();
+    }
+
+    /**
+     * Send a request to GitHub to set the status on the `ordering` context.
+     * @param pullRequest The pull request to set the status on.
+     * @param status The status to set.
+     * @throws IOException when the request fails
+     */
+    public void setOrderingStatus(GitHubPullRequest pullRequest, OrderingStatus status) throws IOException {
+        Request createStatus = tokenBuilder.addToken(new Request.Builder())
+                .url(pullRequest.links.statuses)
+                .post(toJson(status))
+                .build();
+
+        OK_HTTP_CLIENT.newCall(createStatus).execute();
+    }
+
+    private RequestBody toJson(Object value) throws JsonProcessingException {
+        return RequestBody.create(MediaType.parse("application/json"), mapper.writeValueAsString(value));
+    }
+
 //    public OrderingStatus getOrderingStatus(String owner, String name, int number) throws IOException {
         // /repos/:owner/:repo/pulls/:number
 //        Request createStatus = new Request.Builder()
@@ -177,4 +228,8 @@ public class GithubService {
 //
 //        OK_HTTP_CLIENT.newCall(createStatus).execute();
 //    }
+    public interface TokenBuilder {
+        Request.Builder addToken(Request.Builder builder);
+    }
+
 }
