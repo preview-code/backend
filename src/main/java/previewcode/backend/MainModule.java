@@ -111,4 +111,15 @@ public class MainModule extends ServletModule {
     public GitHub provideGitHubConnection() {
         throw new NotAuthorizedException("user id must be manually seeded");
     }
+
+    /**
+     * Method to declare Named key "github.installation.token" to obtain the current GitHub Installation token
+     * @Throws an exception if key was not set
+     */
+    @Provides
+    @Named("github.installation.token")
+    @RequestScoped
+    public String provideGitHubInstallationToken() {
+        throw new NotAuthorizedException("Installation token must be received via an authorization call to the GitHub API.");
+    }
 }

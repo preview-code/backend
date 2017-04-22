@@ -1,11 +1,7 @@
 package previewcode.backend.api.v1;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.MediaType;
-
+import com.google.inject.Inject;
+import okhttp3.OkHttpClient;
 import previewcode.backend.DTO.Ordering;
 import previewcode.backend.DTO.PRbody;
 import previewcode.backend.DTO.PrNumber;
@@ -13,8 +9,11 @@ import previewcode.backend.DTO.StatusBody;
 import previewcode.backend.services.FirebaseService;
 import previewcode.backend.services.GithubService;
 
-import com.google.inject.Inject;
-
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.core.MediaType;
 import java.util.List;
 
 @Path("{owner}/{name}/pulls/")
@@ -25,6 +24,8 @@ public class PullRequestAPI {
 
     @Inject
     private FirebaseService firebaseService;
+
+    private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
 
 
     /**
