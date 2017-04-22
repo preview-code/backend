@@ -5,11 +5,6 @@ package previewcode.backend.DTO;
  */
 public class Track {
     /**
-     * The id of the user
-     */
-    public String userID;
-
-    /**
      * The new location of the current user
      */
     public String newPath;
