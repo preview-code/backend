@@ -1,6 +1,7 @@
 package previewcode.backend.api.v1;
 
 import com.google.inject.Inject;
+import okhttp3.OkHttpClient;
 import previewcode.backend.DTO.Ordering;
 import previewcode.backend.DTO.PRbody;
 import previewcode.backend.DTO.PrNumber;
@@ -23,6 +24,8 @@ public class PullRequestAPI {
 
     @Inject
     private FirebaseService firebaseService;
+
+    private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
 
 
     /**

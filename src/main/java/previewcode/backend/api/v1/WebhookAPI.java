@@ -1,20 +1,16 @@
 package previewcode.backend.api.v1;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import org.apache.commons.codec.binary.Hex;
+import previewcode.backend.DTO.GitHubPullRequest;
+import previewcode.backend.DTO.GitHubRepository;
+import previewcode.backend.DTO.OrderingStatus;
 import previewcode.backend.DTO.PRComment;
-import previewcode.backend.DTO.WebhookPullRequest;
-import previewcode.backend.DTO.WebhookRepo;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.HeaderParam;
@@ -25,23 +21,11 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Calendar;
-import java.util.Date;
 
 
 @Path("webhook/")
 public class WebhookAPI {
 
-    @Inject
-    private Algorithm jwtSigningAlgorithm;
-
-    @Inject
-    @Named("github.webhook.secret")
-    private SecretKeySpec webhookSecret;
-
-    private static final String INTEGRATION_ID = "2150";
-    private static final String TEST_INTEGRATION_ID = "2152";
-    private static final RequestBody EMPTY_REQUEST_BODY = RequestBody.create(null, new byte[]{});
     private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -49,8 +33,11 @@ public class WebhookAPI {
     private static final String GITHUB_WEBHOOK_SECRET_HEADER = "X-Hub-Signature";
 
     private static final Response BAD_REQUEST = Response.status(Response.Status.BAD_REQUEST).build();
-    private static final Response UNAUTHORIZED = Response.status(Response.Status.UNAUTHORIZED).build();
     private static final Response OK = Response.ok().build();
+
+    @Inject
+    @Named("github.installation.token")
+    private String installation_token;
 
     @POST
     public Response onWebhookPost(String postData,
@@ -58,21 +45,16 @@ public class WebhookAPI {
                                   @HeaderParam(GITHUB_WEBHOOK_SECRET_HEADER) String hash)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException {
 
-        // Check the GitHub secret
-        final Mac mac = Mac.getInstance("HmacSHA1");
-        mac.init(webhookSecret);
-        final String expectedHash = Hex.encodeHexString(mac.doFinal(postData.getBytes()));
-        if (!hash.equals("sha1="+ expectedHash)) {
-            return UNAUTHORIZED;
-        }
-
         // Respond to different webhook events
         if (eventType.equals("pull_request")) {
             JsonNode body = mapper.readTree(postData);
-            String installationToken = getGitHubInstallationToken(body);
 
-            if (body.get("action").asText().equals("opened")) {
-                placePullRequestComment(body, installationToken);
+            if (body.get("action").asText().equals("edited")) {
+                GitHubRepository repo = mapper.treeToValue(body.get("repository"), GitHubRepository.class);
+                GitHubPullRequest pullRequest = mapper.treeToValue(body.get("pull_request"), GitHubPullRequest.class);
+
+                placePullRequestComment(pullRequest, repo, installation_token);
+                createPendingOrderStatus(pullRequest, repo, installation_token);
             }
         } else if (eventType.equals("pull_request_review")) {
             // Respond to a review event
@@ -87,10 +69,7 @@ public class WebhookAPI {
         return OK;
     }
 
-    private void placePullRequestComment(JsonNode body, String token) throws IOException {
-        WebhookRepo repo = mapper.treeToValue(body.get("repository"), WebhookRepo.class);
-        WebhookPullRequest pullRequest = mapper.treeToValue(body.get("pull_request"), WebhookPullRequest.class);
-
+    private void placePullRequestComment(GitHubPullRequest pullRequest, GitHubRepository repo, String token) throws IOException {
         PRComment comment = new PRComment(constructMarkdownComment(repo, pullRequest));
         RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), mapper.writeValueAsString(comment));
 
@@ -104,34 +83,23 @@ public class WebhookAPI {
         OK_HTTP_CLIENT.newCall(postComment).execute();
     }
 
-    private String constructMarkdownComment(WebhookRepo repo, WebhookPullRequest pullRequest) {
-        return "This pull request can be reviewed with [on Preview Code](https://preview-code.com/projects/" + repo.fullName + "/pulls/" + pullRequest.number + ").\n" +
-               "To speed up the review process and get better feedback on your changes, " +
-               "please **[order your changes](https://preview-code.com/" + repo.fullName + "/pulls/" + pullRequest.number + ").**\n";
+    private void createPendingOrderStatus(GitHubPullRequest pullRequest, GitHubRepository repo, String token) throws IOException {
+        OrderingStatus pendingStatus = new OrderingStatus(pullRequest, repo);
+
+        RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), mapper.writeValueAsString(pendingStatus));
+        Request createStatus = new Request.Builder()
+                .url(pullRequest.links.statuses)
+                .addHeader("Accept", "application/vnd.github.machine-man-preview+json")
+                .addHeader("Authorization", "token " + token)
+                .post(requestBody)
+                .build();
+
+        OK_HTTP_CLIENT.newCall(createStatus).execute();
     }
 
-    private String getGitHubInstallationToken(JsonNode body) throws IOException {
-        String installationId = body.get("installation").get("id").asText();
-
-        Calendar calendar = Calendar.getInstance();
-        Date now = calendar.getTime();
-        calendar.add(Calendar.MINUTE, 10);
-        Date exp = calendar.getTime();
-
-        String token = JWT.create()
-                .withIssuedAt(now)
-                .withExpiresAt(exp)
-                .withIssuer(TEST_INTEGRATION_ID)
-                .sign(jwtSigningAlgorithm);
-
-        Request request = new Request.Builder()
-                .url("https://api.github.com/installations/" + installationId + "/access_tokens")
-                .addHeader("Accept", "application/vnd.github.machine-man-preview+json")
-                .addHeader("Authorization", "Bearer " + token)
-                .post(EMPTY_REQUEST_BODY)
-                .build();
-        okhttp3.Response response = OK_HTTP_CLIENT.newCall(request).execute();
-        return mapper.readValue(response.body().string(), JsonNode.class)
-                .get("token").asText();
+    private String constructMarkdownComment(GitHubRepository repo, GitHubPullRequest pullRequest) {
+        return "This pull request can be reviewed with [on Preview Code](https://preview-code.com/projects/" + repo.fullName + "/pulls/" + pullRequest.number + ").\n" +
+               "To speed up the review process and get better feedback on your changes, " +
+               "please **[order your changes](" + pullRequest.previewCodeUrl(repo) + ").**\n";
     }
 }

@@ -1,20 +1,23 @@
 package previewcode.backend.services;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-
+import org.kohsuke.github.GHIssueComment;
+import org.kohsuke.github.GHMyself;
+import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHPullRequestReviewComment;
+import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GitHub;
 import previewcode.backend.DTO.PRComment;
 import previewcode.backend.DTO.PRLineComment;
 import previewcode.backend.DTO.PRbody;
 import previewcode.backend.DTO.PrNumber;
 
-import org.kohsuke.github.*;
+import java.io.IOException;
 
 /**
  * An abstract class that connects with github
@@ -162,4 +165,16 @@ public class GithubService {
         }
 
     }
+
+//    public OrderingStatus getOrderingStatus(String owner, String name, int number) throws IOException {
+        // /repos/:owner/:repo/pulls/:number
+//        Request createStatus = new Request.Builder()
+//                .url(pullRequest.links.statuses)
+//                .addHeader("Accept", "application/vnd.github.machine-man-preview+json")
+//                .addHeader("Authorization", "token " + token)
+//                .get()
+//                .build();
+//
+//        OK_HTTP_CLIENT.newCall(createStatus).execute();
+//    }
 }
