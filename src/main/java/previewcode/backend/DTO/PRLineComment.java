@@ -22,4 +22,7 @@ public class PRLineComment extends PRComment {
     public int position;
 
 
+    public PRLineComment(String body) {
+        super(body);
+    }
 }

@@ -76,7 +76,7 @@ public class MainModule extends ServletModule {
     @Provides
     public Algorithm provideJWTSigningAlgo() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         if (RSA_PRIVATE_KEY == null) {
-            URL url = Resources.getResource("integration.private-key.pem");
+            URL url = Resources.getResource("integration.test-key.pem");
             RSA_PRIVATE_KEY = Resources.toString(url, Charsets.UTF_8)
                     .replace("-----END PRIVATE KEY-----", "")
                     .replace("-----BEGIN PRIVATE KEY-----", "")
@@ -93,7 +93,7 @@ public class MainModule extends ServletModule {
     @Named("github.webhook.secret")
     public SecretKeySpec provideGitHubWebhookSecret() throws IOException {
         if (GITHUB_WEBHOOK_SECRET == null) {
-            URL url = Resources.getResource("github-webhook-secret.txt");
+            URL url = Resources.getResource("github-webhook-test-secret.txt");
             final String secret = Resources.toString(url, Charsets.UTF_8);
             GITHUB_WEBHOOK_SECRET = new SecretKeySpec(secret.getBytes(), "HmacSHA1");
         }

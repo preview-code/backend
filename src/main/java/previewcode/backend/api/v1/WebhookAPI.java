@@ -9,6 +9,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import org.apache.commons.codec.binary.Hex;
+import previewcode.backend.DTO.PRComment;
 import previewcode.backend.DTO.WebhookPullRequest;
 import previewcode.backend.DTO.WebhookRepo;
 
@@ -39,6 +40,7 @@ public class WebhookAPI {
     private SecretKeySpec webhookSecret;
 
     private static final String INTEGRATION_ID = "2150";
+    private static final String TEST_INTEGRATION_ID = "2152";
     private static final RequestBody EMPTY_REQUEST_BODY = RequestBody.create(null, new byte[]{});
     private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -67,8 +69,10 @@ public class WebhookAPI {
         // Respond to different webhook events
         if (eventType.equals("pull_request")) {
             JsonNode body = mapper.readTree(postData);
+            String installationToken = getGitHubInstallationToken(body);
+
             if (body.get("action").asText().equals("opened")) {
-                handleNewPullRequest(body);
+                placePullRequestComment(body, installationToken);
             }
         } else if (eventType.equals("pull_request_review")) {
             // Respond to a review event
@@ -83,7 +87,30 @@ public class WebhookAPI {
         return OK;
     }
 
-    private void handleNewPullRequest(JsonNode body) throws IOException {
+    private void placePullRequestComment(JsonNode body, String token) throws IOException {
+        WebhookRepo repo = mapper.treeToValue(body.get("repository"), WebhookRepo.class);
+        WebhookPullRequest pullRequest = mapper.treeToValue(body.get("pull_request"), WebhookPullRequest.class);
+
+        PRComment comment = new PRComment(constructMarkdownComment(repo, pullRequest));
+        RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), mapper.writeValueAsString(comment));
+
+        Request postComment = new Request.Builder()
+                .url(pullRequest.links.comments)
+                .addHeader("Accept", "application/vnd.github.machine-man-preview+json")
+                .addHeader("Authorization", "token " + token)
+                .post(requestBody)
+                .build();
+
+        OK_HTTP_CLIENT.newCall(postComment).execute();
+    }
+
+    private String constructMarkdownComment(WebhookRepo repo, WebhookPullRequest pullRequest) {
+        return "This pull request can be reviewed with [on Preview Code](https://preview-code.com/projects/" + repo.fullName + "/pulls/" + pullRequest.number + ").\n" +
+               "To speed up the review process and get better feedback on your changes, " +
+               "please **[order your changes](https://preview-code.com/" + repo.fullName + "/pulls/" + pullRequest.number + ").**\n";
+    }
+
+    private String getGitHubInstallationToken(JsonNode body) throws IOException {
         String installationId = body.get("installation").get("id").asText();
 
         Calendar calendar = Calendar.getInstance();
@@ -94,7 +121,7 @@ public class WebhookAPI {
         String token = JWT.create()
                 .withIssuedAt(now)
                 .withExpiresAt(exp)
-                .withIssuer(INTEGRATION_ID)
+                .withIssuer(TEST_INTEGRATION_ID)
                 .sign(jwtSigningAlgorithm);
 
         Request request = new Request.Builder()
@@ -104,22 +131,7 @@ public class WebhookAPI {
                 .post(EMPTY_REQUEST_BODY)
                 .build();
         okhttp3.Response response = OK_HTTP_CLIENT.newCall(request).execute();
-        String installationToken = mapper.readValue(response.body().string(), JsonNode.class)
+        return mapper.readValue(response.body().string(), JsonNode.class)
                 .get("token").asText();
-
-        WebhookRepo repo = mapper.treeToValue(body.get("repository"), WebhookRepo.class);
-        WebhookPullRequest editedPull = mapper.treeToValue(body.get("pull_request"), WebhookPullRequest.class)
-                .addPreviewCodeSignature(repo);
-
-        RequestBody editPullBody = RequestBody.create(MediaType.parse("application/json"), mapper.writeValueAsString(editedPull));
-
-        Request editPull = new Request.Builder()
-                .url(editedPull.url)
-                .addHeader("Accept", "application/vnd.github.machine-man-preview+json")
-                .addHeader("Authorization", "token " + installationToken)
-                .patch(editPullBody)
-                .build();
-
-        OK_HTTP_CLIENT.newCall(editPull).execute();
     }
 }
