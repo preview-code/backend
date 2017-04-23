@@ -25,6 +25,6 @@ public class PullRequestIdentifier {
     }
 
     public String toGitHubURL() {
-        return "https://api.github.com/repos" + owner + "/" + name + "/pulls/" + number;
+        return "https://api.github.com/repos/" + owner + "/" + name + "/pulls/" + number;
     }
 }

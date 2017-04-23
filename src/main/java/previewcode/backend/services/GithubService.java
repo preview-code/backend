@@ -1,6 +1,7 @@
 package previewcode.backend.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -19,6 +20,7 @@ import org.kohsuke.github.GHPullRequestReviewComment;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import previewcode.backend.DTO.GitHubPullRequest;
+import previewcode.backend.DTO.GitHubStatus;
 import previewcode.backend.DTO.OrderingStatus;
 import previewcode.backend.DTO.PRComment;
 import previewcode.backend.DTO.PRLineComment;
@@ -27,6 +29,8 @@ import previewcode.backend.DTO.PrNumber;
 import previewcode.backend.DTO.PullRequestIdentifier;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * An abstract class that connects with github
@@ -230,18 +234,27 @@ public class GithubService {
         OK_HTTP_CLIENT.newCall(createStatus).execute();
     }
 
-    public OrderingStatus getOrderingStatus(GitHubPullRequest pullRequest) throws IOException {
+    public Optional<OrderingStatus> getOrderingStatus(GitHubPullRequest pullRequest) throws IOException {
         Request getStatus = tokenBuilder.addToken(new Request.Builder())
                 .url(pullRequest.links.statuses)
                 .get()
                 .build();
 
         Response response = OK_HTTP_CLIENT.newCall(getStatus).execute();
-        return null; //TODO
+        List<GitHubStatus> statuses = fromJson(response, new TypeReference<List<GitHubStatus>>(){});
+        if (statuses.size() > 0) {
+            return OrderingStatus.fromGitHubStatus(statuses.get(0));
+        } else {
+            return Optional.empty();
+        }
     }
 
     private RequestBody toJson(Object value) throws JsonProcessingException {
         return RequestBody.create(MediaType.parse("application/json"), mapper.writeValueAsString(value));
+    }
+
+    private <T> T fromJson(Response response, TypeReference<T> typeReference) throws IOException {
+        return mapper.readValue(response.body().string(), typeReference);
     }
 
     private <T> T fromJson(Response response, Class<T> destClass) throws IOException {
