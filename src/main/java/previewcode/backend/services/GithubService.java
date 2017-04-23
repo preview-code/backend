@@ -241,12 +241,11 @@ public class GithubService {
                 .build();
 
         Response response = OK_HTTP_CLIENT.newCall(getStatus).execute();
-        List<GitHubStatus> statuses = fromJson(response, new TypeReference<List<GitHubStatus>>(){});
-        if (statuses.size() > 0) {
-            return OrderingStatus.fromGitHubStatus(statuses.get(0));
-        } else {
-            return Optional.empty();
-        }
+        return fromJson(response, new TypeReference<List<GitHubStatus>>(){}).stream()
+                .map(OrderingStatus::fromGitHubStatus)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .findFirst();
     }
 
     private RequestBody toJson(Object value) throws JsonProcessingException {

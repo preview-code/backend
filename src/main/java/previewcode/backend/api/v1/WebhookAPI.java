@@ -1,5 +1,6 @@
 package previewcode.backend.api.v1;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import previewcode.backend.DTO.GitHubPullRequest;
@@ -44,18 +45,22 @@ public class WebhookAPI {
         // Respond to different webhook events
         if (eventType.equals("pull_request")) {
             JsonNode body = mapper.readTree(postData);
+            String action = body.get("action").asText();
 
-            if (body.get("action").asText().equals("opened")) {
-                GitHubRepository repo = mapper.treeToValue(body.get("repository"), GitHubRepository.class);
-                GitHubPullRequest pullRequest = mapper.treeToValue(body.get("pull_request"), GitHubPullRequest.class);
+            if (action.equals("opened")) {
+                Pair<GitHubRepository, GitHubPullRequest> repoAndPull = readRepoAndPullFromWebhook(body);
+                PRComment comment = new PRComment(constructMarkdownComment(repoAndPull.first, repoAndPull.second));
+                OrderingStatus pendingStatus = new OrderingStatus(repoAndPull.second, repoAndPull.first);
 
-                PRComment comment = new PRComment(constructMarkdownComment(repo, pullRequest));
-                OrderingStatus pendingStatus = new OrderingStatus(pullRequest, repo);
+                firebaseService.addDefaultData(new PullRequestIdentifier(repoAndPull.first, repoAndPull.second));
 
-                firebaseService.addDefaultData(new PullRequestIdentifier(repo, pullRequest));
+                githubService.placePullRequestComment(repoAndPull.second, comment);
+                githubService.setOrderingStatus(repoAndPull.second, pendingStatus);
 
-                githubService.placePullRequestComment(pullRequest, comment);
-                githubService.setOrderingStatus(pullRequest, pendingStatus);
+            } else if (action.equals("synchronize")) {
+                Pair<GitHubRepository, GitHubPullRequest> repoAndPull = readRepoAndPullFromWebhook(body);
+                OrderingStatus pendingStatus = new OrderingStatus(repoAndPull.second, repoAndPull.first);
+                githubService.setOrderingStatus(repoAndPull.second, pendingStatus);
             }
         } else if (eventType.equals("pull_request_review")) {
             // Respond to a review event
@@ -74,6 +79,22 @@ public class WebhookAPI {
         return "This pull request can be reviewed with [on Preview Code](https://preview-code.com/projects/" + repo.fullName + "/pulls/" + pullRequest.number + ").\n" +
                "To speed up the review process and get better feedback on your changes, " +
                "please **[order your changes](" + pullRequest.previewCodeUrl(repo) + ").**\n";
+    }
+
+    private Pair<GitHubRepository, GitHubPullRequest> readRepoAndPullFromWebhook(JsonNode body) throws JsonProcessingException {
+        GitHubRepository repo = mapper.treeToValue(body.get("repository"), GitHubRepository.class);
+        GitHubPullRequest pullRequest = mapper.treeToValue(body.get("pull_request"), GitHubPullRequest.class);
+        return new Pair<>(repo, pullRequest);
+    }
+
+    class Pair<A, B> {
+        public final A first;
+        public final B second;
+
+        public Pair(A first, B second) {
+            this.first = first;
+            this.second = second;
+        }
     }
 }
 
