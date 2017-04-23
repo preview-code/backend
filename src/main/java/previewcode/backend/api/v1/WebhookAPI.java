@@ -6,6 +6,8 @@ import previewcode.backend.DTO.GitHubPullRequest;
 import previewcode.backend.DTO.GitHubRepository;
 import previewcode.backend.DTO.OrderingStatus;
 import previewcode.backend.DTO.PRComment;
+import previewcode.backend.DTO.PullRequestIdentifier;
+import previewcode.backend.services.FirebaseService;
 import previewcode.backend.services.GithubService;
 
 import javax.inject.Inject;
@@ -32,6 +34,9 @@ public class WebhookAPI {
     @Inject
     private GithubService githubService;
 
+    @Inject
+    private FirebaseService firebaseService;
+
     @POST
     public Response onWebhookPost(String postData, @HeaderParam(GITHUB_WEBHOOK_EVENT_HEADER) String eventType)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException {
@@ -40,12 +45,15 @@ public class WebhookAPI {
         if (eventType.equals("pull_request")) {
             JsonNode body = mapper.readTree(postData);
 
-            if (body.get("action").asText().equals("edited")) {
+            if (body.get("action").asText().equals("opened")) {
                 GitHubRepository repo = mapper.treeToValue(body.get("repository"), GitHubRepository.class);
                 GitHubPullRequest pullRequest = mapper.treeToValue(body.get("pull_request"), GitHubPullRequest.class);
 
                 PRComment comment = new PRComment(constructMarkdownComment(repo, pullRequest));
                 OrderingStatus pendingStatus = new OrderingStatus(pullRequest, repo);
+
+                firebaseService.addDefaultData(new PullRequestIdentifier(repo, pullRequest));
+
                 githubService.placePullRequestComment(pullRequest, comment);
                 githubService.setOrderingStatus(pullRequest, pendingStatus);
             }

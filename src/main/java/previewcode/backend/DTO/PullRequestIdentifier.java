@@ -18,6 +18,12 @@ public class PullRequestIdentifier {
         this.number = number;
     }
 
+    public PullRequestIdentifier(GitHubRepository repo, GitHubPullRequest pullRequest) {
+        this.owner = repo.owner.login;
+        this.name = repo.name;
+        this.number = pullRequest.number;
+    }
+
     public String toGitHubURL() {
         return "https://api.github.com/repos" + owner + "/" + name + "/pulls/" + number;
     }

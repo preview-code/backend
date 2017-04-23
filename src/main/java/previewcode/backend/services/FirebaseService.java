@@ -1,13 +1,5 @@
 package previewcode.backend.services;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
-
-import previewcode.backend.DTO.Approve;
-import previewcode.backend.DTO.Ordering;
-import previewcode.backend.DTO.PrNumber;
-
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -18,7 +10,14 @@ import com.google.firebase.database.Transaction.Handler;
 import com.google.firebase.database.Transaction.Result;
 import com.google.firebase.database.ValueEventListener;
 import com.google.inject.Singleton;
+import previewcode.backend.DTO.Approve;
+import previewcode.backend.DTO.Ordering;
+import previewcode.backend.DTO.PullRequestIdentifier;
 import previewcode.backend.DTO.Track;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 /**
  * An abstract class that connects with firebase
@@ -133,19 +132,15 @@ public class FirebaseService {
     /**
      * Sets the ordering of a pull request on firebase
      *
-     * @param owner
-     *            The owner of the repository where the pull request is located
-     * @param name
-     *            The name of the repository where the pull request is located
-     * @param number
-     *            The number of the pull request
-     * @param orderings
-     *            The ordering of the pull request
+     * @param pullId The identifier object for the pull request
      */
-    public void setOrdering(final String owner, final String name, final PrNumber number,
-                            List<Ordering> orderings) {
+    public void setOrdering(final PullRequestIdentifier pullId, List<Ordering> orderings) {
 
-        DatabaseReference path = this.ref.child(owner).child(name).child("pulls").child(number.toString()).child("ordering");
+        DatabaseReference path = this.ref
+                .child(pullId.owner)
+                .child(pullId.name).child("pulls")
+                .child(pullId.number.toString())
+                .child("ordering");
 
         this.doTransaction(path, data -> {
             data.child("lastChanged").setValue(System.currentTimeMillis());
@@ -180,27 +175,22 @@ public class FirebaseService {
     /**
      * Adds default information about a pull request, as there is no data present in our service.
      *
-     * @param owner
-     *            The owner of the repository where the pull request is located
-     * @param name
-     *            The name of the repository where the pull request is located
-     * @param number
-     *            The number of the pull request
-     * @param ordering
-     *            The ordering of the pull request
+     * @param pullId The identifier object for the pull request
      */
-    public void addDefaultData(String owner, String name, String number, Ordering ordering) {
+    public void addDefaultData(PullRequestIdentifier pullId) {
         FirebaseService that = this;
         this.ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
-                if (!snapshot.hasChild(owner + "/" + name + "/pulls/" + number + "/status")) {
-                    that.ref.child(owner).child(name).child("pulls").child(number).child("status").setValue("No status yet");
-                    List<Ordering> orderings = new ArrayList<Ordering>();
-                    orderings.add(ordering);
-                    PrNumber prNumber = new PrNumber();
-                    prNumber.number = Integer.parseInt(number);
-                    that.setOrdering(owner, name, prNumber, orderings);
+                if (!snapshot.hasChild(pullId.owner + "/" + pullId.name + "/pulls/" + pullId.number + "/status")) {
+                    that.ref.child(pullId.owner)
+                            .child(pullId.name)
+                            .child("pulls")
+                            .child(pullId.number.toString())
+                            .child("status")
+                            .setValue("No status yet");
+
+                    that.setOrdering(pullId, new ArrayList<>());
                 }
             }
             @Override

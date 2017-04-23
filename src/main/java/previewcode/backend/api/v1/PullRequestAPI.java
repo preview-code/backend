@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import previewcode.backend.DTO.Ordering;
 import previewcode.backend.DTO.PRbody;
 import previewcode.backend.DTO.PrNumber;
+import previewcode.backend.DTO.PullRequestIdentifier;
 import previewcode.backend.DTO.StatusBody;
 import previewcode.backend.services.FirebaseService;
 import previewcode.backend.services.GithubService;
@@ -44,7 +45,7 @@ public class PullRequestAPI {
             throw new IllegalArgumentException("Title or body is empty");
         }
         PrNumber number = githubService.createPullRequest(owner, name, body);
-        firebaseService.setOrdering(owner, name, number, body.ordering);
+        firebaseService.setOrdering(new PullRequestIdentifier(owner, name, number.number), body.ordering);
         StatusBody statusBody = new StatusBody();
         statusBody.status = "No reviewer assigned";
         firebaseService.setStatus(owner, name,
@@ -71,34 +72,9 @@ public class PullRequestAPI {
     @Consumes(MediaType.APPLICATION_JSON)
     public void updateOrdering(@PathParam("owner") String owner,
                              @PathParam("name") String name,
-                             @PathParam("number") PrNumber number, List<Ordering> body) {
-        if(githubService.isOwner(owner, name,  number.number)) {
-            firebaseService.setOrdering(owner, name, number, body);
-        }
-    }
-
-     /**
-     * Checks if there is information stored of this pull request
-     *    If not, add the data via a default template
-     *
-     * @param owner
-     *          The owner of the repository on which the pull request is created
-     * @param name
-     *          The owner of the repository on which the pull request is created
-     * @param number
-     *          The number of the pull request
-     * @param ordering
-     *          The ordering of the pull request
-     */
-    @POST
-    @Path("{branch}/check")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public void isInformationPresent(@PathParam("owner") String owner,
-                                     @PathParam("name") String name, @PathParam("branch") String number,
-                                     Ordering ordering) {
-        if (!ordering.diff.isEmpty()) {
-            firebaseService.addDefaultData(owner.toLowerCase(), name.toLowerCase(),
-                    number, ordering);
+                             @PathParam("number") Integer number, List<Ordering> body) {
+        if(githubService.isOwner(owner, name,  number)) {
+            firebaseService.setOrdering(new PullRequestIdentifier(owner, name, number), body);
         }
     }
 }
