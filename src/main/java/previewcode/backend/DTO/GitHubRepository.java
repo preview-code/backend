@@ -8,9 +8,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class GitHubRepository {
 
     public final String fullName;
+    public final GitHubUser owner;
+    public final String name;
 
     @JsonCreator
-    public GitHubRepository(@JsonProperty("full_name") String name) {
-        this.fullName = name;
+    public GitHubRepository(
+            @JsonProperty("full_name") String fullName,
+            @JsonProperty("owner") GitHubUser owner,
+            @JsonProperty("name") String name) {
+        this.fullName = fullName;
+        this.owner = owner;
+        this.name = name;
     }
 }
