@@ -1,13 +1,5 @@
 package previewcode.backend.services;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
-
-import previewcode.backend.DTO.Approve;
-import previewcode.backend.DTO.Ordering;
-import previewcode.backend.DTO.PrNumber;
-
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -18,7 +10,14 @@ import com.google.firebase.database.Transaction.Handler;
 import com.google.firebase.database.Transaction.Result;
 import com.google.firebase.database.ValueEventListener;
 import com.google.inject.Singleton;
+import previewcode.backend.DTO.Approve;
+import previewcode.backend.DTO.Ordering;
+import previewcode.backend.DTO.PrNumber;
 import previewcode.backend.DTO.Track;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 /**
  * An abstract class that connects with firebase
@@ -172,7 +171,7 @@ public class FirebaseService {
     }
 
     public void addTracker(Track data) {
-        DatabaseReference path = this.ref.child("users").child(data.userID).child("tracker").child(data.time);
+        DatabaseReference path = this.ref.child("tracking").child(data.time);
         path.child("new").setValue(data.newPath);
         path.child("old").setValue(data.oldPath);
     }
