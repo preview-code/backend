@@ -1,6 +1,7 @@
 package previewcode.backend.api.v1;
 
 import com.google.inject.Inject;
+import org.jboss.resteasy.annotations.Suspend;
 import previewcode.backend.DTO.GitHubPullRequest;
 import previewcode.backend.DTO.Ordering;
 import previewcode.backend.DTO.OrderingStatus;
@@ -11,14 +12,16 @@ import previewcode.backend.DTO.StatusBody;
 import previewcode.backend.services.FirebaseService;
 import previewcode.backend.services.GithubService;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.*;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Path("{owner}/{name}/pulls/")
 public class PullRequestAPI {
@@ -73,12 +76,26 @@ public class PullRequestAPI {
     @POST
     @Path("{number}/ordering")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void updateOrdering(@PathParam("owner") String owner,
-                             @PathParam("name") String name,
-                             @PathParam("number") Integer number, List<Ordering> body) throws IOException {
+    public void updateOrdering(
+            @Suspended AsyncResponse response,
+            @PathParam("owner") String owner,
+            @PathParam("name") String name,
+            @PathParam("number") Integer number, List<Ordering> body) throws IOException {
+        response.setTimeout(10, TimeUnit.SECONDS);
+
         if(githubService.isOwner(owner, name,  number)) {
-            firebaseService.setOrdering(new PullRequestIdentifier(owner, name, number), body);
-            updateOrderingStatus(owner, name, number);
+            CompletableFuture<Void> future = firebaseService.setOrdering(new PullRequestIdentifier(owner, name, number), body);
+            future.thenApply(v -> {
+                try {
+                    updateOrderingStatus(owner, name, number);
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e.getMessage(), e);
+                }
+                return response.resume(Response.ok().build());
+            });
+
+        } else {
+            response.resume(new NotAuthorizedException("Only the owner of a pull request can edit it's ordering"));
         }
     }
 

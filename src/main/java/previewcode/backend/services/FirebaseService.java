@@ -11,6 +11,7 @@ import previewcode.backend.DTO.Track;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 /**
@@ -26,7 +27,7 @@ public class FirebaseService {
     /**
      * Recursion count for the transaction
      */
-    private static final int RECURSION_COUNT = 5;
+    private static final int RETRY_COUNT = 5;
 
     /**
      * Making a connection with the database
@@ -84,7 +85,12 @@ public class FirebaseService {
      * @param handler
      *                  The function that is executed in order to do the transaction
      */
-    private void doTransaction(final DatabaseReference path, final Function<MutableData, Transaction.Result> handler, int recursion) {
+    private CompletableFuture<DataSnapshot> doTransaction(
+            final DatabaseReference path,
+            final Function<MutableData, Transaction.Result> handler,
+            int retries) {
+        final CompletableFuture<DataSnapshot> future = new CompletableFuture<>();
+
         final DatabaseReference infoRef = this.ref.child(".info").child("connected");
 
         infoRef.addValueEventListener(new ValueEventListener() {
@@ -100,11 +106,13 @@ public class FirebaseService {
                         public void onComplete(DatabaseError error, boolean isCommited, DataSnapshot currentData) {
                             infoRef.removeEventListener(that);
                             if (error != null) {
-                                if (recursion > 0) {
-                                    FirebaseService.this.doTransaction(path, handler, recursion - 1);
+                                if (retries > 0) {
+                                    FirebaseService.this.doTransaction(path, handler, retries - 1);
                                 } else {
-                                    throw new RuntimeException(error.toException());
+                                    future.completeExceptionally(new RuntimeException(error.toException()));
                                 }
+                            } else {
+                                future.complete(currentData);
                             }
                         }
 
@@ -118,9 +126,11 @@ public class FirebaseService {
 
             @Override
             public void onCancelled(DatabaseError error) {
-                throw new RuntimeException(error.toException());
+                future.completeExceptionally(new RuntimeException(error.toException()));
             }
         });
+
+        return future;
     }
 
     /**
@@ -128,7 +138,7 @@ public class FirebaseService {
      *
      * @param pullId The identifier object for the pull request
      */
-    public void setOrdering(final PullRequestIdentifier pullId, List<Ordering> orderings) {
+    public CompletableFuture<Void> setOrdering(final PullRequestIdentifier pullId, List<Ordering> orderings) {
 
         DatabaseReference path = this.ref
                 .child(pullId.owner)
@@ -136,11 +146,11 @@ public class FirebaseService {
                 .child(pullId.number.toString())
                 .child("ordering");
 
-        this.doTransaction(path, data -> {
+        return this.doTransaction(path, data -> {
             data.child("lastChanged").setValue(System.currentTimeMillis());
             data.child("groups").setValue(orderings);
             return Transaction.success(data);
-        }, RECURSION_COUNT);
+        }, RETRY_COUNT).thenAccept(d -> {});
     }
 
     /**
@@ -183,8 +193,6 @@ public class FirebaseService {
                             .child(pullId.number.toString())
                             .child("status")
                             .setValue("No status yet");
-
-                    that.setOrdering(pullId, new ArrayList<>());
                 }
             }
             @Override
