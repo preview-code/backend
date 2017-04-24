@@ -93,7 +93,7 @@ public class GithubService {
             PrNumber number = new PrNumber(pr.getNumber());
             if (body.metadata) {
                 pr.setBody(body.description + "\n\n---\n" +
-                        "Review this pull request [on Preview Code](https://preview-code.com/projects/" +
+                        "Review this pull request [on Preview Code](https://preview-code.com/" +
                         owner + "/" + name + "/pulls/" + number.number + "/overview).");
             }
             return number;
