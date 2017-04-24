@@ -11,4 +11,7 @@ public class PRComment {
      */
     public String body;
 
+    public PRComment(String body) {
+        this.body = body;
+    }
 }
