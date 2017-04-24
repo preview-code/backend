@@ -18,9 +18,10 @@ import previewcode.backend.api.v1.AssigneesAPI;
 import previewcode.backend.api.v1.CommentsAPI;
 import previewcode.backend.api.v1.PullRequestAPI;
 import previewcode.backend.api.v1.StatusAPI;
-import previewcode.backend.api.v1.WebhookAPI;
 import previewcode.backend.api.v1.TrackerAPI;
+import previewcode.backend.api.v1.WebhookAPI;
 
+import javax.crypto.spec.SecretKeySpec;
 import javax.ws.rs.NotAuthorizedException;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -86,6 +87,19 @@ public class MainModule extends ServletModule {
         KeyFactory kf = KeyFactory.getInstance("RSA");
         return Algorithm.RSA256((RSAPrivateKey) kf.generatePrivate(keySpec));
     }
+
+    private static SecretKeySpec GITHUB_WEBHOOK_SECRET;
+    @Provides
+    @Named("github.webhook.secret")
+    public SecretKeySpec provideGitHubWebhookSecret() throws IOException {
+        if (GITHUB_WEBHOOK_SECRET == null) {
+            URL url = Resources.getResource("github-webhook-secret.txt");
+            final String secret = Resources.toString(url, Charsets.UTF_8);
+            GITHUB_WEBHOOK_SECRET = new SecretKeySpec(secret.getBytes(), "HmacSHA1");
+        }
+        return GITHUB_WEBHOOK_SECRET;
+    }
+
 
     /**
      * Method to declare Named key "github.user" to obtain the current GitHub instance
