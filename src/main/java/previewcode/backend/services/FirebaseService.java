@@ -1,22 +1,17 @@
 package previewcode.backend.services;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.MutableData;
-import com.google.firebase.database.Transaction;
+import com.google.firebase.database.*;
 import com.google.firebase.database.Transaction.Handler;
 import com.google.firebase.database.Transaction.Result;
-import com.google.firebase.database.ValueEventListener;
 import com.google.inject.Singleton;
 import previewcode.backend.DTO.Approve;
 import previewcode.backend.DTO.Ordering;
-import previewcode.backend.DTO.PrNumber;
+import previewcode.backend.DTO.PullRequestIdentifier;
 import previewcode.backend.DTO.Track;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 /**
@@ -32,7 +27,7 @@ public class FirebaseService {
     /**
      * Recursion count for the transaction
      */
-    private static final int RECURSION_COUNT = 5;
+    private static final int RETRY_COUNT = 5;
 
     /**
      * Making a connection with the database
@@ -90,7 +85,12 @@ public class FirebaseService {
      * @param handler
      *                  The function that is executed in order to do the transaction
      */
-    private void doTransaction(final DatabaseReference path, final Function<MutableData, Transaction.Result> handler, int recursion) {
+    private CompletableFuture<DataSnapshot> doTransaction(
+            final DatabaseReference path,
+            final Function<MutableData, Transaction.Result> handler,
+            int retries) {
+        final CompletableFuture<DataSnapshot> future = new CompletableFuture<>();
+
         final DatabaseReference infoRef = this.ref.child(".info").child("connected");
 
         infoRef.addValueEventListener(new ValueEventListener() {
@@ -106,11 +106,13 @@ public class FirebaseService {
                         public void onComplete(DatabaseError error, boolean isCommited, DataSnapshot currentData) {
                             infoRef.removeEventListener(that);
                             if (error != null) {
-                                if (recursion > 0) {
-                                    FirebaseService.this.doTransaction(path, handler, recursion - 1);
+                                if (retries > 0) {
+                                    FirebaseService.this.doTransaction(path, handler, retries - 1);
                                 } else {
-                                    throw new RuntimeException(error.toException());
+                                    future.completeExceptionally(new RuntimeException(error.toException()));
                                 }
+                            } else {
+                                future.complete(currentData);
                             }
                         }
 
@@ -124,33 +126,31 @@ public class FirebaseService {
 
             @Override
             public void onCancelled(DatabaseError error) {
-                throw new RuntimeException(error.toException());
+                future.completeExceptionally(new RuntimeException(error.toException()));
             }
         });
+
+        return future;
     }
 
     /**
      * Sets the ordering of a pull request on firebase
      *
-     * @param owner
-     *            The owner of the repository where the pull request is located
-     * @param name
-     *            The name of the repository where the pull request is located
-     * @param number
-     *            The number of the pull request
-     * @param orderings
-     *            The ordering of the pull request
+     * @param pullId The identifier object for the pull request
      */
-    public void setOrdering(final String owner, final String name, final PrNumber number,
-                            List<Ordering> orderings) {
+    public CompletableFuture<Void> setOrdering(final PullRequestIdentifier pullId, List<Ordering> orderings) {
 
-        DatabaseReference path = this.ref.child(owner).child(name).child("pulls").child(number.toString()).child("ordering");
+        DatabaseReference path = this.ref
+                .child(pullId.owner)
+                .child(pullId.name).child("pulls")
+                .child(pullId.number.toString())
+                .child("ordering");
 
-        this.doTransaction(path, data -> {
+        return this.doTransaction(path, data -> {
             data.child("lastChanged").setValue(System.currentTimeMillis());
             data.child("groups").setValue(orderings);
             return Transaction.success(data);
-        }, RECURSION_COUNT);
+        }, RETRY_COUNT).thenAccept(d -> {});
     }
 
     /**
@@ -179,27 +179,20 @@ public class FirebaseService {
     /**
      * Adds default information about a pull request, as there is no data present in our service.
      *
-     * @param owner
-     *            The owner of the repository where the pull request is located
-     * @param name
-     *            The name of the repository where the pull request is located
-     * @param number
-     *            The number of the pull request
-     * @param ordering
-     *            The ordering of the pull request
+     * @param pullId The identifier object for the pull request
      */
-    public void addDefaultData(String owner, String name, String number, Ordering ordering) {
+    public void addDefaultData(PullRequestIdentifier pullId) {
         FirebaseService that = this;
         this.ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
-                if (!snapshot.hasChild(owner + "/" + name + "/pulls/" + number + "/status")) {
-                    that.ref.child(owner).child(name).child("pulls").child(number).child("status").setValue("No status yet");
-                    List<Ordering> orderings = new ArrayList<Ordering>();
-                    orderings.add(ordering);
-                    PrNumber prNumber = new PrNumber();
-                    prNumber.number = Integer.parseInt(number);
-                    that.setOrdering(owner, name, prNumber, orderings);
+                if (!snapshot.hasChild(pullId.owner + "/" + pullId.name + "/pulls/" + pullId.number + "/status")) {
+                    that.ref.child(pullId.owner)
+                            .child(pullId.name)
+                            .child("pulls")
+                            .child(pullId.number.toString())
+                            .child("status")
+                            .setValue("No status yet");
                 }
             }
             @Override

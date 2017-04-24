@@ -1,22 +1,17 @@
 package previewcode.backend.api.v1;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import org.apache.commons.codec.binary.Hex;
+import previewcode.backend.DTO.GitHubPullRequest;
+import previewcode.backend.DTO.GitHubRepository;
+import previewcode.backend.DTO.OrderingStatus;
 import previewcode.backend.DTO.PRComment;
-import previewcode.backend.DTO.WebhookPullRequest;
-import previewcode.backend.DTO.WebhookRepo;
+import previewcode.backend.DTO.PullRequestIdentifier;
+import previewcode.backend.services.FirebaseService;
+import previewcode.backend.services.GithubService;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -25,54 +20,47 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Calendar;
-import java.util.Date;
 
 
 @Path("webhook/")
 public class WebhookAPI {
 
-    @Inject
-    private Algorithm jwtSigningAlgorithm;
-
-    @Inject
-    @Named("github.webhook.secret")
-    private SecretKeySpec webhookSecret;
-
-    private static final String INTEGRATION_ID = "2150";
-    private static final String TEST_INTEGRATION_ID = "2152";
-    private static final RequestBody EMPTY_REQUEST_BODY = RequestBody.create(null, new byte[]{});
-    private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
     private static final ObjectMapper mapper = new ObjectMapper();
 
     private static final String GITHUB_WEBHOOK_EVENT_HEADER = "X-GitHub-Event";
-    private static final String GITHUB_WEBHOOK_SECRET_HEADER = "X-Hub-Signature";
 
     private static final Response BAD_REQUEST = Response.status(Response.Status.BAD_REQUEST).build();
-    private static final Response UNAUTHORIZED = Response.status(Response.Status.UNAUTHORIZED).build();
     private static final Response OK = Response.ok().build();
 
-    @POST
-    public Response onWebhookPost(String postData,
-                                  @HeaderParam(GITHUB_WEBHOOK_EVENT_HEADER) String eventType,
-                                  @HeaderParam(GITHUB_WEBHOOK_SECRET_HEADER) String hash)
-            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException {
+    @Inject
+    private GithubService githubService;
 
-        // Check the GitHub secret
-        final Mac mac = Mac.getInstance("HmacSHA1");
-        mac.init(webhookSecret);
-        final String expectedHash = Hex.encodeHexString(mac.doFinal(postData.getBytes()));
-        if (!hash.equals("sha1="+ expectedHash)) {
-            return UNAUTHORIZED;
-        }
+    @Inject
+    private FirebaseService firebaseService;
+
+    @POST
+    public Response onWebhookPost(String postData, @HeaderParam(GITHUB_WEBHOOK_EVENT_HEADER) String eventType)
+            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException {
 
         // Respond to different webhook events
         if (eventType.equals("pull_request")) {
             JsonNode body = mapper.readTree(postData);
-            String installationToken = getGitHubInstallationToken(body);
+            String action = body.get("action").asText();
 
-            if (body.get("action").asText().equals("opened")) {
-                placePullRequestComment(body, installationToken);
+            if (action.equals("opened")) {
+                Pair<GitHubRepository, GitHubPullRequest> repoAndPull = readRepoAndPullFromWebhook(body);
+                PRComment comment = new PRComment(constructMarkdownComment(repoAndPull.first, repoAndPull.second));
+                OrderingStatus pendingStatus = new OrderingStatus(repoAndPull.second, repoAndPull.first);
+
+                firebaseService.addDefaultData(new PullRequestIdentifier(repoAndPull.first, repoAndPull.second));
+
+                githubService.placePullRequestComment(repoAndPull.second, comment);
+                githubService.setOrderingStatus(repoAndPull.second, pendingStatus);
+
+            } else if (action.equals("synchronize")) {
+                Pair<GitHubRepository, GitHubPullRequest> repoAndPull = readRepoAndPullFromWebhook(body);
+                OrderingStatus pendingStatus = new OrderingStatus(repoAndPull.second, repoAndPull.first);
+                githubService.setOrderingStatus(repoAndPull.second, pendingStatus);
             }
         } else if (eventType.equals("pull_request_review")) {
             // Respond to a review event
@@ -87,51 +75,26 @@ public class WebhookAPI {
         return OK;
     }
 
-    private void placePullRequestComment(JsonNode body, String token) throws IOException {
-        WebhookRepo repo = mapper.treeToValue(body.get("repository"), WebhookRepo.class);
-        WebhookPullRequest pullRequest = mapper.treeToValue(body.get("pull_request"), WebhookPullRequest.class);
-
-        PRComment comment = new PRComment(constructMarkdownComment(repo, pullRequest));
-        RequestBody requestBody = RequestBody.create(MediaType.parse("application/json"), mapper.writeValueAsString(comment));
-
-        Request postComment = new Request.Builder()
-                .url(pullRequest.links.comments)
-                .addHeader("Accept", "application/vnd.github.machine-man-preview+json")
-                .addHeader("Authorization", "token " + token)
-                .post(requestBody)
-                .build();
-
-        OK_HTTP_CLIENT.newCall(postComment).execute();
-    }
-
-    private String constructMarkdownComment(WebhookRepo repo, WebhookPullRequest pullRequest) {
-        return "This pull request can be reviewed with [on Preview Code](https://preview-code.com/projects/" + repo.fullName + "/pulls/" + pullRequest.number + ").\n" +
+    private String constructMarkdownComment(GitHubRepository repo, GitHubPullRequest pullRequest) {
+        return "This pull request can be reviewed with [on Preview Code](" + pullRequest.previewCodeUrl(repo) + ").\n" +
                "To speed up the review process and get better feedback on your changes, " +
-               "please **[order your changes](https://preview-code.com/" + repo.fullName + "/pulls/" + pullRequest.number + ").**\n";
+               "please **[order your changes](" + pullRequest.previewCodeUrl(repo) + ").**\n";
     }
 
-    private String getGitHubInstallationToken(JsonNode body) throws IOException {
-        String installationId = body.get("installation").get("id").asText();
+    private Pair<GitHubRepository, GitHubPullRequest> readRepoAndPullFromWebhook(JsonNode body) throws JsonProcessingException {
+        GitHubRepository repo = mapper.treeToValue(body.get("repository"), GitHubRepository.class);
+        GitHubPullRequest pullRequest = mapper.treeToValue(body.get("pull_request"), GitHubPullRequest.class);
+        return new Pair<>(repo, pullRequest);
+    }
 
-        Calendar calendar = Calendar.getInstance();
-        Date now = calendar.getTime();
-        calendar.add(Calendar.MINUTE, 10);
-        Date exp = calendar.getTime();
+    class Pair<A, B> {
+        public final A first;
+        public final B second;
 
-        String token = JWT.create()
-                .withIssuedAt(now)
-                .withExpiresAt(exp)
-                .withIssuer(TEST_INTEGRATION_ID)
-                .sign(jwtSigningAlgorithm);
-
-        Request request = new Request.Builder()
-                .url("https://api.github.com/installations/" + installationId + "/access_tokens")
-                .addHeader("Accept", "application/vnd.github.machine-man-preview+json")
-                .addHeader("Authorization", "Bearer " + token)
-                .post(EMPTY_REQUEST_BODY)
-                .build();
-        okhttp3.Response response = OK_HTTP_CLIENT.newCall(request).execute();
-        return mapper.readValue(response.body().string(), JsonNode.class)
-                .get("token").asText();
+        public Pair(A first, B second) {
+            this.first = first;
+            this.second = second;
+        }
     }
 }
+

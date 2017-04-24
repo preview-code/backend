@@ -5,12 +5,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
-public class WebhookRepo {
-
-    public final String fullName;
+public class GitHubUser {
+    public final Integer id;
+    public final String login;
 
     @JsonCreator
-    public WebhookRepo(@JsonProperty("full_name") String name) {
-        this.fullName = name;
+    public GitHubUser(@JsonProperty("id") Integer id, @JsonProperty("login") String login) {
+        this.id = id;
+        this.login = login;
     }
 }

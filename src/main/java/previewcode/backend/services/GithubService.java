@@ -1,20 +1,36 @@
 package previewcode.backend.services;
 
-import java.io.IOException;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import org.kohsuke.github.GHIssueComment;
+import org.kohsuke.github.GHMyself;
+import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHPullRequestReviewComment;
+import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GitHub;
+import previewcode.backend.DTO.GitHubPullRequest;
+import previewcode.backend.DTO.GitHubStatus;
+import previewcode.backend.DTO.OrderingStatus;
 import previewcode.backend.DTO.PRComment;
 import previewcode.backend.DTO.PRLineComment;
 import previewcode.backend.DTO.PRbody;
 import previewcode.backend.DTO.PrNumber;
+import previewcode.backend.DTO.PullRequestIdentifier;
 
-import org.kohsuke.github.*;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * An abstract class that connects with github
@@ -22,6 +38,14 @@ import org.kohsuke.github.*;
  */
 @Singleton
 public class GithubService {
+
+    private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
+    private static final ObjectMapper mapper = new ObjectMapper();
+
+
+    @Inject
+    @Named("github.token.builder")
+    private TokenBuilder tokenBuilder;
 
     /**
      * The GitHub provider.
@@ -61,15 +85,15 @@ public class GithubService {
      */
     public PrNumber createPullRequest(String owner, String name, PRbody body) {
         try {
-            PrNumber number = new PrNumber();
+
             GHRepository repo = this.githubProvider.get().getRepository(
                     owner.toLowerCase() + "/" + name.toLowerCase());
             GHPullRequest pr = repo.createPullRequest(body.title, body.head,
                     body.base, body.description);
-            number.number = pr.getNumber();
+            PrNumber number = new PrNumber(pr.getNumber());
             if (body.metadata) {
                 pr.setBody(body.description + "\n\n---\n" +
-                        "Review this pull request [on Preview Code](https://preview-code.com/projects/" +
+                        "Review this pull request [on Preview Code](https://preview-code.com/" +
                         owner + "/" + name + "/pulls/" + number.number + "/overview).");
             }
             return number;
@@ -162,4 +186,82 @@ public class GithubService {
         }
 
     }
+
+    /**
+     * GET a pull request from GitHub.
+     *
+     * @param identifier The identifier object containing owner, name and number of the pull to fetch.
+     * @throws IOException when the request fails
+     */
+    public GitHubPullRequest fetchPullRequest(PullRequestIdentifier identifier) throws IOException {
+        Request getPull = tokenBuilder.addToken(new Request.Builder())
+                .url(identifier.toGitHubURL())
+                .get()
+                .build();
+        Response response = OK_HTTP_CLIENT.newCall(getPull).execute();
+        return fromJson(response, GitHubPullRequest.class);
+    }
+
+
+    /**
+     * Sends a request to GitHub to place a comment at the given pull request.
+     *
+     * @param pullRequest The PR to place the comment on
+     * @param comment The comment to place
+     * @throws IOException when the request fails
+     */
+    public void placePullRequestComment(GitHubPullRequest pullRequest, PRComment comment) throws IOException {
+        Request postComment = tokenBuilder.addToken(new Request.Builder())
+                .url(pullRequest.links.comments)
+                .post(toJson(comment))
+                .build();
+
+        OK_HTTP_CLIENT.newCall(postComment).execute();
+    }
+
+    /**
+     * Send a request to GitHub to set the status on the `ordering` context.
+     * @param pullRequest The pull request to set the status on.
+     * @param status The status to set.
+     * @throws IOException when the request fails
+     */
+    public void setOrderingStatus(GitHubPullRequest pullRequest, OrderingStatus status) throws IOException {
+        Request createStatus = tokenBuilder.addToken(new Request.Builder())
+                .url(pullRequest.links.statuses)
+                .post(toJson(status))
+                .build();
+
+        OK_HTTP_CLIENT.newCall(createStatus).execute();
+    }
+
+    public Optional<OrderingStatus> getOrderingStatus(GitHubPullRequest pullRequest) throws IOException {
+        Request getStatus = tokenBuilder.addToken(new Request.Builder())
+                .url(pullRequest.links.statuses)
+                .get()
+                .build();
+
+        Response response = OK_HTTP_CLIENT.newCall(getStatus).execute();
+        return fromJson(response, new TypeReference<List<GitHubStatus>>(){}).stream()
+                .map(OrderingStatus::fromGitHubStatus)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .findFirst();
+    }
+
+    private RequestBody toJson(Object value) throws JsonProcessingException {
+        return RequestBody.create(MediaType.parse("application/json"), mapper.writeValueAsString(value));
+    }
+
+    private <T> T fromJson(Response response, TypeReference<T> typeReference) throws IOException {
+        return mapper.readValue(response.body().string(), typeReference);
+    }
+
+    private <T> T fromJson(Response response, Class<T> destClass) throws IOException {
+        return mapper.readValue(response.body().string(), destClass);
+    }
+
+    public interface TokenBuilder {
+        Request.Builder addToken(Request.Builder builder);
+    }
+
 }
