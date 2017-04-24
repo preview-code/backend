@@ -46,6 +46,6 @@ public class WebhookPullRequest {
                 "[//]: # (PREVIEW_CODE_BEGIN_SIGNATURE)\n" +
                 "\n" +
                 "---\n" +
-                "Review this pull request [on Preview Code](https://preview-code.com/projects/" + repo.fullName + "/pulls/" + this.number + "/overview).";
+                "Review this pull request [on Preview Code](https://preview-code.com/" + repo.fullName + "/pulls/" + this.number + ").";
     }
 }
