@@ -1,0 +1,17 @@
+Configuration:
+  status: warn
+  name: TestConfig
+  thresholdFilter:
+    level: debug
+  appenders:
+    Console:
+      name: STDOUT
+      PatternLayout:
+        Pattern: "%highlight{> [%p] %d{HH:mm:ss,SSS} %C{1.} [%t] %m%n}{FATAL=red, ERROR=red, WARN=yellow, INFO=green, DEBUG=blue, TRACE=white}"
+
+  Loggers:
+    Root:
+      level: trace
+      AppenderRef:
+        ref: STDOUT
+          

@@ -13,6 +13,8 @@ import okhttp3.RequestBody;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 import org.kohsuke.github.GitHub;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import previewcode.backend.services.GithubService;
 
 import javax.crypto.Mac;
@@ -38,6 +40,7 @@ import java.util.Date;
 @PreMatching
 public class GitHubAccessTokenFilter implements ContainerRequestFilter {
 
+    private static final Logger logger = LoggerFactory.getLogger(GitHubAccessTokenFilter.class);
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
 
@@ -89,6 +92,7 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
             try {
                 verifyGitHubWebhookSecret(context, requestBody);
             } catch (Exception e) {
+                logger.warn("Could not verify GitHub webhook call:", e);
                 context.abortWith(UNAUTHORIZED);
                 return;
             }
@@ -195,6 +199,7 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
                 GithubService.TokenBuilder builder = (Request.Builder b) -> b.header("Authorization", "token " + token);
                 context.setProperty(Key.get(GithubService.TokenBuilder.class, Names.named(CURRENT_TOKEN_BUILDER)).toString(), builder);
             } catch (final NotAuthorizedException e) {
+                logger.warn("Could not connect to GitHub on behalf of user with OAuth:", e);
                 context.abortWith(UNAUTHORIZED);
             }
         }
