@@ -85,12 +85,12 @@ public class GithubService {
      */
     public PrNumber createPullRequest(String owner, String name, PRbody body) {
         try {
-            PrNumber number = new PrNumber();
+
             GHRepository repo = this.githubProvider.get().getRepository(
                     owner.toLowerCase() + "/" + name.toLowerCase());
             GHPullRequest pr = repo.createPullRequest(body.title, body.head,
                     body.base, body.description);
-            number.number = pr.getNumber();
+            PrNumber number = new PrNumber(pr.getNumber());
             if (body.metadata) {
                 pr.setBody(body.description + "\n\n---\n" +
                         "Review this pull request [on Preview Code](https://preview-code.com/projects/" +

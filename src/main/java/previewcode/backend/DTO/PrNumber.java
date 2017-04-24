@@ -1,5 +1,8 @@
 package previewcode.backend.DTO;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * The data of a newly made pull request
  *
@@ -8,16 +11,16 @@ public class PrNumber {
     /**
      * The number of the newly made pull request
      */
-    public int number;
+    public final Integer number;
 
-    public static PrNumber fromString(String string) {
-        PrNumber number = new PrNumber();
-        number.number = Integer.parseInt(string);
-        return number;
+    @JsonCreator
+    public PrNumber(@JsonProperty("number") Integer number) {
+        this.number = number;
     }
 
+
     @Override
-    public String toString(){
+    public String toString() {
         return Integer.toString(number);
-     }
+    }
 }
