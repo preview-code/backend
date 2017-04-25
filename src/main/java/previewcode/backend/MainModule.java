@@ -2,7 +2,7 @@ package previewcode.backend;
 
 import com.auth0.jwt.algorithms.Algorithm;
 import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
+import com.google.common.io.Files;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.inject.Provides;
@@ -26,10 +26,10 @@ import previewcode.backend.services.GithubService;
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.ws.rs.NotAuthorizedException;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URL;
 import java.security.KeyFactory;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -83,8 +83,8 @@ public class MainModule extends ServletModule {
         try {
             if (RSA_PRIVATE_KEY == null) {
                 logger.info("Loading GitHub Integration RSA key...");
-                URL url = Resources.getResource("integration.test-key.pem");
-                String key = Resources.toString(url, Charsets.UTF_8)
+                File file = new File(System.getenv("INTEGRATION_KEY"));
+                String key = Files.toString(file, Charsets.UTF_8)
                         .replace("-----END PRIVATE KEY-----", "")
                         .replace("-----BEGIN PRIVATE KEY-----", "")
                         .replaceAll("\n", "");
@@ -92,6 +92,9 @@ public class MainModule extends ServletModule {
                 KeyFactory kf = KeyFactory.getInstance("RSA");
                 RSA_PRIVATE_KEY = Algorithm.RSA256((RSAPrivateKey) kf.generatePrivate(keySpec));
             }
+        } catch (NullPointerException e){
+            logger.error("Environmental variable for GitHub Integration RSA not set");
+            System.exit(-1);
         } catch (Exception e) {
             logger.error("Failed to load GitHub Integration RSA key:", e);
             System.exit(-1);
@@ -100,22 +103,46 @@ public class MainModule extends ServletModule {
     }
 
     private static SecretKeySpec GITHUB_WEBHOOK_SECRET;
+
     @Provides
     @Named("github.webhook.secret")
     public SecretKeySpec provideGitHubWebhookSecret() {
         if (GITHUB_WEBHOOK_SECRET == null) {
             try {
                 logger.info("Loading GitHub Integration Webhook key...");
-                URL url = Resources.getResource("github-webhook-test-secret.txt");
-                final String secret = Resources.toString(url, Charsets.UTF_8);
+                File file = new File(System.getenv("WEBHOOK_SECRET"));
+                final String secret = Files.toString(file, Charsets.UTF_8);
                 GITHUB_WEBHOOK_SECRET = new SecretKeySpec(secret.getBytes(), "HmacSHA1");
             } catch (IOException e) {
                 logger.error("Failed to load GitHub Integration webhook secret:", e);
+                System.exit(-1);
+            } catch (NullPointerException e){
+                logger.error("Environmental variable for GitHub Integration webhook secret not set");
                 System.exit(-1);
             }
         }
         return GITHUB_WEBHOOK_SECRET;
     }
+
+    private static String INTEGRATION_ID;
+
+    @Provides
+    @Named("integration.id")
+    public String provideIntegrationId() {
+        try {
+            logger.info("Loading GitHub Integration ID...");
+            INTEGRATION_ID = Files.toString(new File(System.getenv("INTEGRATION_ID")), Charsets.UTF_8);
+        } catch (IOException e) {
+            logger.error("Failed to load GitHub Integration ID:", e);
+            System.exit(-1);
+        } catch (NullPointerException e){
+            logger.error("Environmental variable for the GitHub Integration ID not set");
+            System.exit(-1);
+        }
+        return INTEGRATION_ID;
+    }
+
+
 
 
     /**

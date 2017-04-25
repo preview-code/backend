@@ -53,9 +53,6 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
     private static final String GITHUB_WEBHOOK_USER_AGENT_PREFIX = "GitHub-Hookshot/";
     private static final String GITHUB_WEBHOOK_SECRET_HEADER = "X-Hub-Signature";
 
-    private static final String INTEGRATION_ID = "2150";
-    private static final String TEST_INTEGRATION_ID = "2152";
-
     private static final Response UNAUTHORIZED = Response.status(Response.Status.UNAUTHORIZED).build();
     private static final RequestBody EMPTY_REQUEST_BODY = RequestBody.create(null, new byte[]{});
 
@@ -65,6 +62,11 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
     @Inject
     @Named("github.webhook.secret")
     private SecretKeySpec webhookSecret;
+
+    @Inject
+    @Named("integration.id")
+    private String INTEGRATION_ID;
+
 
     @Override
     public void filter(ContainerRequestContext containerRequestContext) throws IOException {
@@ -92,7 +94,6 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
             try {
                 verifyGitHubWebhookSecret(context, requestBody);
             } catch (Exception e) {
-                logger.warn("Could not verify GitHub webhook call:", e);
                 context.abortWith(UNAUTHORIZED);
                 return;
             }
@@ -150,6 +151,7 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
         JsonNode body = mapper.readTree(requestBody);
         String installationId = body.get("installation").get("id").asText();
 
+
         Calendar calendar = Calendar.getInstance();
         Date now = calendar.getTime();
         calendar.add(Calendar.MINUTE, 10);
@@ -158,7 +160,7 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
         String token = JWT.create()
                 .withIssuedAt(now)
                 .withExpiresAt(exp)
-                .withIssuer(TEST_INTEGRATION_ID)
+                .withIssuer(INTEGRATION_ID)
                 .sign(jwtSigningAlgorithm);
 
         Request request = new Request.Builder()
