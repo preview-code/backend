@@ -4,6 +4,8 @@ import com.google.firebase.database.*;
 import com.google.firebase.database.Transaction.Handler;
 import com.google.firebase.database.Transaction.Result;
 import com.google.inject.Singleton;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import previewcode.backend.DTO.Approve;
 import previewcode.backend.DTO.Ordering;
 import previewcode.backend.DTO.PullRequestIdentifier;
@@ -19,6 +21,8 @@ import java.util.function.Function;
  */
 @Singleton
 public class FirebaseService {
+
+    private static final Logger logger = LoggerFactory.getLogger(FirebaseService.class);
     /**
      * The reference to the database
      */
@@ -33,7 +37,7 @@ public class FirebaseService {
      * Making a connection with the database
      */
     public FirebaseService() {
-
+        logger.debug("Instantiating Firebase connection");
         ref = FirebaseDatabase.getInstance().getReference();
     }
 
@@ -90,9 +94,9 @@ public class FirebaseService {
             final Function<MutableData, Transaction.Result> handler,
             int retries) {
         final CompletableFuture<DataSnapshot> future = new CompletableFuture<>();
-
         final DatabaseReference infoRef = this.ref.child(".info").child("connected");
 
+        logger.debug("Initializing Firebase transaction");
         infoRef.addValueEventListener(new ValueEventListener() {
 
             final ValueEventListener that = this;
@@ -100,6 +104,7 @@ public class FirebaseService {
             @Override
             public void onDataChange(DataSnapshot connected) {
                 if ((Boolean) connected.getValue()) {
+                    logger.debug("Connection with Firebase established");
                     path.runTransaction(new Handler() {
 
                         @Override
@@ -107,17 +112,25 @@ public class FirebaseService {
                             infoRef.removeEventListener(that);
                             if (error != null) {
                                 if (retries > 0) {
+                                    logger.debug("Transaction failed with error");
+                                    logger.debug("  Error code: " + error.getCode());
+                                    logger.debug("  Error message: " + error.getMessage());
+                                    logger.debug("  Error details: " + error.getDetails());
+                                    logger.debug("  " + retries + " retry attempts left");
                                     FirebaseService.this.doTransaction(path, handler, retries - 1);
                                 } else {
+                                    logger.error("Transaction failed: ", error.toException());
                                     future.completeExceptionally(new RuntimeException(error.toException()));
                                 }
                             } else {
+                                logger.debug("Transaction completed successfully");
                                 future.complete(currentData);
                             }
                         }
 
                         @Override
                         public Result doTransaction(MutableData data) {
+                            logger.debug("Performing transaction");
                             return handler.apply(data);
                         }
                     });
@@ -146,6 +159,7 @@ public class FirebaseService {
                 .child(pullId.number.toString())
                 .child("ordering");
 
+        logger.debug("Updating ordering on Firebase");
         return this.doTransaction(path, data -> {
             data.child("lastChanged").setValue(System.currentTimeMillis());
             data.child("groups").setValue(orderings);
