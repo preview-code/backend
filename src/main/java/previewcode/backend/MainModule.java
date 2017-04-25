@@ -12,6 +12,8 @@ import com.google.inject.servlet.ServletModule;
 import org.jboss.resteasy.plugins.guice.ext.JaxrsModule;
 import org.jboss.resteasy.util.Base64;
 import org.kohsuke.github.GitHub;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import previewcode.backend.api.exceptionmapper.IllegalArgumentExceptionMapper;
 import previewcode.backend.api.filter.GitHubAccessTokenFilter;
 import previewcode.backend.api.v1.AssigneesAPI;
@@ -29,9 +31,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 
 /**
@@ -40,6 +40,8 @@ import java.security.spec.PKCS8EncodedKeySpec;
  *
  */
 public class MainModule extends ServletModule {
+
+    private static final Logger logger = LoggerFactory.getLogger(MainModule.class);
 
     /**
      * The method that configures the servlets
@@ -57,6 +59,7 @@ public class MainModule extends ServletModule {
         this.bind(WebhookAPI.class);
 
         try {
+            logger.info("Loading Firebase config...");
             FileInputStream file = new FileInputStream("src/main/resources/firebase-auth.json");
             // Initialize the app with a service account, granting admin privileges
             FirebaseOptions options = new FirebaseOptions.Builder()
@@ -64,39 +67,52 @@ public class MainModule extends ServletModule {
                     .setDatabaseUrl("https://preview-code.firebaseio.com/").build();
             FirebaseApp.initializeApp(options);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            logger.error("Failed to load firebase config", e);
+            System.exit(-1);
         }
     }
 
-    private static String RSA_PRIVATE_KEY;
+    private static Algorithm RSA_PRIVATE_KEY;
 
     /**
      * Provides the signing algorithm to sign JWT keys destined for authenticating
      * with GitHub Integrations.
      */
     @Provides
-    public Algorithm provideJWTSigningAlgo() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        if (RSA_PRIVATE_KEY == null) {
-            URL url = Resources.getResource("integration.test-key.pem");
-            RSA_PRIVATE_KEY = Resources.toString(url, Charsets.UTF_8)
-                    .replace("-----END PRIVATE KEY-----", "")
-                    .replace("-----BEGIN PRIVATE KEY-----", "")
-                    .replaceAll("\n", "");
+    public Algorithm provideJWTSigningAlgo() {
+        try {
+            if (RSA_PRIVATE_KEY == null) {
+                logger.info("Loading GitHub Integration RSA key...");
+                URL url = Resources.getResource("integration.test-key.pem");
+                String key = Resources.toString(url, Charsets.UTF_8)
+                        .replace("-----END PRIVATE KEY-----", "")
+                        .replace("-----BEGIN PRIVATE KEY-----", "")
+                        .replaceAll("\n", "");
+                PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(Base64.decode(key));
+                KeyFactory kf = KeyFactory.getInstance("RSA");
+                RSA_PRIVATE_KEY = Algorithm.RSA256((RSAPrivateKey) kf.generatePrivate(keySpec));
+            }
+        } catch (Exception e) {
+            logger.error("Failed to load GitHub Integration RSA key:", e);
+            System.exit(-1);
         }
-
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(Base64.decode(RSA_PRIVATE_KEY));
-        KeyFactory kf = KeyFactory.getInstance("RSA");
-        return Algorithm.RSA256((RSAPrivateKey) kf.generatePrivate(keySpec));
+        return RSA_PRIVATE_KEY;
     }
 
     private static SecretKeySpec GITHUB_WEBHOOK_SECRET;
     @Provides
     @Named("github.webhook.secret")
-    public SecretKeySpec provideGitHubWebhookSecret() throws IOException {
+    public SecretKeySpec provideGitHubWebhookSecret() {
         if (GITHUB_WEBHOOK_SECRET == null) {
-            URL url = Resources.getResource("github-webhook-test-secret.txt");
-            final String secret = Resources.toString(url, Charsets.UTF_8);
-            GITHUB_WEBHOOK_SECRET = new SecretKeySpec(secret.getBytes(), "HmacSHA1");
+            try {
+                logger.info("Loading GitHub Integration Webhook key...");
+                URL url = Resources.getResource("github-webhook-test-secret.txt");
+                final String secret = Resources.toString(url, Charsets.UTF_8);
+                GITHUB_WEBHOOK_SECRET = new SecretKeySpec(secret.getBytes(), "HmacSHA1");
+            } catch (IOException e) {
+                logger.error("Failed to load GitHub Integration webhook secret:", e);
+                System.exit(-1);
+            }
         }
         return GITHUB_WEBHOOK_SECRET;
     }

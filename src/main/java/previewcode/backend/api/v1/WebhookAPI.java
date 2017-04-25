@@ -3,6 +3,8 @@ package previewcode.backend.api.v1;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import previewcode.backend.DTO.GitHubPullRequest;
 import previewcode.backend.DTO.GitHubRepository;
 import previewcode.backend.DTO.OrderingStatus;
@@ -24,10 +26,11 @@ import java.security.spec.InvalidKeySpecException;
 
 @Path("webhook/")
 public class WebhookAPI {
-
+    private static  final Logger logger = LoggerFactory.getLogger(WebhookAPI.class);
     private static final ObjectMapper mapper = new ObjectMapper();
 
     private static final String GITHUB_WEBHOOK_EVENT_HEADER = "X-GitHub-Event";
+    private static final String GITHUB_WEBHOOK_DELIVERY_HEADER = "X-GitHub-Delivery";
 
     private static final Response BAD_REQUEST = Response.status(Response.Status.BAD_REQUEST).build();
     private static final Response OK = Response.ok().build();
@@ -39,13 +42,19 @@ public class WebhookAPI {
     private FirebaseService firebaseService;
 
     @POST
-    public Response onWebhookPost(String postData, @HeaderParam(GITHUB_WEBHOOK_EVENT_HEADER) String eventType)
+    public Response onWebhookPost(
+            String postData,
+            @HeaderParam(GITHUB_WEBHOOK_EVENT_HEADER) String eventType,
+            @HeaderParam(GITHUB_WEBHOOK_DELIVERY_HEADER) String delivery)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException {
+
+        logger.debug("Receiving Webhook call {" + delivery + "} for event {" + eventType + "}");
 
         // Respond to different webhook events
         if (eventType.equals("pull_request")) {
             JsonNode body = mapper.readTree(postData);
             String action = body.get("action").asText();
+            logger.debug("Handling `"+ action +"` pull request...");
 
             if (action.equals("opened")) {
                 Pair<GitHubRepository, GitHubPullRequest> repoAndPull = readRepoAndPullFromWebhook(body);
@@ -70,6 +79,7 @@ public class WebhookAPI {
             return OK;
         } else {
             // We'll also receive events related to issues which we do not need.
+            logger.debug("Did not recognize Webhook event.");
             return BAD_REQUEST;
         }
         return OK;

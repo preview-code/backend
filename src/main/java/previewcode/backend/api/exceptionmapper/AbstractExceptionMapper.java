@@ -1,11 +1,14 @@
 package previewcode.backend.api.exceptionmapper;
 
-import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import previewcode.backend.api.filter.GitHubAccessTokenFilter;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
+import java.util.UUID;
 
 /**
  * An ExceptionMapper which can catch exceptions and report to the frontend.
@@ -15,10 +18,12 @@ import javax.ws.rs.ext.ExceptionMapper;
  */
 public abstract class AbstractExceptionMapper<T extends Throwable> implements ExceptionMapper<T> {
 
+    private static final Logger logger = LoggerFactory.getLogger(GitHubAccessTokenFilter.class);
+
     @Override
     public Response toResponse(final Throwable exception) {
         final UUID id = UUID.randomUUID();
-//        log.error(exception.getMessage() + " (" + id + ")", exception);
+        logger.error("Unhandled exception in API call:", exception);
         return createResponse(exception, id);
     }
 
