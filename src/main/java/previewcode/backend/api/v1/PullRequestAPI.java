@@ -93,7 +93,6 @@ public class PullRequestAPI {
                 }
                 return response.resume(Response.ok().build());
             });
-
         } else {
             response.resume(new NotAuthorizedException("Only the owner of a pull request can edit it's ordering"));
         }
