@@ -21,6 +21,7 @@
       <env name="INTEGRATION_KEY" value="secrets/integration.test-key.pem" />
       <env name="WEBHOOK_SECRET" value="secrets/github-webhook-test-secret.txt" />
       <env name="FIREBASE_AUTH" value="secrets/firebase-auth.json" />
+      <env name="PORT" value="8443" />
     </envs>
     <method />
   </configuration>
