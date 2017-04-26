@@ -45,7 +45,7 @@ public class MainModule extends ServletModule {
     private static Algorithm RSA_PRIVATE_KEY;
     private static SecretKeySpec GITHUB_WEBHOOK_SECRET;
     private static String INTEGRATION_ID;
-    
+
     /**
      * The method that configures the servlets
      */
@@ -71,6 +71,7 @@ public class MainModule extends ServletModule {
             FirebaseApp.initializeApp(options);
         } catch (NullPointerException e) {
             logger.error("FIREBASE_AUTH environmental variable was not set");
+            System.exit(-1);
         } catch (FileNotFoundException e) {
             logger.error("Failed to load Firebase config", e);
             System.exit(-1);
