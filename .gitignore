@@ -28,30 +28,14 @@ local.properties
 
 # Package Files #
 *.jar
-*.war
-*.ear
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
-### AppEngine ###
-appengine-generated/
-
 ### Intellij ###
 *.iml
-.idea/
-/out/
-
-
-### authentication ###
-firebase-auth.json
-jetty-ssl-context.xml
-*.jks
+.idea/*
+!.idea/runConfigurations
 
 ### certificates ###
-server.crt
-server.csr
-server.key
-server.pkcs12
-*.pem
-*.txt
+secrets/

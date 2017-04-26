@@ -42,6 +42,9 @@ import java.security.spec.PKCS8EncodedKeySpec;
 public class MainModule extends ServletModule {
 
     private static final Logger logger = LoggerFactory.getLogger(MainModule.class);
+    private static Algorithm RSA_PRIVATE_KEY;
+    private static SecretKeySpec GITHUB_WEBHOOK_SECRET;
+    private static String INTEGRATION_ID;
 
     /**
      * The method that configures the servlets
@@ -59,20 +62,21 @@ public class MainModule extends ServletModule {
         this.bind(WebhookAPI.class);
 
         try {
-            logger.info("Loading Firebase config...");
-            FileInputStream file = new FileInputStream("src/main/resources/firebase-auth.json");
+            logger.info("Loading Firebase auth...");
+            FileInputStream file = new FileInputStream(System.getenv("FIREBASE_AUTH"));
             // Initialize the app with a service account, granting admin privileges
             FirebaseOptions options = new FirebaseOptions.Builder()
                     .setServiceAccount(file)
                     .setDatabaseUrl("https://preview-code.firebaseio.com/").build();
             FirebaseApp.initializeApp(options);
+        } catch (NullPointerException e) {
+            logger.error("FIREBASE_AUTH environmental variable was not set");
+            System.exit(-1);
         } catch (FileNotFoundException e) {
-            logger.error("Failed to load firebase config", e);
+            logger.error("Failed to load Firebase config", e);
             System.exit(-1);
         }
     }
-
-    private static Algorithm RSA_PRIVATE_KEY;
 
     /**
      * Provides the signing algorithm to sign JWT keys destined for authenticating
@@ -102,7 +106,6 @@ public class MainModule extends ServletModule {
         return RSA_PRIVATE_KEY;
     }
 
-    private static SecretKeySpec GITHUB_WEBHOOK_SECRET;
     /**
      * Method to declare Named key "github.webhook.secret" to obtain the webhook secret.
      */
@@ -126,7 +129,6 @@ public class MainModule extends ServletModule {
         return GITHUB_WEBHOOK_SECRET;
     }
 
-    private static String INTEGRATION_ID;
     /**
      * Method to declare Named key "integration.id" to obtain the current GitHub Integration id.
      */
