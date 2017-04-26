@@ -67,7 +67,6 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
     @Named("integration.id")
     private String INTEGRATION_ID;
 
-
     @Override
     public void filter(ContainerRequestContext containerRequestContext) throws IOException {
         checkForOAuthToken(containerRequestContext);
@@ -94,6 +93,7 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
             try {
                 verifyGitHubWebhookSecret(context, requestBody);
             } catch (Exception e) {
+                logger.warn("Could not verify GitHub webhook call:", e);
                 context.abortWith(UNAUTHORIZED);
                 return;
             }
@@ -150,7 +150,6 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
     private String getGitHubInstallationToken(String requestBody) throws IOException {
         JsonNode body = mapper.readTree(requestBody);
         String installationId = body.get("installation").get("id").asText();
-
 
         Calendar calendar = Calendar.getInstance();
         Date now = calendar.getTime();

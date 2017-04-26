@@ -103,7 +103,9 @@ public class MainModule extends ServletModule {
     }
 
     private static SecretKeySpec GITHUB_WEBHOOK_SECRET;
-
+    /**
+     * Method to declare Named key "github.webhook.secret" to obtain the webhook secret.
+     */
     @Provides
     @Named("github.webhook.secret")
     public SecretKeySpec provideGitHubWebhookSecret() {
@@ -125,7 +127,9 @@ public class MainModule extends ServletModule {
     }
 
     private static String INTEGRATION_ID;
-
+    /**
+     * Method to declare Named key "integration.id" to obtain the current GitHub Integration id.
+     */
     @Provides
     @Named("integration.id")
     public String provideIntegrationId() {
@@ -141,9 +145,6 @@ public class MainModule extends ServletModule {
         }
         return INTEGRATION_ID;
     }
-
-
-
 
     /**
      * Method to declare Named key "github.user" to obtain the current GitHub instance
