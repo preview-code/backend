@@ -6,9 +6,9 @@
         <MavenRunnerSettings>
           <option name="environmentProperties">
             <map>
-              <entry key="INTEGRATION_ID" value="src/main/resources/integration-id.txt" />
-              <entry key="INTEGRATION_KEY" value="src/main/resources/integration.test-key.pem" />
-              <entry key="WEBHOOK_SECRET" value="src/main/resources/github-webhook-test-secret.txt" />
+              <entry key="INTEGRATION_ID" value="secrets/integration-id.txt" />
+              <entry key="INTEGRATION_KEY" value="secrets/integration.test-key.pem" />
+              <entry key="WEBHOOK_SECRET" value="secrets/github-webhook-test-secret.txt" />
             </map>
           </option>
           <option name="jreName" value="#USE_PROJECT_JDK" />
