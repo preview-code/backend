@@ -9,8 +9,8 @@ import java.util.Optional;
  */
 public class OrderingStatus extends GitHubStatus {
     private static final String CONTEXT = "preview-code/ordering";
-    private static final String PENDING_DESCRIPTION = "Waiting for author to order changes.";
-    private static final String SUCCESS_DESCRIPTION = "Changes have been ordered by the author.";
+    private static final String PENDING_DESCRIPTION = "Waiting for author to order changes";
+    private static final String SUCCESS_DESCRIPTION = "Changes have been ordered by the author";
 
     public OrderingStatus(GitHubPullRequest pullRequest, GitHubRepository repository) {
         super("pending", PENDING_DESCRIPTION, CONTEXT, pullRequest.previewCodeUrl(repository));

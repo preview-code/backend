@@ -12,8 +12,7 @@ public class GitHubPullRequest {
     public final Integer number;
     public final PullRequestLinks links;
 
-    private static final String TEST_URL = "https://localhost:8080/";
-    private static final String PRODUCTION_URL = "https://preview-code.com/";
+    private static final String PREVIEW_URL = "https://preview-code.com/";
 
     @JsonCreator
     public GitHubPullRequest(
@@ -30,6 +29,6 @@ public class GitHubPullRequest {
     }
 
     public String previewCodeUrl(GitHubRepository repository) {
-        return TEST_URL + repository.fullName + "/pulls/" + this.number;
+        return PREVIEW_URL + repository.fullName + "/pulls/" + this.number;
     }
 }
