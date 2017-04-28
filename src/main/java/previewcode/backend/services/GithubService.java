@@ -15,6 +15,8 @@ import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestReviewComment;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import previewcode.backend.DTO.GitHubPullRequest;
 import previewcode.backend.DTO.GitHubStatus;
 import previewcode.backend.DTO.OrderingStatus;
@@ -36,6 +38,7 @@ import java.util.Optional;
 @Singleton
 public class GithubService {
 
+    private static final Logger logger = LoggerFactory.getLogger(GithubService.class);
     private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -125,6 +128,7 @@ public class GithubService {
     public GHIssueComment postComment(String owner, String name, int number,
             PRComment comment) {
                 try {
+                    logger.info("Posting GitHub comment");
                     GHRepository repo = this.githubProvider.get().getRepository(
                             owner.toLowerCase() + "/" + name.toLowerCase());
                     GHPullRequest pr = repo.getPullRequest(number);
@@ -151,6 +155,7 @@ public class GithubService {
     public GHPullRequestReviewComment postLineComment(String owner, String name, int number,
                                       PRLineComment comment) {
         try {
+            logger.info("Posting GitHub line comment");
             GHRepository repo = this.githubProvider.get().getRepository(
                     owner.toLowerCase() + "/" + name.toLowerCase());
             GHPullRequest pr = repo.getPullRequest(number);
@@ -191,6 +196,8 @@ public class GithubService {
      * @throws IOException when the request fails
      */
     public GitHubPullRequest fetchPullRequest(PullRequestIdentifier identifier) throws IOException {
+        logger.info("Fetching pull request from GitHub API...");
+
         Request getPull = tokenBuilder.addToken(new Request.Builder())
                 .url(identifier.toGitHubURL())
                 .get()
@@ -208,6 +215,7 @@ public class GithubService {
      * @throws IOException when the request fails
      */
     public void placePullRequestComment(GitHubPullRequest pullRequest, PRComment comment) throws IOException {
+        logger.info("[OKHTTP3] Posting comment to GitHub");
         Request postComment = tokenBuilder.addToken(new Request.Builder())
                 .url(pullRequest.links.comments)
                 .post(toJson(comment))
@@ -223,6 +231,7 @@ public class GithubService {
      * @throws IOException when the request fails
      */
     public void setOrderingStatus(GitHubPullRequest pullRequest, OrderingStatus status) throws IOException {
+        logger.info("Setting pull request status to: " + status);
         Request createStatus = tokenBuilder.addToken(new Request.Builder())
                 .url(pullRequest.links.statuses)
                 .post(toJson(status))
@@ -232,6 +241,7 @@ public class GithubService {
     }
 
     public Optional<OrderingStatus> getOrderingStatus(GitHubPullRequest pullRequest) throws IOException {
+        logger.info("Fetching pull request status from GitHub API");
         Request getStatus = tokenBuilder.addToken(new Request.Builder())
                 .url(pullRequest.links.statuses)
                 .get()
@@ -262,6 +272,8 @@ public class GithubService {
     }
 
     private String execute(Request request) throws IOException, GitHubApiException {
+        logger.debug("[OKHTTP3] Executing request: " + request);
+
         try (Response response = OK_HTTP_CLIENT.newCall(request).execute()) {
             String body = response.body().string();
             if (response.isSuccessful()) {
