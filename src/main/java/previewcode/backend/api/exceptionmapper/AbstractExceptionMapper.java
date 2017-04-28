@@ -2,7 +2,6 @@ package previewcode.backend.api.exceptionmapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import previewcode.backend.api.filter.GitHubAccessTokenFilter;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -18,32 +17,31 @@ import java.util.UUID;
  */
 public abstract class AbstractExceptionMapper<T extends Throwable> implements ExceptionMapper<T> {
 
-    private static final Logger logger = LoggerFactory.getLogger(GitHubAccessTokenFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractExceptionMapper.class);
 
     @Override
-    public Response toResponse(final Throwable exception) {
-        final UUID id = UUID.randomUUID();
+    public Response toResponse(final T exception) {
         logger.error("Unhandled exception in API call:", exception);
-        return createResponse(exception, id);
+        return createResponse(exception);
     }
 
-    protected Response createResponse(final Throwable exception, final UUID id) {
-        final ExceptionResponse exceptionResponse = createResponse(exception);
-        exceptionResponse.setUuid(id.toString());
+    protected Response createResponse(final T exception) {
+        final ExceptionResponse exceptionResponse = new ExceptionResponse();
+        exceptionResponse.setUuid(this.getUuid(exception).toString());
+        exceptionResponse.setMessage(exception.getMessage());
 
-        return Response.status(getStatusCode())
+        return Response.status(this.getStatusCode(exception))
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .entity(exceptionResponse)
                 .build();
     }
 
-    protected ExceptionResponse createResponse(final Throwable exception) {
-        final ExceptionResponse exceptionResponse = new ExceptionResponse();
-        exceptionResponse.setMessage(exception.getMessage());
-        return exceptionResponse;
+    protected UUID getUuid(T exception) {
+        return UUID.randomUUID();
     }
 
-    public abstract Status getStatusCode();
+    public abstract Status getStatusCode(final T exception);
+
 
     /**
      * The response to the frontend.

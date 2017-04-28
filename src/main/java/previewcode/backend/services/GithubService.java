@@ -8,11 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import okhttp3.*;
 import org.kohsuke.github.GHIssueComment;
 import org.kohsuke.github.GHMyself;
 import org.kohsuke.github.GHPullRequest;
@@ -27,6 +23,7 @@ import previewcode.backend.DTO.PRLineComment;
 import previewcode.backend.DTO.PRbody;
 import previewcode.backend.DTO.PrNumber;
 import previewcode.backend.DTO.PullRequestIdentifier;
+import previewcode.backend.api.exceptionmapper.GitHubApiException;
 
 import java.io.IOException;
 import java.util.List;
@@ -198,7 +195,7 @@ public class GithubService {
                 .url(identifier.toGitHubURL())
                 .get()
                 .build();
-        Response response = OK_HTTP_CLIENT.newCall(getPull).execute();
+        String response = this.execute(getPull);
         return fromJson(response, GitHubPullRequest.class);
     }
 
@@ -216,7 +213,7 @@ public class GithubService {
                 .post(toJson(comment))
                 .build();
 
-        OK_HTTP_CLIENT.newCall(postComment).execute();
+        this.execute(postComment);
     }
 
     /**
@@ -231,7 +228,7 @@ public class GithubService {
                 .post(toJson(status))
                 .build();
 
-        OK_HTTP_CLIENT.newCall(createStatus).execute();
+        this.execute(createStatus);
     }
 
     public Optional<OrderingStatus> getOrderingStatus(GitHubPullRequest pullRequest) throws IOException {
@@ -240,7 +237,7 @@ public class GithubService {
                 .get()
                 .build();
 
-        Response response = OK_HTTP_CLIENT.newCall(getStatus).execute();
+        String response = this.execute(getStatus);
         return fromJson(response, new TypeReference<List<GitHubStatus>>(){}).stream()
                 .map(OrderingStatus::fromGitHubStatus)
                 .filter(Optional::isPresent)
@@ -252,16 +249,27 @@ public class GithubService {
         return RequestBody.create(MediaType.parse("application/json"), mapper.writeValueAsString(value));
     }
 
-    private <T> T fromJson(Response response, TypeReference<T> typeReference) throws IOException {
-        return mapper.readValue(response.body().string(), typeReference);
+    private <T> T fromJson(String body, TypeReference<T> typeReference) throws IOException {
+        return mapper.readValue(body, typeReference);
     }
 
-    private <T> T fromJson(Response response, Class<T> destClass) throws IOException {
-        return mapper.readValue(response.body().string(), destClass);
+    private <T> T fromJson(String body, Class<T> destClass) throws IOException {
+        return mapper.readValue(body, destClass);
     }
 
     public interface TokenBuilder {
         Request.Builder addToken(Request.Builder builder);
+    }
+
+    private String execute(Request request) throws IOException, GitHubApiException {
+        try (Response response = OK_HTTP_CLIENT.newCall(request).execute()) {
+            String body = response.body().string();
+            if (response.isSuccessful()) {
+                return body;
+            } else {
+                throw new GitHubApiException(body, response.code());
+            }
+        }
     }
 
 }
