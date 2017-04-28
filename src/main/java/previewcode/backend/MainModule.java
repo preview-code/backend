@@ -14,6 +14,7 @@ import org.jboss.resteasy.util.Base64;
 import org.kohsuke.github.GitHub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import previewcode.backend.api.exceptionmapper.GitHubApiExceptionMapper;
 import previewcode.backend.api.exceptionmapper.IllegalArgumentExceptionMapper;
 import previewcode.backend.api.filter.GitHubAccessTokenFilter;
 import previewcode.backend.api.v1.AssigneesAPI;
@@ -59,6 +60,7 @@ public class MainModule extends ServletModule {
         this.bind(AssigneesAPI.class);
         this.bind(TrackerAPI.class);
         this.bind(IllegalArgumentExceptionMapper.class);
+        this.bind(GitHubApiExceptionMapper.class);
         this.bind(WebhookAPI.class);
 
         try {

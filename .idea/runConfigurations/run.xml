@@ -18,7 +18,7 @@
     <module name="backend-api" />
     <envs>
       <env name="INTEGRATION_ID" value="secrets/integration-id.txt" />
-      <env name="INTEGRATION_KEY" value="secrets/integration.test-key.pem" />
+      <env name="INTEGRATION_KEY" value="secrets/integration-test.pkcs8" />
       <env name="WEBHOOK_SECRET" value="secrets/github-webhook-test-secret.txt" />
       <env name="FIREBASE_AUTH" value="secrets/firebase-auth.json" />
       <env name="PORT" value="8443" />
