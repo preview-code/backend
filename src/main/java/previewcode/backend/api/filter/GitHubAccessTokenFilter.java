@@ -15,6 +15,7 @@ import org.apache.commons.io.IOUtils;
 import org.kohsuke.github.GitHub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import previewcode.backend.api.exceptionmapper.GitHubApiException;
 import previewcode.backend.services.GithubService;
 
 import javax.crypto.Mac;
@@ -88,6 +89,7 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
     private void checkForWehbook(ContainerRequestContext context) throws IOException {
         String userAgent = context.getHeaderString("User-Agent");
         if (userAgent != null && userAgent.startsWith(GITHUB_WEBHOOK_USER_AGENT_PREFIX)) {
+
             String requestBody = readRequestBody(context);
 
             try {
@@ -162,15 +164,28 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
                 .withIssuer(INTEGRATION_ID)
                 .sign(jwtSigningAlgorithm);
 
+        logger.info("Authenticating installation {" + installationId + "} as integration {" + INTEGRATION_ID + "}");
+        return this.authenticateInstallation(installationId, token);
+    }
+
+    private String authenticateInstallation(String installationId, String integrationToken) throws IOException {
         Request request = new Request.Builder()
                 .url("https://api.github.com/installations/" + installationId + "/access_tokens")
                 .addHeader("Accept", "application/vnd.github.machine-man-preview+json")
-                .addHeader("Authorization", "Bearer " + token)
+                .addHeader("Authorization", "Bearer " + integrationToken)
                 .post(EMPTY_REQUEST_BODY)
                 .build();
-        okhttp3.Response response = OK_HTTP_CLIENT.newCall(request).execute();
-        return mapper.readValue(response.body().string(), JsonNode.class)
-                .get("token").asText();
+
+        logger.debug("[OKHTTP3] Executing request: " + request);
+
+        try (okhttp3.Response response = OK_HTTP_CLIENT.newCall(request).execute()) {
+            String body = response.body().string();
+            if (response.isSuccessful()) {
+                return mapper.readValue(body, JsonNode.class).get("token").asText();
+            } else {
+                throw new GitHubApiException(body, response.code());
+            }
+        }
     }
 
     /**
