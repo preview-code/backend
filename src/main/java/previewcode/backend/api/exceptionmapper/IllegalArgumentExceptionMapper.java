@@ -15,7 +15,7 @@ public class IllegalArgumentExceptionMapper extends
         AbstractExceptionMapper<IllegalArgumentException> {
 
     @Override
-    public Response.Status getStatusCode() {
+    public Response.Status getStatusCode(IllegalArgumentException e) {
         return BAD_REQUEST;
     }
 

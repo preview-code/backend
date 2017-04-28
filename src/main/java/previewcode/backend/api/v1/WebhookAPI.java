@@ -48,13 +48,13 @@ public class WebhookAPI {
             @HeaderParam(GITHUB_WEBHOOK_DELIVERY_HEADER) String delivery)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException {
 
-        logger.debug("Receiving Webhook call {" + delivery + "} for event {" + eventType + "}");
+        logger.info("Receiving Webhook call {" + delivery + "} for event {" + eventType + "}");
 
         // Respond to different webhook events
         if (eventType.equals("pull_request")) {
             JsonNode body = mapper.readTree(postData);
             String action = body.get("action").asText();
-            logger.debug("Handling `"+ action +"` pull request...");
+            logger.info("Handling `"+ action +"` pull request...");
 
             if (action.equals("opened")) {
                 Pair<GitHubRepository, GitHubPullRequest> repoAndPull = readRepoAndPullFromWebhook(body);
@@ -79,7 +79,7 @@ public class WebhookAPI {
             return OK;
         } else {
             // We'll also receive events related to issues which we do not need.
-            logger.debug("Did not recognize Webhook event.");
+            logger.info("Did not recognize Webhook event.");
             return BAD_REQUEST;
         }
         return OK;

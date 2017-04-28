@@ -43,4 +43,9 @@ public class OrderingStatus extends GitHubStatus {
             return Optional.empty();
         }
     }
+
+    @Override
+    public String toString() {
+        return "OrderingStatus{" + state + "}";
+    }
 }

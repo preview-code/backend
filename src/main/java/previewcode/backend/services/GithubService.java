@@ -8,17 +8,15 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import okhttp3.*;
 import org.kohsuke.github.GHIssueComment;
 import org.kohsuke.github.GHMyself;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestReviewComment;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import previewcode.backend.DTO.GitHubPullRequest;
 import previewcode.backend.DTO.GitHubStatus;
 import previewcode.backend.DTO.OrderingStatus;
@@ -27,6 +25,7 @@ import previewcode.backend.DTO.PRLineComment;
 import previewcode.backend.DTO.PRbody;
 import previewcode.backend.DTO.PrNumber;
 import previewcode.backend.DTO.PullRequestIdentifier;
+import previewcode.backend.api.exceptionmapper.GitHubApiException;
 
 import java.io.IOException;
 import java.util.List;
@@ -39,6 +38,7 @@ import java.util.Optional;
 @Singleton
 public class GithubService {
 
+    private static final Logger logger = LoggerFactory.getLogger(GithubService.class);
     private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -128,6 +128,7 @@ public class GithubService {
     public GHIssueComment postComment(String owner, String name, int number,
             PRComment comment) {
                 try {
+                    logger.info("Posting GitHub comment");
                     GHRepository repo = this.githubProvider.get().getRepository(
                             owner.toLowerCase() + "/" + name.toLowerCase());
                     GHPullRequest pr = repo.getPullRequest(number);
@@ -154,6 +155,7 @@ public class GithubService {
     public GHPullRequestReviewComment postLineComment(String owner, String name, int number,
                                       PRLineComment comment) {
         try {
+            logger.info("Posting GitHub line comment");
             GHRepository repo = this.githubProvider.get().getRepository(
                     owner.toLowerCase() + "/" + name.toLowerCase());
             GHPullRequest pr = repo.getPullRequest(number);
@@ -194,11 +196,13 @@ public class GithubService {
      * @throws IOException when the request fails
      */
     public GitHubPullRequest fetchPullRequest(PullRequestIdentifier identifier) throws IOException {
+        logger.info("Fetching pull request from GitHub API...");
+
         Request getPull = tokenBuilder.addToken(new Request.Builder())
                 .url(identifier.toGitHubURL())
                 .get()
                 .build();
-        Response response = OK_HTTP_CLIENT.newCall(getPull).execute();
+        String response = this.execute(getPull);
         return fromJson(response, GitHubPullRequest.class);
     }
 
@@ -211,12 +215,13 @@ public class GithubService {
      * @throws IOException when the request fails
      */
     public void placePullRequestComment(GitHubPullRequest pullRequest, PRComment comment) throws IOException {
+        logger.info("[OKHTTP3] Posting comment to GitHub");
         Request postComment = tokenBuilder.addToken(new Request.Builder())
                 .url(pullRequest.links.comments)
                 .post(toJson(comment))
                 .build();
 
-        OK_HTTP_CLIENT.newCall(postComment).execute();
+        this.execute(postComment);
     }
 
     /**
@@ -226,21 +231,23 @@ public class GithubService {
      * @throws IOException when the request fails
      */
     public void setOrderingStatus(GitHubPullRequest pullRequest, OrderingStatus status) throws IOException {
+        logger.info("Setting pull request status to: " + status);
         Request createStatus = tokenBuilder.addToken(new Request.Builder())
                 .url(pullRequest.links.statuses)
                 .post(toJson(status))
                 .build();
 
-        OK_HTTP_CLIENT.newCall(createStatus).execute();
+        this.execute(createStatus);
     }
 
     public Optional<OrderingStatus> getOrderingStatus(GitHubPullRequest pullRequest) throws IOException {
+        logger.info("Fetching pull request status from GitHub API");
         Request getStatus = tokenBuilder.addToken(new Request.Builder())
                 .url(pullRequest.links.statuses)
                 .get()
                 .build();
 
-        Response response = OK_HTTP_CLIENT.newCall(getStatus).execute();
+        String response = this.execute(getStatus);
         return fromJson(response, new TypeReference<List<GitHubStatus>>(){}).stream()
                 .map(OrderingStatus::fromGitHubStatus)
                 .filter(Optional::isPresent)
@@ -252,16 +259,29 @@ public class GithubService {
         return RequestBody.create(MediaType.parse("application/json"), mapper.writeValueAsString(value));
     }
 
-    private <T> T fromJson(Response response, TypeReference<T> typeReference) throws IOException {
-        return mapper.readValue(response.body().string(), typeReference);
+    private <T> T fromJson(String body, TypeReference<T> typeReference) throws IOException {
+        return mapper.readValue(body, typeReference);
     }
 
-    private <T> T fromJson(Response response, Class<T> destClass) throws IOException {
-        return mapper.readValue(response.body().string(), destClass);
+    private <T> T fromJson(String body, Class<T> destClass) throws IOException {
+        return mapper.readValue(body, destClass);
     }
 
     public interface TokenBuilder {
         Request.Builder addToken(Request.Builder builder);
+    }
+
+    private String execute(Request request) throws IOException, GitHubApiException {
+        logger.debug("[OKHTTP3] Executing request: " + request);
+
+        try (Response response = OK_HTTP_CLIENT.newCall(request).execute()) {
+            String body = response.body().string();
+            if (response.isSuccessful()) {
+                return body;
+            } else {
+                throw new GitHubApiException(body, response.code());
+            }
+        }
     }
 
 }

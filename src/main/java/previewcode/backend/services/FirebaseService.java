@@ -159,7 +159,7 @@ public class FirebaseService {
                 .child(pullId.number.toString())
                 .child("ordering");
 
-        logger.debug("Updating ordering on Firebase");
+        logger.info("Updating ordering on Firebase");
         return this.doTransaction(path, data -> {
             data.child("lastChanged").setValue(System.currentTimeMillis());
             data.child("groups").setValue(orderings);
