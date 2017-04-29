@@ -10,6 +10,7 @@ import com.google.inject.name.Named;
 import com.google.inject.servlet.RequestScoped;
 import com.google.inject.servlet.ServletModule;
 import org.jboss.resteasy.plugins.guice.ext.JaxrsModule;
+import org.jboss.resteasy.plugins.providers.jackson.ResteasyJackson2Provider;
 import org.jboss.resteasy.util.Base64;
 import org.kohsuke.github.GitHub;
 import org.slf4j.Logger;
@@ -61,6 +62,7 @@ public class MainModule extends ServletModule {
         this.bind(TrackerAPI.class);
         this.bind(IllegalArgumentExceptionMapper.class);
         this.bind(GitHubApiExceptionMapper.class);
+        this.bind(ResteasyJackson2Provider.class);
         this.bind(WebhookAPI.class);
 
         try {
