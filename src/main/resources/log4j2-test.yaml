@@ -1,13 +1,13 @@
 Configuration:
   status: warn
-  name: ProductionConfig
+  name: TestConfig
   thresholdFilter:
     level: debug
   appenders:
     Console:
       name: STDOUT
       PatternLayout:
-        Pattern: "%highlight{%p %C{1.} [%t] %m%n}{FATAL=red, ERROR=red, WARN=yellow, INFO=green, DEBUG=blue, TRACE=white}"
+        Pattern: "%highlight{> [%p] %d{HH:mm:ss,SSS} %C{1.} [%t] %m%n}{FATAL=red, ERROR=red, WARN=yellow, INFO=green, DEBUG=blue, TRACE=white}"
 
   Loggers:
     logger:
@@ -21,4 +21,3 @@ Configuration:
       level: INFO
       AppenderRef:
         ref: STDOUT
-          
