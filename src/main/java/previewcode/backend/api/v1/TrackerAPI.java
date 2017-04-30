@@ -12,7 +12,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * API endpoint for the status of a pull request
  */
-@Path("tracker/")
+@Path("v1/tracker")
 public class TrackerAPI {
 
     @Inject

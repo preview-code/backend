@@ -39,3 +39,7 @@ hs_err_pid*
 
 ### certificates ###
 secrets/
+
+### Generated sources ###
+src/main/java/previewcode/backend/database/model
+*database.mv.db

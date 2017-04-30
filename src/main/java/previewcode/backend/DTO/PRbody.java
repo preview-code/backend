@@ -1,27 +1,53 @@
 package previewcode.backend.DTO;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 /**
  * The data for the newly made pull request
  */
-public class PRbody extends TitleDescription{
+@JsonIgnoreProperties(ignoreUnknown=true)
+public class PRbody extends TitleDescription {
 
     /**
      * The head branch of the newly made pull request
      */
-    public String head;
+    @JsonProperty("head")
+    public final String head;
+
     /**
      * The base branch of the newly made pull request
      */
-    public String base;
+    @JsonProperty("base")
+    public final String base;
+
     /**
      * The ordering of the changes of the pull request
      */
-    public List<Ordering> ordering;
+    @JsonProperty("ordering")
+    public final List<OrderingGroup> ordering;
+
     /**
      * If the description should include metadata.
      */
-    public boolean metadata;
+    @JsonProperty("metadata")
+    public final Boolean metadata;
 
+    @JsonCreator
+    public PRbody(
+            @JsonProperty("title") String title,
+            @JsonProperty("description") String description,
+            @JsonProperty("head") String head,
+            @JsonProperty("base") String base,
+            @JsonProperty("ordering") List<OrderingGroup> ordering,
+            @JsonProperty("metadata") Boolean metadata) {
+        super(title, description);
+        this.head = head;
+        this.base = base;
+        this.ordering = ordering;
+        this.metadata = metadata;
+    }
 }

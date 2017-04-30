@@ -23,8 +23,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
-
-@Path("webhook/")
+@Path("v1/webhook")
 public class WebhookAPI {
     private static  final Logger logger = LoggerFactory.getLogger(WebhookAPI.class);
     private static final ObjectMapper mapper = new ObjectMapper();

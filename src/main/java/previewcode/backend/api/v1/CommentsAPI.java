@@ -20,7 +20,7 @@ import com.google.inject.Inject;
  * API endpoint for comments
  *
  */
-@Path("{owner}/{name}/pulls/{number}/comments/")
+@Path("v1/{owner}/{name}/pulls/{number}/comments")
 public class CommentsAPI {
 
     @Inject

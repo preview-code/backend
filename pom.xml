@@ -16,6 +16,19 @@
         <resteasy.version>3.1.2.Final</resteasy.version>
         <jetty.version>9.4.4.v20170414</jetty.version>
         <jackson.version>2.8.8</jackson.version>
+        <postgres.version>42.0.0</postgres.version>
+        <jooq.version>3.9.2</jooq.version>
+
+        <junit.jupiter.version>5.0.0-M4</junit.jupiter.version>
+        <junit.vintage.version>${junit.version}.0-M4</junit.vintage.version>
+        <junit.platform.version>1.0.0-M4</junit.platform.version>
+        <!-- Old junit version -->
+        <junit.version>4.12</junit.version>
+
+        <db.url>jdbc:postgresql://localhost:5432/preview_code</db.url>
+        <db.username>admin</db.username>
+        <db.password>password</db.password>
+        <db.schema>preview_code</db.schema>
     </properties>
 
     <prerequisites>
@@ -23,47 +36,13 @@
     </prerequisites>
 
     <dependencies>
-        <!-- Compile/runtime dependencies -->
-        <!-- firebase -->
-        <dependency>
-          <groupId>com.google.firebase</groupId>
-          <artifactId>firebase-server-sdk</artifactId>
-          <version>[3.0.0,)</version>
-        </dependency>
-
-        <!-- For calling GitHub APIs that are still in preview -->
-        <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>3.7.0</version>
-        </dependency>
-
-        <!-- For authenticating our Integration & Installation with GitHub -->
-        <dependency>
-            <groupId>com.auth0</groupId>
-            <artifactId>java-jwt</artifactId>
-            <version>3.1.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-
-        <!-- Necessary for runtime decoding of json -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.jaxrs</groupId>
-            <artifactId>jackson-jaxrs-json-provider</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-
         <!-- JAX-RS -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>${javax.servlet.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-jaxrs</artifactId>
@@ -83,10 +62,37 @@
         </dependency>
 
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>${javax.servlet.version}</version>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+            <version>${jetty.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlets</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+
+
+        <!-- Decoding of JSON -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-json-provider</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
 
         <!-- Guice dependency injection -->
         <dependency>
@@ -96,36 +102,69 @@
         </dependency>
 
         <dependency>
-            <groupId>com.google.inject.extensions</groupId>
-            <artifactId>guice-persist</artifactId>
-            <version>${guice.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <version>${guice.version}</version>
         </dependency>
 
-        <!-- Utilities -->
+        <!-- Database stuff -->
+        <!-- SQL query generation -->
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>18.0</version>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq</artifactId>
+            <version>${jooq.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>org.reflections</groupId>
-            <artifactId>reflections</artifactId>
-            <version>0.9.8</version>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq-codegen</artifactId>
+            <version>${jooq.version}</version>
         </dependency>
 
-        <!-- http://mvnrepository.com/artifact/org.kohsuke/github-api -->
+        <!-- The actual database API -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.0.0</version>
+        </dependency>
+
+        <!-- Connection pool -->
+        <dependency>
+            <groupId>com.jolbox</groupId>
+            <artifactId>bonecp</artifactId>
+            <version>0.8.0.RELEASE</version>
+        </dependency>
+
+
+
+        <!-- GitHub -->
         <dependency>
           <groupId>org.kohsuke</groupId>
           <artifactId>github-api</artifactId>
           <version>1.76</version>
         </dependency>
+
+        <!-- Firebase -->
+        <dependency>
+            <groupId>com.google.firebase</groupId>
+            <artifactId>firebase-server-sdk</artifactId>
+            <version>[3.0.0,)</version>
+        </dependency>
+
+        <!-- For calling GitHub APIs that are still in preview -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>3.7.0</version>
+        </dependency>
+
+        <!-- For authenticating our Integration & Installation with GitHub -->
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+
 
         <!-- Logging -->
         <dependency>
@@ -144,43 +183,82 @@
             <version>2.8.2</version>
         </dependency>
 
+        <!-- Decoding log config files -->
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
             <version>${jackson.version}</version>
         </dependency>
 
+
+        <!-- Utilities -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>18.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>0.9.8</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.atlassian.fugue</groupId>
+            <artifactId>fugue</artifactId>
+            <version>4.5.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.vavr</groupId>
+            <artifactId>vavr</artifactId>
+            <version>0.9.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.vavr</groupId>
+            <artifactId>vavr-jackson</artifactId>
+            <version>0.9.0</version>
+        </dependency>
+
+
+
         <!-- Test Dependencies -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.12</version>
+            <version>${junit.version}</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>2.7.22</version>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.7.0</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-client</artifactId>
             <version>${resteasy.version}</version>
+            <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlets</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.mockito</groupId>-->
+            <!--<artifactId>mockito-core</artifactId>-->
+            <!--<version>2.7.22</version>-->
+            <!--<scope>test</scope>-->
+        <!--</dependency>-->
     </dependencies>
 
     <build>
@@ -188,19 +266,18 @@
         <outputDirectory>${project.build.directory}/${project.build.finalName}/WEB-INF/classes</outputDirectory>
 
         <sourceDirectory>src/main/java</sourceDirectory>
-        <!-- No tests yet -->
-        <!--<testSourceDirectory>src/test/java</testSourceDirectory>-->
+        <testSourceDirectory>src/test/java</testSourceDirectory>
 
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
             </resource>
         </resources>
-        <!--<testResources>-->
-            <!--<testResource>-->
-                <!--<directory>src/test/resources</directory>-->
-            <!--</testResource>-->
-        <!--</testResources>-->
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+        </testResources>
 
         <plugins>
             <plugin>
@@ -211,6 +288,111 @@
                     <source>1.8</source>
                     <target>1.8</target>
                 </configuration>
+            </plugin>
+
+            <!-- Flyway DB schema setup/migration -->
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>4.2.0</version>
+
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>migrate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+                <configuration>
+                    <url>${db.url}</url>
+                    <user>${db.username}</user>
+                    <password>${db.password}</password>
+                    <locations>
+                        <location>filesystem:src/main/resources/db-migration</location>
+                    </locations>
+                </configuration>
+            </plugin>
+
+            <!-- jOOQ generate Java sources from DB schema -->
+            <!-- Must come after the flyway plugin to ensure model generation runs after the database has been created. -->
+            <plugin>
+                <groupId>org.jooq</groupId>
+                <artifactId>jooq-codegen-maven</artifactId>
+                <version>${jooq.version}</version>
+
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+                <dependencies>
+                    <dependency>
+                        <groupId>org.postgresql</groupId>
+                        <artifactId>postgresql</artifactId>
+                        <version>${postgres.version}</version>
+                    </dependency>
+                </dependencies>
+
+                <configuration>
+                    <jdbc>
+                        <url>${db.url}</url>
+                        <user>${db.username}</user>
+                        <password>${db.password}</password>
+                    </jdbc>
+
+                    <!-- Generator parameters -->
+                    <generator>
+                        <database>
+                            <includes>.*</includes>
+                            <inputSchema>${db.schema}</inputSchema>
+                        </database>
+
+                        <generate>
+                            <pojos>true</pojos>
+                            <daos>true</daos>
+                        </generate>
+
+                        <target>
+                            <packageName>previewcode.backend.database.model</packageName>
+                            <directory>src/main/java</directory>
+                        </target>
+                    </generator>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.19.1</version>
+                <configuration>
+                    <includes>
+                        <include>**/Test*.java</include>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                        <include>**/*TestCase.java</include>
+                    </includes>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.junit.platform</groupId>
+                        <artifactId>junit-platform-surefire-provider</artifactId>
+                        <version>${junit.platform.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.junit.jupiter</groupId>
+                        <artifactId>junit-jupiter-engine</artifactId>
+                        <version>${junit.jupiter.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.junit.vintage</groupId>
+                        <artifactId>junit-vintage-engine</artifactId>
+                        <version>${junit.vintage.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
 
             <!-- Plugin for generating an uber-jar containing the server with all dependencies-->

@@ -19,7 +19,7 @@ import java.io.IOException;
  * API endpoint for approving hunks
  *
  */
-@Path("{owner}/{name}/pulls/{number}/approve")
+@Path("v1/{owner}/{name}/pulls/{number}/approve")
 public class AssigneesAPI {
 
     @Inject

@@ -1,9 +1,8 @@
 package previewcode.backend.api.v1;
 
 import com.google.inject.Inject;
-import org.jboss.resteasy.annotations.Suspend;
 import previewcode.backend.DTO.GitHubPullRequest;
-import previewcode.backend.DTO.Ordering;
+import previewcode.backend.DTO.OrderingGroup;
 import previewcode.backend.DTO.OrderingStatus;
 import previewcode.backend.DTO.PRbody;
 import previewcode.backend.DTO.PrNumber;
@@ -12,7 +11,11 @@ import previewcode.backend.DTO.StatusBody;
 import previewcode.backend.services.FirebaseService;
 import previewcode.backend.services.GithubService;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
@@ -20,10 +23,9 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-@Path("{owner}/{name}/pulls/")
+@Path("v1/{owner}/{name}/pulls")
 public class PullRequestAPI {
 
     @Inject
@@ -80,7 +82,7 @@ public class PullRequestAPI {
             @Suspended AsyncResponse response,
             @PathParam("owner") String owner,
             @PathParam("name") String name,
-            @PathParam("number") Integer number, List<Ordering> body) throws IOException {
+            @PathParam("number") Integer number, List<OrderingGroup> body) throws IOException {
         response.setTimeout(10, TimeUnit.SECONDS);
 
         if(githubService.isOwner(owner, name,  number)) {
@@ -90,6 +92,7 @@ public class PullRequestAPI {
         } else {
             response.resume(new NotAuthorizedException("Only the owner of a pull request can edit it's ordering"));
         }
+
     }
 
     /**

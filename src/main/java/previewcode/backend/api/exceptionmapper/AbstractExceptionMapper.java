@@ -1,9 +1,9 @@
 package previewcode.backend.api.exceptionmapper;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.jaxrs.json.annotation.JSONP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,6 +11,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -26,18 +27,22 @@ public abstract class AbstractExceptionMapper<T extends Throwable> implements Ex
 
     @Override
     public Response toResponse(final T exception) {
-        logger.error("Unhandled exception in API call:", exception);
+        UUID uuid = this.newUUID(exception);
+
+        logger.error("Unhandled exception in API call:");
+        logger.error("  UUID: " + uuid);
+        logger.error("  Exception: ", exception);
         try {
-            return createResponse(exception);
+            return createResponse(uuid, exception);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Could not convert object to JSON", e);
         }
     }
 
-    protected Response createResponse(final T exception) throws JsonProcessingException {
+    protected Response createResponse(final UUID uuid, final T exception) throws JsonProcessingException {
         final ExceptionResponse exceptionResponse = new ExceptionResponse(
-                this.getUuid(exception).toString(),
-                exception.getMessage()
+                uuid.toString(),
+                this.getExposedMessage(exception)
         );
 
         return Response.status(this.getStatusCode(exception))
@@ -46,12 +51,21 @@ public abstract class AbstractExceptionMapper<T extends Throwable> implements Ex
                 .build();
     }
 
-    protected UUID getUuid(T exception) {
+    /**
+     * Creates a response string to send back over the network.
+     * Care should be taken to avoid sending sensitive data back to users.
+     */
+    protected String getExposedMessage(T exception) {
+        return "An error occurred, try again later or contact an administrator.";
+    }
+
+    protected UUID newUUID(T exception) {
         return UUID.randomUUID();
     }
 
-    public abstract Status getStatusCode(final T exception);
-
+    protected Status getStatusCode(final T exception) {
+        return Status.INTERNAL_SERVER_ERROR;
+    }
 }
 
 /**
@@ -80,9 +94,32 @@ class ExceptionResponse {
     public final String message;
 
 
-
-    public ExceptionResponse(String uuid, String message) {
+    @JsonCreator
+    public ExceptionResponse(@JsonProperty("uuid") String uuid, @JsonProperty("message") String message) {
+        Objects.requireNonNull(uuid, message);
         this.uuid = uuid;
         this.message = message;
+    }
+
+    @Override
+    public String toString() {
+        return "ExceptionResponse{" +
+                "message='" + message + '\'' +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ExceptionResponse that = (ExceptionResponse) o;
+
+        return message.equals(that.message);
+    }
+
+    @Override
+    public int hashCode() {
+        return message.hashCode();
     }
 }

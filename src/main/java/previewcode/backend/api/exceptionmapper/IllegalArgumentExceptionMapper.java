@@ -19,4 +19,9 @@ public class IllegalArgumentExceptionMapper extends
         return BAD_REQUEST;
     }
 
+
+    @Override
+    protected String getExposedMessage(IllegalArgumentException exception) {
+        return exception.getMessage();
+    }
 }

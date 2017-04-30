@@ -1,0 +1,78 @@
+package previewcode.backend;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.google.inject.servlet.ServletModule;
+import io.atlassian.fugue.Unit;
+import org.jboss.resteasy.plugins.guice.ext.JaxrsModule;
+import previewcode.backend.api.exceptionmapper.GitHubApiExceptionMapper;
+import previewcode.backend.api.exceptionmapper.IllegalArgumentExceptionMapper;
+import previewcode.backend.api.exceptionmapper.RootExceptionMapper;
+import previewcode.backend.api.v2.OrderingAPI;
+import previewcode.backend.api.v2.TestAPI;
+
+import javax.ws.rs.ext.ContextResolver;
+import javax.ws.rs.ext.Provider;
+import java.io.IOException;
+
+
+public class APIModule extends ServletModule {
+
+    @SuppressWarnings("PointlessBinding")
+    @Override
+    public void configureServlets() {
+        this.install(new JaxrsModule());
+
+        // API Endpoints
+        // v2
+        this.bind(TestAPI.class);
+        this.bind(OrderingAPI.class);
+
+        // Exception mappers
+        this.bind(RootExceptionMapper.class);
+        this.bind(IllegalArgumentExceptionMapper.class);
+        this.bind(GitHubApiExceptionMapper.class);
+        this.bind(JacksonObjectMapperProvider.class);
+    }
+
+
+    /**
+     * Plumbing necessary to convert Unit values to an empty response body when sent back over the network
+     */
+    @Provider
+    static class JacksonObjectMapperProvider implements ContextResolver<ObjectMapper> {
+
+        final ObjectMapper defaultObjectMapper;
+
+        public JacksonObjectMapperProvider() {
+            defaultObjectMapper = createDefaultMapper();
+        }
+
+        @Override
+        public ObjectMapper getContext(Class<?> type) {
+            return defaultObjectMapper;
+        }
+
+        private static ObjectMapper createDefaultMapper() {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new UnitSerializerModule());
+            return mapper;
+        }
+
+    }
+
+    static class UnitSerializerModule extends SimpleModule {
+        public UnitSerializerModule() {
+            super();
+            this.addSerializer(Unit.class, new JsonSerializer<Unit>() {
+                @Override
+                public void serialize(Unit value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                    gen.close();
+                }
+            });
+        }
+    }
+}

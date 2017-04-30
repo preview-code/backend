@@ -7,11 +7,10 @@ import com.google.inject.Singleton;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import previewcode.backend.DTO.Approve;
-import previewcode.backend.DTO.Ordering;
+import previewcode.backend.DTO.OrderingGroup;
 import previewcode.backend.DTO.PullRequestIdentifier;
 import previewcode.backend.DTO.Track;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -151,7 +150,7 @@ public class FirebaseService {
      *
      * @param pullId The identifier object for the pull request
      */
-    public void setOrdering(final PullRequestIdentifier pullId, List<Ordering> orderings) {
+    public void setOrdering(final PullRequestIdentifier pullId, List<OrderingGroup> orderings) {
 
         DatabaseReference path = this.ref
                 .child(pullId.owner)
