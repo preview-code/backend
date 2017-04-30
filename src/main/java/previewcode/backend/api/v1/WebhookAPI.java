@@ -86,7 +86,7 @@ public class WebhookAPI {
     }
 
     private String constructMarkdownComment(GitHubRepository repo, GitHubPullRequest pullRequest) {
-        return "This pull request can be reviewed with [on Preview Code](" + pullRequest.previewCodeUrl(repo) + ").\n" +
+        return "This pull request can be reviewed with [Preview Code](" + pullRequest.previewCodeUrl(repo) + ").\n" +
                "To speed up the review process and get better feedback on your changes, " +
                "please **[order your changes](" + pullRequest.previewCodeUrl(repo) + ").**\n";
     }
