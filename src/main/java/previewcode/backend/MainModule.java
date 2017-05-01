@@ -95,7 +95,7 @@ public class MainModule extends ServletModule {
                 String key = Files.toString(file, Charsets.UTF_8)
                         .replace("-----END PRIVATE KEY-----", "")
                         .replace("-----BEGIN PRIVATE KEY-----", "")
-                        .replaceAll("\n", "");
+                        .replaceAll("\n", "").trim();
                 PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(Base64.decode(key));
                 KeyFactory kf = KeyFactory.getInstance("RSA");
                 RSA_PRIVATE_KEY = Algorithm.RSA256((RSAPrivateKey) kf.generatePrivate(keySpec));
@@ -120,7 +120,7 @@ public class MainModule extends ServletModule {
             try {
                 logger.info("Loading GitHub Integration Webhook key...");
                 File file = new File(System.getenv("WEBHOOK_SECRET"));
-                final String secret = Files.toString(file, Charsets.UTF_8);
+                final String secret = Files.toString(file, Charsets.UTF_8).trim();
                 GITHUB_WEBHOOK_SECRET = new SecretKeySpec(secret.getBytes(), "HmacSHA1");
             } catch (IOException e) {
                 logger.error("Failed to load GitHub Integration webhook secret:", e);
@@ -141,7 +141,7 @@ public class MainModule extends ServletModule {
     public String provideIntegrationId() {
         try {
             logger.info("Loading GitHub Integration ID...");
-            INTEGRATION_ID = Files.toString(new File(System.getenv("INTEGRATION_ID")), Charsets.UTF_8);
+            INTEGRATION_ID = Files.toString(new File(System.getenv("INTEGRATION_ID")), Charsets.UTF_8).trim();
         } catch (IOException e) {
             logger.error("Failed to load GitHub Integration ID:", e);
             System.exit(-1);
