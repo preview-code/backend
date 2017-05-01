@@ -84,15 +84,9 @@ public class PullRequestAPI {
         response.setTimeout(10, TimeUnit.SECONDS);
 
         if(githubService.isOwner(owner, name,  number)) {
-            CompletableFuture<Void> future = firebaseService.setOrdering(new PullRequestIdentifier(owner, name, number), body);
-            future.thenApply(v -> {
-                try {
-                    updateOrderingStatus(owner, name, number);
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e.getMessage(), e);
-                }
-                return response.resume(Response.ok().build());
-            });
+            firebaseService.setOrdering(new PullRequestIdentifier(owner, name, number), body);
+            updateOrderingStatus(owner, name, number);
+            response.resume(Response.ok().build());
         } else {
             response.resume(new NotAuthorizedException("Only the owner of a pull request can edit it's ordering"));
         }

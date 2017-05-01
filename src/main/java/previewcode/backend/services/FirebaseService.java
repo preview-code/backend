@@ -151,7 +151,7 @@ public class FirebaseService {
      *
      * @param pullId The identifier object for the pull request
      */
-    public CompletableFuture<Void> setOrdering(final PullRequestIdentifier pullId, List<Ordering> orderings) {
+    public void setOrdering(final PullRequestIdentifier pullId, List<Ordering> orderings) {
 
         DatabaseReference path = this.ref
                 .child(pullId.owner)
@@ -160,11 +160,8 @@ public class FirebaseService {
                 .child("ordering");
 
         logger.info("Updating ordering on Firebase");
-        return this.doTransaction(path, data -> {
-            data.child("lastChanged").setValue(System.currentTimeMillis());
-            data.child("groups").setValue(orderings);
-            return Transaction.success(data);
-        }, RETRY_COUNT).thenAccept(d -> {});
+        path.child("lastChanged").setValue(System.currentTimeMillis());
+        path.child("groups").setValue(orderings);
     }
 
     /**
