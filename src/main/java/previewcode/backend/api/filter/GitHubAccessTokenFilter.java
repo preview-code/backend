@@ -100,6 +100,8 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
                 return;
             }
             String installationToken = getGitHubInstallationToken(requestBody);
+            logger.debug("Authenticated as Installation with: " + installationToken.hashCode());
+
             context.setProperty(Key.get(String.class, Names.named(CURRENT_INSTALLATION_TOKEN)).toString(), installationToken);
             GithubService.TokenBuilder builder = (Request.Builder request) ->
                     request
@@ -211,7 +213,7 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
                 final GitHub user = GitHub.connectUsingOAuth(token);
                 context.setProperty(Key.get(GitHub.class, Names.named(CURRENT_USER_NAME)).toString(), user);
                 context.setProperty(Key.get(String.class, Names.named(CURRENT_USER_TOKEN)).toString(), token);
-
+                logger.debug("Authenticated as github user with: " + token.hashCode());
                 GithubService.TokenBuilder builder = (Request.Builder b) -> b.header("Authorization", "token " + token);
                 context.setProperty(Key.get(GithubService.TokenBuilder.class, Names.named(CURRENT_TOKEN_BUILDER)).toString(), builder);
             } catch (final NotAuthorizedException e) {

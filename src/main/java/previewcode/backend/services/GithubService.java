@@ -6,9 +6,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import okhttp3.*;
+import com.google.inject.servlet.RequestScoped;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import org.kohsuke.github.GHIssueComment;
 import org.kohsuke.github.GHMyself;
 import org.kohsuke.github.GHPullRequest;
@@ -35,12 +39,13 @@ import java.util.Optional;
  * An abstract class that connects with github
  *
  */
-@Singleton
+@RequestScoped
 public class GithubService {
 
     private static final Logger logger = LoggerFactory.getLogger(GithubService.class);
     private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
     private static final ObjectMapper mapper = new ObjectMapper();
+
 
 
     @Inject
@@ -273,7 +278,7 @@ public class GithubService {
 
     private String execute(Request request) throws IOException, GitHubApiException {
         logger.debug("[OKHTTP3] Executing request: " + request);
-
+        logger.debug("With Authorization hashcode: " + request.header("Authorization").hashCode());
         try (Response response = OK_HTTP_CLIENT.newCall(request).execute()) {
             String body = response.body().string();
             if (response.isSuccessful()) {
