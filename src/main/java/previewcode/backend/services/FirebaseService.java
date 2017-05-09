@@ -11,7 +11,6 @@ import previewcode.backend.DTO.Ordering;
 import previewcode.backend.DTO.PullRequestIdentifier;
 import previewcode.backend.DTO.Track;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -55,7 +54,7 @@ public class FirebaseService {
      */
     public void setApproved(String owner, String name, String number, Approve LGTM) {
         this.ref.child(owner).child(name).child("pulls").child(number)
-                .child("hunkApprovals").child(LGTM.hunkId).child(String.valueOf(LGTM.githubLogin)).setValue(LGTM.isApproved);
+                .child("hunkApprovals").child(LGTM.hunkId).child(String.valueOf(LGTM.githubLogin)).setValue(LGTM.status);
     }
 
     /**

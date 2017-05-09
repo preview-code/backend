@@ -9,9 +9,9 @@ public class Approve {
      */
     public String hunkId;
     /**
-     * If the hunk is approved or disapproved
+     * If the hunk is approved, disapproved or none
      */
-    public boolean isApproved;
+    public String status;
     /**
      * Which user approves this hunk
      */
