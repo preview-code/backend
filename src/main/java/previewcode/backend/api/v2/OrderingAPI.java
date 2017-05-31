@@ -20,8 +20,6 @@ import javax.ws.rs.core.Response;
 @Path("v2/{owner}/{name}/pulls/{number}/ordering")
 public class OrderingAPI {
 
-    private static final Logger logger = LoggerFactory.getLogger(OrderingAPI.class);
-
     private final Interpreter interpreter;
     private final IDatabaseService databaseService;
 

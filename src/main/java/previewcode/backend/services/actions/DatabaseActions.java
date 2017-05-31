@@ -2,6 +2,7 @@ package previewcode.backend.services.actions;
 
 import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
+import previewcode.backend.DTO.ApproveStatus;
 import previewcode.backend.DTO.PullRequestIdentifier;
 import previewcode.backend.database.GroupID;
 import previewcode.backend.database.HunkID;
@@ -11,9 +12,7 @@ import previewcode.backend.services.actiondsl.ActionDSL.*;
 
 public class DatabaseActions {
 
-    public static class DatabaseAction<A> extends Action<A> { }
-
-    public static class FetchPull extends DatabaseAction<PullRequestID> {
+    public static class FetchPull extends Action<PullRequestID> {
         public final String owner;
         public final String name;
         public final Integer number;
@@ -31,7 +30,7 @@ public class DatabaseActions {
         }
     }
 
-    public static class NewGroup extends DatabaseAction<GroupID> {
+    public static class NewGroup extends Action<GroupID> {
 
         public final PullRequestID pullRequestId;
         public final String title;
@@ -44,7 +43,7 @@ public class DatabaseActions {
         }
     }
 
-    public static class AssignHunkToGroup extends DatabaseAction<Unit> {
+    public static class AssignHunkToGroup extends Action<Unit> {
 
         public final GroupID groupID;
         public final String hunkIdentifier;
@@ -55,7 +54,7 @@ public class DatabaseActions {
         }
     }
 
-    public static class FetchGroupsForPull extends DatabaseAction<List<PullRequestGroup>> {
+    public static class FetchGroupsForPull extends Action<List<PullRequestGroup>> {
         public final PullRequestID pullRequestID;
 
         public FetchGroupsForPull(PullRequestID pullRequestID) {
@@ -63,7 +62,7 @@ public class DatabaseActions {
         }
     }
 
-    public static class FetchHunksForGroup extends DatabaseAction<List<HunkID>> {
+    public static class FetchHunksForGroup extends Action<List<HunkID>> {
 
         public final GroupID groupID;
 
@@ -72,7 +71,7 @@ public class DatabaseActions {
         }
     }
 
-    public static class DeleteGroup extends DatabaseAction<Unit> {
+    public static class DeleteGroup extends Action<Unit> {
         public final GroupID groupID;
 
         public DeleteGroup(GroupID groupID) {
@@ -80,7 +79,20 @@ public class DatabaseActions {
         }
     }
 
+    public static class ApproveHunk extends Action<Unit> {
+        public final PullRequestID pullRequestID;
+        public final String hunkId;
+        public final String githubUser;
+        public final ApproveStatus approve;
 
+        public ApproveHunk(PullRequestID pullRequestID, String hunkId, String githubUser, ApproveStatus approve) {
+
+            this.pullRequestID = pullRequestID;
+            this.hunkId = hunkId;
+            this.githubUser = githubUser;
+            this.approve = approve;
+        }
+    }
 
     public static InsertPullIfNotExists insertPullIfNotExists(PullRequestIdentifier pull) {
         return new InsertPullIfNotExists(pull);
@@ -112,5 +124,9 @@ public class DatabaseActions {
 
     public static DeleteGroup delete(GroupID groupID) {
         return new DeleteGroup(groupID);
+    }
+
+    public static ApproveHunk setApprove(PullRequestID pullRequestID, String hunkId, String githubUser, ApproveStatus approve) {
+        return new ApproveHunk(pullRequestID, hunkId, githubUser, approve);
     }
 }

@@ -11,6 +11,7 @@ import org.jboss.resteasy.plugins.guice.ext.JaxrsModule;
 import previewcode.backend.api.exceptionmapper.GitHubApiExceptionMapper;
 import previewcode.backend.api.exceptionmapper.IllegalArgumentExceptionMapper;
 import previewcode.backend.api.exceptionmapper.RootExceptionMapper;
+import previewcode.backend.api.v2.ApprovalsAPI;
 import previewcode.backend.api.v2.OrderingAPI;
 import previewcode.backend.api.v2.TestAPI;
 
@@ -30,6 +31,7 @@ public class APIModule extends ServletModule {
         // v2
         this.bind(TestAPI.class);
         this.bind(OrderingAPI.class);
+        this.bind(ApprovalsAPI.class);
 
         // Exception mappers
         this.bind(RootExceptionMapper.class);

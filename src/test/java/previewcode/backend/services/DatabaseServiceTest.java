@@ -49,7 +49,7 @@ public class DatabaseServiceTest {
         new OrderingGroupWithID(group, hunkIDs.map(id -> id.hunkID).toJavaList())
     );
 
-
+    private ApproveRequest approveStatus = new ApproveRequest("hunkID", ApproveStatus.DISAPPROVED, 1);
 
     @Test
     public void insertsPullIfNotExists() throws Exception {
@@ -149,4 +149,28 @@ public class DatabaseServiceTest {
                 .hasSameElementsAs(hunkIDs)
                 .hasSize(hunkIDs.size() * groupsWithHunks.size());
     }
+
+    @Test
+    public void insertApproval() throws Exception {
+        Action<Unit> dbAction = service.setApproval(pullIdentifier, approveStatus);
+
+        Interpreter interpreter =
+                interpret()
+                        .on(InsertPullIfNotExists.class).returnA(pullRequestID)
+                        .on(ApproveHunk.class).stop(approveHunk -> {
+                            assertThat(approveHunk.approve)
+                                    .isEqualTo(ApproveStatus.DISAPPROVED);
+                            assertThat(approveHunk.githubUser)
+                                    .isEqualTo("1");
+                            assertThat(approveHunk.hunkId)
+                                    .isEqualTo("hunkID");
+                            assertThat(approveHunk.pullRequestID)
+                                    .isEqualTo(pullRequestID);
+                        });
+
+        assertThatExceptionOfType(Interpreter.StoppedException.class)
+                .isThrownBy(() -> interpreter.unsafeEvaluate(dbAction));
+
+    }
+
 }

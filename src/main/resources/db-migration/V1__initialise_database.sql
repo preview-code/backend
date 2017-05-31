@@ -40,7 +40,9 @@ CREATE INDEX idx_fk_hunk_group_id ON preview_code.hunk (group_id);
 CREATE TABLE preview_code.approval (
   pull_request_id BIGINT NOT NULL CONSTRAINT fk_approval_pull_request REFERENCES preview_code.pull_request(id),
   hunk_id VARCHAR NOT NULL,
+  approver VARCHAR NOT NULL,
+  status VARCHAR NOT NULL,
 
-  CONSTRAINT pk_approval PRIMARY KEY (pull_request_id, hunk_id)
+  CONSTRAINT pk_approval PRIMARY KEY (pull_request_id, hunk_id, approver)
 )
 

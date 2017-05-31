@@ -26,6 +26,7 @@ public class DatabaseInterpreter extends Interpreter {
         on(NewGroup.class).apply(this::insertNewGroup);
         on(FetchGroupsForPull.class).apply(this::fetchGroups);
         on(AssignHunkToGroup.class).apply(this::assignHunk);
+        on(ApproveHunk.class).apply(this::approveHunk);
     }
 
     protected Unit assignHunk(AssignHunkToGroup action) {
@@ -34,6 +35,14 @@ public class DatabaseInterpreter extends Interpreter {
                 .values(action.groupID.id, action.hunkIdentifier)
                 .execute();
         return unit;
+    }
+
+    protected Unit approveHunk(ApproveHunk approveHunk) {
+      db.insertInto(APPROVAL)
+              .columns(APPROVAL.PULL_REQUEST_ID, APPROVAL.HUNK_ID, APPROVAL.APPROVER, APPROVAL.STATUS)
+              .values(approveHunk.pullRequestID.id, approveHunk.hunkId, approveHunk.githubUser, approveHunk.approve.getApproved())
+              .execute();
+      return unit;
     }
 
 

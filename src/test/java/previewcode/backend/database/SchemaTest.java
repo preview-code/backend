@@ -38,6 +38,14 @@ public class SchemaTest {
     }
 
     @Test
+    public void approvalsTable_isEmpty(DSLContext db) {
+        int rows = db.select(APPROVAL.PULL_REQUEST_ID, APPROVAL.HUNK_ID, APPROVAL.APPROVER, APPROVAL.STATUS)
+                .from(APPROVAL).execute();
+
+        assertThat(rows).isZero();
+    }
+
+    @Test
     public void hasSequence_pullRequestId(DSLContext db) {
         db.nextval(SEQ_PK_PULL_REQUEST);
         assertThat(db.currval(SEQ_PK_PULL_REQUEST)).isEqualTo(1L);

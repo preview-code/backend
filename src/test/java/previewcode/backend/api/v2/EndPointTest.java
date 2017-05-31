@@ -4,8 +4,11 @@ import io.atlassian.fugue.Unit;
 import io.vavr.collection.Seq;
 import org.junit.jupiter.api.Test;
 import previewcode.backend.APIModule;
+import previewcode.backend.DTO.ApproveRequest;
+import previewcode.backend.DTO.IsApproved;
 import previewcode.backend.DTO.OrderingGroup;
 import previewcode.backend.DTO.PullRequestIdentifier;
+import previewcode.backend.services.actiondsl.ActionDSL;
 import previewcode.backend.test.helpers.ApiEndPointTest;
 import previewcode.backend.database.PullRequestGroup;
 import previewcode.backend.services.IDatabaseService;
@@ -50,6 +53,17 @@ public class EndPointTest {
         assertThat(response.getLength()).isZero();
         assertThat(response.getStatus()).isEqualTo(200);
     }
+
+    @Test
+    public void isApprovedApiIsReachable(WebTarget target) {
+        Response response = target
+                .path("/v2/preview-code/backend/pulls/42/setApprove")
+                .request("application/json")
+                .post(Entity.json("{}"));
+
+        assertThat(response.getLength()).isZero();
+        assertThat(response.getStatus()).isEqualTo(200);
+    }
 }
 
 class TestModule extends APIModule implements IDatabaseService {
@@ -58,6 +72,11 @@ class TestModule extends APIModule implements IDatabaseService {
 
     @Override
     public Action<Unit> updateOrdering(PullRequestIdentifier pullRequestIdentifier, Seq<OrderingGroup> body) {
+        return new NoOp<>();
+    }
+
+    @Override
+    public Action<Unit> setApproval(PullRequestIdentifier pullRequestIdentifier, ApproveRequest approve) {
         return new NoOp<>();
     }
 
