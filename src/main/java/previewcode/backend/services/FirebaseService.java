@@ -1,5 +1,7 @@
 package previewcode.backend.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.database.*;
 import com.google.firebase.database.Transaction.Handler;
 import com.google.firebase.database.Transaction.Result;
@@ -54,9 +56,9 @@ public class FirebaseService {
                 .child("hunkApprovals").child(LGTM.hunkId).child(String.valueOf(LGTM.githubLogin)).setValue(LGTM.status);
     }
 
-    public void setIsApproved(String owner, String name, String number, IsApproved approved) {
-        this.ref.child(owner).child(name).child("pulls").child(number)
-                .child("approvals").setValue(approved);
+    public void setIsApproved(String owner, String name, String number, IsApproved approved) throws JsonProcessingException {
+       this.ref.child(owner).child(name).child("pulls").child(number)
+                .child("approvals").setValue(new ObjectMapper().writeValueAsString(approved));
     }
 
     /**
