@@ -1,15 +1,14 @@
 package previewcode.backend.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.database.*;
 import com.google.firebase.database.Transaction.Handler;
 import com.google.firebase.database.Transaction.Result;
 import com.google.inject.Singleton;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
-import previewcode.backend.DTO.Approve;
-import previewcode.backend.DTO.Ordering;
-import previewcode.backend.DTO.PullRequestIdentifier;
-import previewcode.backend.DTO.Track;
+import previewcode.backend.DTO.*;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -55,6 +54,11 @@ public class FirebaseService {
     public void setApproved(String owner, String name, String number, Approve LGTM) {
         this.ref.child(owner).child(name).child("pulls").child(number)
                 .child("hunkApprovals").child(LGTM.hunkId).child(String.valueOf(LGTM.githubLogin)).setValue(LGTM.status);
+    }
+
+    public void setIsApproved(String owner, String name, String number, IsApproved approved) throws JsonProcessingException {
+       this.ref.child(owner).child(name).child("pulls").child(number)
+                .child("approvals").setValue(new ObjectMapper().writeValueAsString(approved));
     }
 
     /**

@@ -7,6 +7,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 
 import previewcode.backend.DTO.Approve;
+import previewcode.backend.DTO.ApprovedGroup;
+import previewcode.backend.DTO.IsApproved;
 import previewcode.backend.services.FirebaseService;
 
 import com.google.inject.Inject;
@@ -19,7 +21,7 @@ import java.io.IOException;
  * API endpoint for approving hunks
  *
  */
-@Path("{owner}/{name}/pulls/{number}/approve")
+@Path("{owner}/{name}/pulls/{number}")
 public class AssigneesAPI {
 
     @Inject
@@ -42,6 +44,7 @@ public class AssigneesAPI {
      * @return The number of the newly made pull request
      */
     @POST
+    @Path("approve")
     @Consumes(MediaType.APPLICATION_JSON)
     public Approve setApprove(@PathParam("owner") String owner,
                               @PathParam("name") String name,
@@ -53,5 +56,15 @@ public class AssigneesAPI {
         }
         firebaseService.setApproved(owner, name, number, body);
         return body;
+    }
+
+    @POST
+    @Path("isApproved")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void setIsApprove(@PathParam("owner") String owner,
+                              @PathParam("name") String name,
+                              @PathParam("number") String number,
+                              IsApproved body) throws IOException {
+        firebaseService.setIsApproved(owner, name, number, body);
     }
 }
