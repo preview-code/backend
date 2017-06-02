@@ -1,23 +1,78 @@
 package previewcode.backend.database;
 
+import io.vavr.Tuple2;
+import org.jooq.DSLContext;
+import org.jooq.exception.DataAccessException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.*;
+import static previewcode.backend.database.model.Tables.GROUPS;
+import static previewcode.backend.database.model.Tables.HUNK;
+import static previewcode.backend.database.model.Tables.PULL_REQUEST;
+import static previewcode.backend.services.actions.DatabaseActions.*;
 
 public class DatabaseInterpreter_HunksTest extends DatabaseInterpreterTest {
 
+    private static final String hunkID = "ABCDEF";
+
+    private static final GroupID group_A_id = new GroupID(0L);
+    private static final GroupID group_B_id = new GroupID(1L);
+
+    @BeforeEach
+    @Override
+    public void setup(DSLContext db) {
+        super.setup(db);
+        db.insertInto(PULL_REQUEST, PULL_REQUEST.ID, PULL_REQUEST.OWNER, PULL_REQUEST.NAME, PULL_REQUEST.NUMBER)
+                .values(dbPullId.id, owner, name, number)
+                .execute();
+
+        db.insertInto(GROUPS)
+                .columns(GROUPS.ID, GROUPS.PULL_REQUEST_ID, GROUPS.TITLE, GROUPS.DESCRIPTION)
+                .values(group_A_id.id, dbPullId.id, "A", "B")
+                .values(group_B_id.id, dbPullId.id, "C", "D")
+                .execute();
+    }
+
     @Test
-    public void assignHunk_groupMustExist() {
-        fail();
+    public void assignHunk_groupMustExist() throws Exception {
+        GroupID invalidID = new GroupID(-1L);
+        assertThatExceptionOfType(DataAccessException.class)
+                .isThrownBy(() -> eval(assignToGroup(invalidID, hunkID)));
     }
 
     @Test
     public void assignHunk_cannotAssignTwice_toSameGroup() {
-        fail();
+        AssignHunkToGroup assign = assignToGroup(group_A_id, hunkID);
+
+        assertThatExceptionOfType(DataAccessException.class)
+                .isThrownBy(() -> eval(assign.then(assign)));
     }
 
     @Test
-    public void assignHunk_cannotAssignTwice_toDifferentGroups() {
-        fail();
+    public void assignHunk_insertsIntoHunkTable(DSLContext db) throws Exception {
+        eval(assignToGroup(group_A_id, hunkID));
+
+        assertThat(
+                db.selectCount().from(HUNK).fetchOneInto(Integer.class)
+        ).isOne();
     }
+
+    @Test
+    public void assignHunk_canInsertDuplicates(DSLContext db) throws Exception {
+        eval(assignToGroup(group_A_id, hunkID).then(assignToGroup(group_B_id, hunkID)));
+
+        assertThat(
+                db.selectCount().from(HUNK).fetchOneInto(Integer.class)
+        ).isEqualTo(2);
+    }
+
+    @Test
+    public void assignHunk_insertsCorrectData(DSLContext db) throws Exception {
+        eval(assignToGroup(group_A_id, hunkID));
+
+        Tuple2 record = db.select(HUNK.GROUP_ID, HUNK.ID).from(HUNK).fetchOneInto(Tuple2.class);
+        assertThat(record).isEqualTo(new Tuple2(group_A_id.id, hunkID));
+    }
+
 }

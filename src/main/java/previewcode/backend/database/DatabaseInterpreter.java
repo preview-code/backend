@@ -1,5 +1,6 @@
 package previewcode.backend.database;
 
+import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
@@ -9,6 +10,7 @@ import previewcode.backend.services.actiondsl.Interpreter;
 import javax.inject.Inject;
 
 import static previewcode.backend.database.model.Tables.*;
+import static previewcode.backend.services.actiondsl.ActionDSL.unit;
 import static previewcode.backend.services.actions.DatabaseActions.*;
 
 public class DatabaseInterpreter extends Interpreter {
@@ -23,6 +25,15 @@ public class DatabaseInterpreter extends Interpreter {
         on(InsertPullIfNotExists.class).apply(this::insertPull);
         on(NewGroup.class).apply(this::insertNewGroup);
         on(FetchGroupsForPull.class).apply(this::fetchGroups);
+        on(AssignHunkToGroup.class).apply(this::assignHunk);
+    }
+
+    protected Unit assignHunk(AssignHunkToGroup action) {
+        db.insertInto(HUNK)
+                .columns(HUNK.GROUP_ID, HUNK.ID)
+                .values(action.groupID.id, action.hunkIdentifier)
+                .execute();
+        return unit;
     }
 
 

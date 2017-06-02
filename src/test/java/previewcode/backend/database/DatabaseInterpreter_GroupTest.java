@@ -21,8 +21,6 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
     private static final String groupTitle = "Title";
     private static final String groupDescription = "Description";
 
-    private static final PullRequestID dbPullId = new PullRequestID(42L);
-
     @BeforeEach
     @Override
     public void setup(DSLContext db) {

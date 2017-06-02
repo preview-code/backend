@@ -16,7 +16,10 @@ public class DatabaseInterpreterTest {
     protected static final String name = "backend";
     protected static final Integer number = 42;
 
-    protected PullRequestIdentifier pullIdentifier = new PullRequestIdentifier(owner, name, number);
+    protected static final PullRequestIdentifier pullIdentifier = new PullRequestIdentifier(owner, name, number);
+
+    protected static final PullRequestID dbPullId = new PullRequestID(42L);
+
 
     @BeforeEach
     public void setup(DSLContext db) {
