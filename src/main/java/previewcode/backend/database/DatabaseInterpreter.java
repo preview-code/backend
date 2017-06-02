@@ -1,12 +1,10 @@
 package previewcode.backend.database;
 
 import io.vavr.collection.List;
-import org.jooq.DSLContext;
-import org.jooq.Record1;
+import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.postgresql.util.PSQLException;
 import previewcode.backend.services.actiondsl.Interpreter;
-import previewcode.backend.services.actions.DatabaseActions;
 
 import javax.inject.Inject;
 
@@ -16,6 +14,7 @@ import static previewcode.backend.services.actions.DatabaseActions.*;
 public class DatabaseInterpreter extends Interpreter {
 
     private final DSLContext db;
+    private static final String UNIQUE_CONSTRAINT_VIOLATION = "23505";
 
     @Inject
     public DatabaseInterpreter(DSLContext db) {
@@ -36,7 +35,8 @@ public class DatabaseInterpreter extends Interpreter {
                             .fetchOne().getId()
             );
         } catch (DataAccessException e) {
-            if (e.getCause() instanceof PSQLException && ((PSQLException) e.getCause()).getSQLState().equals("23505")) {
+            if (e.getCause() instanceof PSQLException &&
+                    ((PSQLException) e.getCause()).getSQLState().equals(UNIQUE_CONSTRAINT_VIOLATION)) {
                 return this.fetchPullRequest(fetchPull(action.owner, action.name, action.number));
             } else {
                 throw e;
@@ -68,7 +68,9 @@ public class DatabaseInterpreter extends Interpreter {
         );
     }
 
-    protected List<PullRequestGroup> fetchGroups(FetchGroupsForPull fetchGroupsForPull) {
-        return null;
+    protected List<PullRequestGroup> fetchGroups(FetchGroupsForPull action) {
+        return List.ofAll(db.selectFrom(GROUPS)
+                .where(GROUPS.PULL_REQUEST_ID.eq(action.pullRequestID.id))
+                .fetch(PullRequestGroup::fromRecord));
     }
 }

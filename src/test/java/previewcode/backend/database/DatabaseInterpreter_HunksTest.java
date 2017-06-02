@@ -12,7 +12,12 @@ public class DatabaseInterpreter_HunksTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void assignHunk_cannotAssignTwice() {
+    public void assignHunk_cannotAssignTwice_toSameGroup() {
+        fail();
+    }
+
+    @Test
+    public void assignHunk_cannotAssignTwice_toDifferentGroups() {
         fail();
     }
 }

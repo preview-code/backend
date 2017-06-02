@@ -1,6 +1,7 @@
 package previewcode.backend.database;
 
 import io.vavr.collection.List;
+import previewcode.backend.database.model.tables.records.GroupsRecord;
 
 import static previewcode.backend.services.actiondsl.ActionDSL.*;
 import static previewcode.backend.services.actions.DatabaseActions.*;
@@ -37,6 +38,10 @@ public class PullRequestGroup {
         this.title = title;
         this.description = description;
         this.fetchHunks = fetchHunks(id);
+    }
+
+    public static PullRequestGroup fromRecord(GroupsRecord record) {
+        return new PullRequestGroup(new GroupID(record.getId()), record.getTitle(), record.getDescription());
     }
 
     @Override

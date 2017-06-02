@@ -1,17 +1,18 @@
 package previewcode.backend.database;
 
+import io.vavr.collection.List;
 import org.jooq.DSLContext;
-import org.jooq.Record3;
 import org.jooq.exception.DataAccessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import previewcode.backend.database.model.tables.records.GroupsRecord;
+import previewcode.backend.services.actiondsl.Interpreter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.junit.Assert.fail;
 import static previewcode.backend.database.model.Tables.GROUPS;
 import static previewcode.backend.database.model.Tables.PULL_REQUEST;
+import static previewcode.backend.services.actiondsl.ActionDSL.*;
 import static previewcode.backend.services.actions.DatabaseActions.*;
 
 
@@ -21,22 +22,6 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
     private static final String groupDescription = "Description";
 
     private static final PullRequestID dbPullId = new PullRequestID(42L);
-
-    //    private List<PullRequestGroup> groups = List.of(
-//            new PullRequestGroup(new GroupID(42L), "Group A", "Description A"),
-//            new PullRequestGroup(new GroupID(24L), "Group B", "Description B")
-//    );
-//
-//    private List<OrderingGroup> groupsWithoutHunks = groups.map(group ->
-//            new OrderingGroupWithID(group, Lists.newLinkedList())
-//    );
-//
-//    private List<HunkID> hunkIDs = List.of(
-//            new HunkID("abcd"), new HunkID("efgh"), new HunkID("ijkl"));
-//
-//    private List<OrderingGroup> groupsWithHunks = groups.map(group ->
-//            new OrderingGroupWithID(group, hunkIDs.map(id -> id.hunkID).toJavaList())
-//    );
 
     @BeforeEach
     @Override
@@ -59,7 +44,8 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
 
     @Test
     public void newGroup_returnsNewId(DSLContext db) throws Exception {
-        db.insertInto(GROUPS, GROUPS.PULL_REQUEST_ID, GROUPS.TITLE, GROUPS.DESCRIPTION)
+        db.insertInto(GROUPS)
+                .columns(GROUPS.PULL_REQUEST_ID, GROUPS.TITLE, GROUPS.DESCRIPTION)
                 .values(dbPullId.id, "A", "B")
                 .values(dbPullId.id, "C", "D")
                 .values(dbPullId.id, "E", "F")
@@ -78,8 +64,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
     @Test
     public void newGroup_canInsertDuplicates(DSLContext db) throws Exception {
         NewGroup create = newGroup(dbPullId, groupTitle, groupDescription);
-
-        GroupID groupID = eval(create.then(create));
+        eval(create.then(create));
 
         Integer groupCount = db.selectCount().from(GROUPS).fetchOne().value1();
         assertThat(groupCount).isEqualTo(2);
@@ -106,17 +91,56 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
 
 
     @Test
-    public void fetchGroups_returnsAllGroups() {
-        fail();
+    public void fetchGroups_returnsAllGroups(DSLContext db) throws Exception {
+        db.insertInto(PULL_REQUEST, PULL_REQUEST.ID, PULL_REQUEST.OWNER, PULL_REQUEST.NAME, PULL_REQUEST.NUMBER)
+                .values(dbPullId.id+1, "xyz", "pqr", number)
+                .execute();
+
+        db.insertInto(GROUPS)
+                .columns(GROUPS.PULL_REQUEST_ID, GROUPS.TITLE, GROUPS.DESCRIPTION)
+                .values(dbPullId.id, "A", "B")
+                .values(dbPullId.id, "C", "D")
+                .values(dbPullId.id, "E", "F")
+                .values(dbPullId.id+1, "X", "Y")
+                .execute();
+
+        List<String> fetchedTitles = eval(fetchGroups(dbPullId)).map(g -> g.title);
+        assertThat(fetchedTitles).containsOnly("A", "C", "E");
     }
 
     @Test
-    public void fetchGroups_pullRequestMustExist() {
-        fail();
+    public void fetchGroups_invalidPull_returnsNoResults() throws Exception {
+        PullRequestID invalidID = new PullRequestID(-1L);
+        List<PullRequestGroup> groups = eval(fetchGroups(invalidID));
+        assertThat(groups).isEmpty();
     }
 
     @Test
-    public void fetchGroups_fetchesCorrectGroupData() {
-        fail();
+    public void fetchGroups_fetchesCorrectGroupData(DSLContext db) throws Exception {
+        db.insertInto(GROUPS)
+                .columns(GROUPS.PULL_REQUEST_ID, GROUPS.TITLE, GROUPS.DESCRIPTION)
+                .values(dbPullId.id, "A", "B")
+                .execute();
+
+        PullRequestGroup group = eval(fetchGroups(dbPullId)).get(0);
+        assertThat(group.title).isEqualTo("A");
+        assertThat(group.description).isEqualTo("B");
+    }
+
+    @Test
+    public void fetchGroups_hasHunkFetchingAction(DSLContext db) throws Exception {
+        db.insertInto(GROUPS)
+                .columns(GROUPS.ID, GROUPS.PULL_REQUEST_ID, GROUPS.TITLE, GROUPS.DESCRIPTION)
+                .values(1234L, dbPullId.id, "A", "B")
+                .execute();
+
+        Action<List<HunkID>> hunkFetchAction = eval(fetchGroups(dbPullId)).get(0).fetchHunks;
+
+        Interpreter i = interpret()
+                .on(FetchHunksForGroup.class).stop(
+                        action -> assertThat(action.groupID).isEqualTo(new GroupID(1234L)));
+
+        assertThatExceptionOfType(Interpreter.StoppedException.class)
+                .isThrownBy(() -> i.unsafeEvaluate(hunkFetchAction));
     }
 }
