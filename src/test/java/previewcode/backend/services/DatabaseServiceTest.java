@@ -158,7 +158,7 @@ public class DatabaseServiceTest {
                 interpret()
                         .on(InsertPullIfNotExists.class).returnA(pullRequestID)
                         .on(ApproveHunk.class).stop(approveHunk -> {
-                            assertThat(approveHunk.approve)
+                            assertThat(approveHunk.status)
                                     .isEqualTo(ApproveStatus.DISAPPROVED);
                             assertThat(approveHunk.githubUser)
                                     .isEqualTo("1");

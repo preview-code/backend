@@ -1,19 +1,16 @@
 package previewcode.backend.database;
 
+import io.vavr.collection.List;
 import org.jooq.DSLContext;
 import org.jooq.exception.DataAccessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import previewcode.backend.DTO.ApproveStatus;
 import previewcode.backend.database.model.tables.records.ApprovalRecord;
-import previewcode.backend.database.model.tables.records.GroupsRecord;
-import previewcode.backend.services.actions.DatabaseActions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static previewcode.backend.database.model.Tables.APPROVAL;
-import static previewcode.backend.database.model.Tables.GROUPS;
 import static previewcode.backend.database.model.Tables.PULL_REQUEST;
 import static previewcode.backend.services.actions.DatabaseActions.*;
 
@@ -22,7 +19,7 @@ public class DatabaseInterpreter_ApprovalTest extends DatabaseInterpreterTest {
 
     private static final String hunkID = "hunkID";
     private static final String githubUser = "user";
-    private static final ApproveStatus approve = ApproveStatus.APPROVED;
+    private static final ApproveStatus statusApproved = ApproveStatus.APPROVED;
 
     private static final PullRequestID dbPullId = new PullRequestID(42L);
 
@@ -38,7 +35,7 @@ public class DatabaseInterpreter_ApprovalTest extends DatabaseInterpreterTest {
 
     @Test
     public void approveHunk_insertApproval(DSLContext db) throws Exception {
-        eval(setApprove(dbPullId, hunkID, githubUser, approve));
+        eval(setApprove(dbPullId, hunkID, githubUser, statusApproved));
 
         Integer approveCount = db.selectCount().from(APPROVAL).fetchOne().value1();
         assertThat(approveCount).isEqualTo(1);
@@ -46,7 +43,7 @@ public class DatabaseInterpreter_ApprovalTest extends DatabaseInterpreterTest {
 
     @Test
     public void approveHunk_insertsCorrectData(DSLContext db) throws Exception {
-        DatabaseActions.ApproveHunk create = setApprove(dbPullId, hunkID, githubUser, approve);
+        ApproveHunk create = setApprove(dbPullId, hunkID, githubUser, statusApproved);
         eval(create);
 
         ApprovalRecord approvalRecord = db.selectFrom(APPROVAL).fetchOne();
@@ -54,23 +51,29 @@ public class DatabaseInterpreter_ApprovalTest extends DatabaseInterpreterTest {
         assertThat(approvalRecord.getPullRequestId()).isEqualTo(create.pullRequestID.id);
         assertThat(approvalRecord.getHunkId()).isEqualTo(create.hunkId);
         assertThat(approvalRecord.getApprover()).isEqualTo(create.githubUser);
-        assertThat(approvalRecord.getStatus()).isEqualTo(create.approve.getApproved());
+        assertThat(approvalRecord.getStatus()).isEqualTo(create.status.getApproved());
     }
 
     @Test
     public void approveHunk_requiresPullRequest(DSLContext db) throws Exception {
-        DatabaseActions.ApproveHunk create = setApprove(new PullRequestID(424242424242L), hunkID, githubUser, approve);
-
+        ApproveHunk create = setApprove(new PullRequestID(424242424242L), hunkID, githubUser, statusApproved);
         assertThatExceptionOfType(DataAccessException.class).isThrownBy(() -> eval(create));
-
     }
 
     @Test
-    public void approveHunk_uniqueConstraints(DSLContext db) throws Exception {
-        DatabaseActions.ApproveHunk create = setApprove(dbPullId, hunkID, githubUser, approve);
+    public void approveHunk_onDuplicate_updatesStatus(DSLContext db) throws Exception {
+        ApproveHunk first = setApprove(dbPullId, hunkID, githubUser, statusApproved);
+        ApproveHunk second = setApprove(dbPullId, hunkID, githubUser, ApproveStatus.DISAPPROVED);
+        eval(first.then(second));
 
-        assertThatExceptionOfType(DataAccessException.class).isThrownBy(() -> eval(create.then(create)));
+        Integer approveCount = db.selectCount().from(APPROVAL).fetchOne().value1();
+        assertThat(approveCount).isEqualTo(1);
 
+        List<ApproveStatus> fetchedStatuses = List.ofAll(db.selectFrom(APPROVAL).fetch(APPROVAL.STATUS))
+                .map(ApproveStatus::fromString);
+
+        assertThat(fetchedStatuses).hasOnlyOneElementSatisfying(
+                s -> assertThat(s).isEqualTo(second.status)
+        );
     }
-
 }

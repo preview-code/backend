@@ -5,14 +5,11 @@ import io.vavr.collection.Seq;
 import org.junit.jupiter.api.Test;
 import previewcode.backend.APIModule;
 import previewcode.backend.DTO.ApproveRequest;
-import previewcode.backend.DTO.IsApproved;
 import previewcode.backend.DTO.OrderingGroup;
 import previewcode.backend.DTO.PullRequestIdentifier;
-import previewcode.backend.services.actiondsl.ActionDSL;
 import previewcode.backend.test.helpers.ApiEndPointTest;
 import previewcode.backend.database.PullRequestGroup;
 import previewcode.backend.services.IDatabaseService;
-import previewcode.backend.services.actiondsl.ActionDSL.*;
 import previewcode.backend.services.actiondsl.Interpreter;
 
 import javax.ws.rs.client.Entity;
@@ -55,7 +52,7 @@ public class EndPointTest {
     }
 
     @Test
-    public void isApprovedApiIsReachable(WebTarget target) {
+    public void setApprovedApiIsReachable(WebTarget target) {
         Response response = target
                 .path("/v2/preview-code/backend/pulls/42/setApprove")
                 .request("application/json")

@@ -56,7 +56,7 @@ public class ApprovalsAPI {
                               ApproveRequest body) throws Exception {
 //        GHMyself user = githubService.getLoggedInUser();
 //        if (body.githubLogin != user.getId()) {
-//            throw new IllegalArgumentException("Can not set approve status of other user");
+//            throw new IllegalArgumentException("Can not set status status of other user");
 //        }
 //        firebaseService.setApproved(owner, name, number, body);
 

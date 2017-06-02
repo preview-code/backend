@@ -83,14 +83,14 @@ public class DatabaseActions {
         public final PullRequestID pullRequestID;
         public final String hunkId;
         public final String githubUser;
-        public final ApproveStatus approve;
+        public final ApproveStatus status;
 
-        public ApproveHunk(PullRequestID pullRequestID, String hunkId, String githubUser, ApproveStatus approve) {
+        public ApproveHunk(PullRequestID pullRequestID, String hunkId, String githubUser, ApproveStatus status) {
 
             this.pullRequestID = pullRequestID;
             this.hunkId = hunkId;
             this.githubUser = githubUser;
-            this.approve = approve;
+            this.status = status;
         }
     }
 

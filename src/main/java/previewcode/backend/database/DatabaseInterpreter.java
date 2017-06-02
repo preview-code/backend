@@ -37,10 +37,12 @@ public class DatabaseInterpreter extends Interpreter {
         return unit;
     }
 
-    protected Unit approveHunk(ApproveHunk approveHunk) {
+    protected Unit approveHunk(ApproveHunk action) {
       db.insertInto(APPROVAL)
               .columns(APPROVAL.PULL_REQUEST_ID, APPROVAL.HUNK_ID, APPROVAL.APPROVER, APPROVAL.STATUS)
-              .values(approveHunk.pullRequestID.id, approveHunk.hunkId, approveHunk.githubUser, approveHunk.approve.getApproved())
+              .values(action.pullRequestID.id, action.hunkId, action.githubUser, action.status.getApproved())
+              .onDuplicateKeyUpdate()
+              .set(APPROVAL.STATUS, action.status.getApproved())
               .execute();
       return unit;
     }

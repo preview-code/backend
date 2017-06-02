@@ -359,11 +359,6 @@
                             <inputSchema>${db.schema}</inputSchema>
                         </database>
 
-                        <generate>
-                            <pojos>true</pojos>
-                            <daos>true</daos>
-                        </generate>
-
                         <target>
                             <packageName>previewcode.backend.database.model</packageName>
                             <directory>src/main/java</directory>
