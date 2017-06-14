@@ -101,10 +101,40 @@ public class DatabaseActions {
         public FetchHunksForGroup(GroupID groupID) {
             this.groupID = groupID;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            FetchHunksForGroup that = (FetchHunksForGroup) o;
+
+            return groupID.equals(that.groupID);
+        }
+
+        @Override
+        public int hashCode() {
+            return groupID.hashCode();
+        }
     }
 
     public static class FetchHunkApprovals extends Action<List<ApproveStatus>> {
         private final HunkID hunkID;
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            FetchHunkApprovals that = (FetchHunkApprovals) o;
+
+            return hunkID.equals(that.hunkID);
+        }
+
+        @Override
+        public int hashCode() {
+            return hunkID.hashCode();
+        }
 
         public FetchHunkApprovals(HunkID hunkID) {
             this.hunkID = hunkID;

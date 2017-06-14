@@ -11,11 +11,13 @@ import previewcode.backend.database.HunkID;
 import previewcode.backend.database.PullRequestGroup;
 import previewcode.backend.database.PullRequestID;
 import previewcode.backend.services.actiondsl.Interpreter;
+import previewcode.backend.services.actions.DatabaseActions;
 
 import java.util.Collection;
 import java.util.function.Consumer;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static previewcode.backend.services.actiondsl.ActionDSL.*;
 import static previewcode.backend.services.actions.DatabaseActions.*;
 
@@ -50,6 +52,10 @@ public class DatabaseServiceTest {
     );
 
     private ApproveRequest approveStatus = new ApproveRequest("hunkID", ApproveStatus.DISAPPROVED, 1);
+
+    private List<ApproveStatus> hunkApprovals =  List.of(
+                ApproveStatus.APPROVED
+            );
 
     @Test
     public void insertsPullIfNotExists() throws Exception {
@@ -195,17 +201,39 @@ public class DatabaseServiceTest {
     }
 
     @Test
-    void getApproval_fetches_group_approvals() throws Exception {
+    void getApproval_fetches_hunks() throws Exception {
         Action<?> dbAction = service.getApproval(pullIdentifier);
+
+        List<PullRequestGroup> oneGroup = List.of(
+                new PullRequestGroup(new GroupID(42L), "Group A", "Description A")
+        );
+
+        Interpreter.Stepper<?> stepper = interpret()
+                .on(FetchPull.class).returnA(pullRequestID)
+                .on(FetchGroupsForPull.class).returnA(oneGroup)
+                .stepwiseEval(dbAction);
+        stepper.next();
+        List<Action<?>> next = stepper.next();
+         assertThat(next).containsOnly(fetchHunks(oneGroup.head().id));
+    }
+
+    @Test
+    void getApproval_fetches_hunk_approvals() throws Exception {
+        Action<?> dbAction = service.getApproval(pullIdentifier);
+
+        HunkID id = new HunkID("abcd");
+        List<HunkID> oneHunk = List.of(id);
 
         Interpreter.Stepper<?> stepper = interpret()
                 .on(FetchPull.class).returnA(pullRequestID)
                 .on(FetchGroupsForPull.class).returnA(groups)
+                .on(FetchHunksForGroup.class).returnA(oneHunk)
                 .stepwiseEval(dbAction);
         stepper.next();
+        stepper.next();
+
         List<Action<?>> next = stepper.next();
-        // assertThat(next).containsOnly(fetchGroups(pullRequestID));
+
+        assertThat(next).containsOnly(new FetchHunkApprovals(id));
     }
-
-
 }
