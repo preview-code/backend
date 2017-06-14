@@ -3,6 +3,8 @@ package previewcode.backend.services.actiondsl;
 import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
 import io.vavr.collection.Seq;
+import previewcode.backend.services.actiondsl.WithSyntax.*;
+
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -166,11 +168,6 @@ public class ActionDSL {
         public <B> Action<B> ap(Action<Function<? super A, ? extends B>> f) {
             return new Apply<>(this.f.ap(f.map(fBC -> fBC::compose)), action);
         }
-
-        @Override
-        public <B> Action<B> then(Function<? super A, ? extends Action<B>> f) {
-            return new Suspend<>(f, action.then(x -> this.f.map(fx -> fx.apply(x))));
-        }
     }
 
     public static class Suspend<A, X> extends Action<A> {
@@ -238,6 +235,11 @@ public class ActionDSL {
      */
     public static <A, B> Function<Seq<A>, Action<Seq<B>>> traverse(Function<? super A, ? extends Action<B>> f) {
         return xs -> sequence(xs.map(f));
+    }
+
+
+    public static <A> W1<A> with(Action<A> a) {
+        return new W1<A>(a);
     }
 
     /**
