@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.google.inject.servlet.RequestScoped;
+import io.atlassian.fugue.Unit;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -21,32 +22,63 @@ import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import previewcode.backend.DTO.GitHubPullRequest;
-import previewcode.backend.DTO.GitHubStatus;
-import previewcode.backend.DTO.OrderingStatus;
-import previewcode.backend.DTO.PRComment;
-import previewcode.backend.DTO.PRLineComment;
-import previewcode.backend.DTO.PRbody;
-import previewcode.backend.DTO.PrNumber;
-import previewcode.backend.DTO.PullRequestIdentifier;
+import previewcode.backend.DTO.*;
 import previewcode.backend.api.exceptionmapper.GitHubApiException;
+import previewcode.backend.api.exceptionmapper.NoTokenException;
+import previewcode.backend.services.actiondsl.ActionDSL.Action;
 
+import javax.ws.rs.NotAuthorizedException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
+
+import static previewcode.backend.services.actions.GitHubActions.*;
+import static previewcode.backend.services.actiondsl.ActionDSL.*;
+import static previewcode.backend.services.actions.RequestContextActions.*;
 
 /**
- * An abstract class that connects with github
- *
+ * An abstract class that connects with GitHub
  */
 @RequestScoped
 public class GithubService {
 
+    public static class V2 {
+
+        private static final String GITHUB_WEBHOOK_USER_AGENT_PREFIX = "GitHub-Hookshot/";
+        private static final String GITHUB_WEBHOOK_SECRET_HEADER = "X-Hub-Signature";
+        private static final String TOKEN_PARAMETER = "access_token";
+
+
+        public Action<Unit> authenticate() {
+            Predicate<String> notNull = Objects::nonNull;
+            Predicate<String> isWebHookUserAgent = s -> s.startsWith(GITHUB_WEBHOOK_USER_AGENT_PREFIX);
+
+            return getUserAgent.map(ua -> notNull.and(isWebHookUserAgent).test(ua)).then(isWebHook -> {
+                if (isWebHook) {
+                    return with(getRequestBody)
+                            .and(getHeader(GITHUB_WEBHOOK_SECRET_HEADER))
+                            .then(verifyWebHookSecret)
+                            .then(getJsonBody)
+                            .map(InstallationID::fromJson)
+                            .then(authenticateInstallation);
+                } else {
+                    return getQueryParam(TOKEN_PARAMETER)
+                            .map(o -> o.getOrElseThrow(NoTokenException::new))
+                            .map(GitHubUserToken::fromString)
+                            .then(getUser)
+                            .toUnit();
+                }
+            });
+        }
+
+
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(GithubService.class);
     private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
     private static final ObjectMapper mapper = new ObjectMapper();
-
-
 
     @Inject
     @Named("github.token.builder")
@@ -62,12 +94,9 @@ public class GithubService {
      *
      * @param gitHubProvider
      *            The provider for GitHub data
-     * @throws IOException
-     *
      */
     @Inject
-    protected GithubService(@Named("github.user") final Provider<GitHub> gitHubProvider)
-            throws IOException {
+    protected GithubService(@Named("github.user") final Provider<GitHub> gitHubProvider) {
         githubProvider = gitHubProvider;
     }
 

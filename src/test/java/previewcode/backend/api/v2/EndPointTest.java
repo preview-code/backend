@@ -98,7 +98,7 @@ class TestModule extends APIModule implements IDatabaseService {
 
         // The interpreter always evaluates any action to Unit
         this.bind(Interpreter.class).toInstance(
-                new Interpreter().on(NoOp.class).apply(x -> unit)
+                interpret().on(NoOp.class).apply(x -> unit)
         );
     }
 }

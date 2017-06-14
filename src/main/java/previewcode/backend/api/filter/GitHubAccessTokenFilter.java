@@ -41,21 +41,21 @@ import java.util.Date;
 @PreMatching
 public class GitHubAccessTokenFilter implements ContainerRequestFilter {
 
-    private static final Logger logger = LoggerFactory.getLogger(GitHubAccessTokenFilter.class);
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
 
-    private static final String TOKEN_PARAMETER = "access_token";
-    private static final String CURRENT_USER_NAME = "github.user";
-    private static final String CURRENT_INSTALLATION_TOKEN = "github.installation.token";
-    private static final String CURRENT_USER_TOKEN = "github.user.token";
-    private static final String CURRENT_TOKEN_BUILDER = "github.token.builder";
-
-    private static final String GITHUB_WEBHOOK_USER_AGENT_PREFIX = "GitHub-Hookshot/";
-    private static final String GITHUB_WEBHOOK_SECRET_HEADER = "X-Hub-Signature";
-
-    private static final Response UNAUTHORIZED = Response.status(Response.Status.UNAUTHORIZED).build();
-    private static final RequestBody EMPTY_REQUEST_BODY = RequestBody.create(null, new byte[]{});
+    private static class Constants {
+        private static final Logger logger = LoggerFactory.getLogger(GitHubAccessTokenFilter.class);
+        private static final String TOKEN_PARAMETER = "access_token";
+        private static final String CURRENT_USER_NAME = "github.user";
+        private static final String CURRENT_INSTALLATION_TOKEN = "github.installation.token";
+        private static final String CURRENT_USER_TOKEN = "github.user.token";
+        private static final String CURRENT_TOKEN_BUILDER = "github.token.builder";
+        private static final String GITHUB_WEBHOOK_USER_AGENT_PREFIX = "GitHub-Hookshot/";
+        private static final String GITHUB_WEBHOOK_SECRET_HEADER = "X-Hub-Signature";
+        private static final Response UNAUTHORIZED = Response.status(Response.Status.UNAUTHORIZED).build();
+        private static final RequestBody EMPTY_REQUEST_BODY = RequestBody.create(null, new byte[]{});
+    }
 
     @Inject
     private Algorithm jwtSigningAlgorithm;
@@ -88,27 +88,27 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
      */
     private void checkForWehbook(ContainerRequestContext context) throws IOException {
         String userAgent = context.getHeaderString("User-Agent");
-        if (userAgent != null && userAgent.startsWith(GITHUB_WEBHOOK_USER_AGENT_PREFIX)) {
+        if (userAgent != null && userAgent.startsWith(Constants.GITHUB_WEBHOOK_USER_AGENT_PREFIX)) {
 
             String requestBody = readRequestBody(context);
 
             try {
                 verifyGitHubWebhookSecret(context, requestBody);
             } catch (Exception e) {
-                logger.warn("Could not verify GitHub webhook call:", e);
-                context.abortWith(UNAUTHORIZED);
+                Constants.logger.warn("Could not verify GitHub webhook call:", e);
+                context.abortWith(Constants.UNAUTHORIZED);
                 return;
             }
             String installationToken = getGitHubInstallationToken(requestBody);
-            logger.debug("Authenticated as Installation with: " + installationToken.hashCode());
+            Constants.logger.debug("Authenticated as Installation with: " + installationToken.hashCode());
 
-            context.setProperty(Key.get(String.class, Names.named(CURRENT_INSTALLATION_TOKEN)).toString(), installationToken);
+            context.setProperty(Key.get(String.class, Names.named(Constants.CURRENT_INSTALLATION_TOKEN)).toString(), installationToken);
             GithubService.TokenBuilder builder = (Request.Builder request) ->
                     request
                         .header("Authorization", "token " + installationToken)
                         .addHeader("Accept", "application/vnd.github.machine-man-preview+json");
 
-            context.setProperty(Key.get(GithubService.TokenBuilder.class, Names.named(CURRENT_TOKEN_BUILDER)).toString(), builder);
+            context.setProperty(Key.get(GithubService.TokenBuilder.class, Names.named(Constants.CURRENT_TOKEN_BUILDER)).toString(), builder);
         }
     }
 
@@ -132,7 +132,7 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
      */
     private void verifyGitHubWebhookSecret(ContainerRequestContext context, String requestBody)
             throws NoSuchAlgorithmException, InvalidKeyException, NotAuthorizedException {
-        String receivedHash = context.getHeaderString(GITHUB_WEBHOOK_SECRET_HEADER);
+        String receivedHash = context.getHeaderString(Constants.GITHUB_WEBHOOK_SECRET_HEADER);
         if (receivedHash != null && receivedHash.startsWith("sha1=")) {
             final Mac mac = Mac.getInstance("HmacSHA1");
             mac.init(webhookSecret);
@@ -141,7 +141,7 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
                 throw new NotAuthorizedException("The received MAC does not match the configured MAC");
             }
         } else {
-            throw new NotAuthorizedException("Expected to find an MAC hash in " + GITHUB_WEBHOOK_SECRET_HEADER);
+            throw new NotAuthorizedException("Expected to find an MAC hash in " + Constants.GITHUB_WEBHOOK_SECRET_HEADER);
         }
     }
 
@@ -152,7 +152,7 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
      * @throws IOException when the request body cannot be read or when the call to GitHub fails.
      */
     private String getGitHubInstallationToken(String requestBody) throws IOException {
-        JsonNode body = mapper.readTree(requestBody);
+        JsonNode body = MAPPER.readTree(requestBody);
         String installationId = body.get("installation").get("id").asText();
 
         Calendar calendar = Calendar.getInstance();
@@ -166,7 +166,7 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
                 .withIssuer(INTEGRATION_ID)
                 .sign(jwtSigningAlgorithm);
 
-        logger.info("Authenticating installation {" + installationId + "} as integration {" + INTEGRATION_ID + "}");
+        Constants.logger.info("Authenticating installation {" + installationId + "} as integration {" + INTEGRATION_ID + "}");
         return this.authenticateInstallation(installationId, token);
     }
 
@@ -175,15 +175,15 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
                 .url("https://api.github.com/installations/" + installationId + "/access_tokens")
                 .addHeader("Accept", "application/vnd.github.machine-man-preview+json")
                 .addHeader("Authorization", "Bearer " + integrationToken)
-                .post(EMPTY_REQUEST_BODY)
+                .post(Constants.EMPTY_REQUEST_BODY)
                 .build();
 
-        logger.debug("[OKHTTP3] Executing request: " + request);
+        Constants.logger.debug("[OKHTTP3] Executing request: " + request);
 
         try (okhttp3.Response response = OK_HTTP_CLIENT.newCall(request).execute()) {
             String body = response.body().string();
             if (response.isSuccessful()) {
-                return mapper.readValue(body, JsonNode.class).get("token").asText();
+                return MAPPER.readValue(body, JsonNode.class).get("token").asText();
             } else {
                 throw new GitHubApiException(body, response.code());
             }
@@ -206,19 +206,19 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
     private void checkForOAuthToken(ContainerRequestContext context) throws IOException {
         final MultivaluedMap<String, String> parameters = context.getUriInfo()
                 .getQueryParameters();
-        final String token = parameters.getFirst(TOKEN_PARAMETER);
+        final String token = parameters.getFirst(Constants.TOKEN_PARAMETER);
 
         if (!Strings.isNullOrEmpty(token)) {
             try {
                 final GitHub user = GitHub.connectUsingOAuth(token);
-                context.setProperty(Key.get(GitHub.class, Names.named(CURRENT_USER_NAME)).toString(), user);
-                context.setProperty(Key.get(String.class, Names.named(CURRENT_USER_TOKEN)).toString(), token);
-                logger.debug("Authenticated as github user with: " + token.hashCode());
+                context.setProperty(Key.get(GitHub.class, Names.named(Constants.CURRENT_USER_NAME)).toString(), user);
+                context.setProperty(Key.get(String.class, Names.named(Constants.CURRENT_USER_TOKEN)).toString(), token);
+                Constants.logger.debug("Authenticated as github user with: " + token.hashCode());
                 GithubService.TokenBuilder builder = (Request.Builder b) -> b.header("Authorization", "token " + token);
-                context.setProperty(Key.get(GithubService.TokenBuilder.class, Names.named(CURRENT_TOKEN_BUILDER)).toString(), builder);
+                context.setProperty(Key.get(GithubService.TokenBuilder.class, Names.named(Constants.CURRENT_TOKEN_BUILDER)).toString(), builder);
             } catch (final NotAuthorizedException e) {
-                logger.warn("Could not connect to GitHub on behalf of user with OAuth:", e);
-                context.abortWith(UNAUTHORIZED);
+                Constants.logger.warn("Could not connect to GitHub on behalf of user with OAuth:", e);
+                context.abortWith(Constants.UNAUTHORIZED);
             }
         }
     }
