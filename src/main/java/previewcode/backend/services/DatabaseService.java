@@ -60,8 +60,11 @@ public class DatabaseService implements IDatabaseService {
         return fetchHunks(groupID).then(
                 hunkIDS -> traverse(hunkIDS, fetchHunkApprovals)
                         .map(DatabaseService::combineMaps)
-                        .map(hunkApprovals ->
-                                new ApprovedGroup(isGroupApproved(hunkIDS.length(), hunkApprovals), hunkApprovals, groupID))
+                        .map(hunkApprovals ->  new ApprovedGroup(
+                                isGroupApproved(hunkIDS.length(), hunkApprovals),
+                                hunkApprovals,
+                                groupID)
+                        )
         );
     }
 

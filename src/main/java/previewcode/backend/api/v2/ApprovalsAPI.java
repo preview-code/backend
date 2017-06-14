@@ -27,7 +27,7 @@ public class ApprovalsAPI {
 
     @Path("getApprovals")
     @GET
-    public Response getIsApprove(@PathParam("owner") String owner,
+    public Response getApprovals(@PathParam("owner") String owner,
                                  @PathParam("name") String name,
                                  @PathParam("number") Integer number) throws Exception {
         PullRequestIdentifier pull = new PullRequestIdentifier(owner, name, number);

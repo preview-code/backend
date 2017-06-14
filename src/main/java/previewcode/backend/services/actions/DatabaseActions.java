@@ -19,6 +19,26 @@ public class DatabaseActions {
             this.name = pullRequestIdentifier.name;
             this.number = pullRequestIdentifier.number;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            FetchPull fetchPull = (FetchPull) o;
+
+            if (!owner.equals(fetchPull.owner)) return false;
+            if (!name.equals(fetchPull.name)) return false;
+            return number.equals(fetchPull.number);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = owner.hashCode();
+            result = 31 * result + name.hashCode();
+            result = 31 * result + number.hashCode();
+            return result;
+        }
     }
 
     public static class InsertPullIfNotExists extends FetchPull {
@@ -56,6 +76,21 @@ public class DatabaseActions {
 
         public FetchGroupsForPull(PullRequestID pullRequestID) {
             this.pullRequestID = pullRequestID;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            FetchGroupsForPull that = (FetchGroupsForPull) o;
+
+            return pullRequestID.equals(that.pullRequestID);
+        }
+
+        @Override
+        public int hashCode() {
+            return pullRequestID.hashCode();
         }
     }
 

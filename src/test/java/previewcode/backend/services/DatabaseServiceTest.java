@@ -173,4 +173,39 @@ public class DatabaseServiceTest {
 
     }
 
+
+    @Test
+    void getApproval_fetches_pull_pullRequest() {
+        Action<?> dbAction = service.getApproval(pullIdentifier);
+
+        Interpreter.Stepper<?> stepper = interpret().stepwiseEval(dbAction);
+        List<Action<?>> peek = stepper.peek();
+        assertThat(peek).containsOnly(fetchPull(pullIdentifier));
+    }
+
+    @Test
+    void getApproval_fetches_pull_groups() throws Exception {
+        Action<?> dbAction = service.getApproval(pullIdentifier);
+
+        Interpreter.Stepper<?> stepper = interpret()
+                .on(FetchPull.class).returnA(pullRequestID)
+                .stepwiseEval(dbAction);
+        List<Action<?>> next = stepper.next();
+        assertThat(next).containsOnly(fetchGroups(pullRequestID));
+    }
+
+    @Test
+    void getApproval_fetches_group_approvals() throws Exception {
+        Action<?> dbAction = service.getApproval(pullIdentifier);
+
+        Interpreter.Stepper<?> stepper = interpret()
+                .on(FetchPull.class).returnA(pullRequestID)
+                .on(FetchGroupsForPull.class).returnA(groups)
+                .stepwiseEval(dbAction);
+        stepper.next();
+        List<Action<?>> next = stepper.next();
+        // assertThat(next).containsOnly(fetchGroups(pullRequestID));
+    }
+
+
 }
