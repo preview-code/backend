@@ -2,7 +2,7 @@ package previewcode.backend.api.v2;
 
 import io.atlassian.fugue.Unit;
 import previewcode.backend.DTO.ApproveRequest;
-import previewcode.backend.DTO.IsApproved;
+import previewcode.backend.DTO.ApprovedPullRequest;
 import previewcode.backend.DTO.PullRequestIdentifier;
 import previewcode.backend.services.IDatabaseService;
 import previewcode.backend.services.actiondsl.Interpreter;
@@ -25,15 +25,15 @@ public class ApprovalsAPI {
         this.databaseService = databaseService;
     }
 
-//    @Path("getApprovals")
-//    @GET
-//    public Response getIsApprove(@PathParam("owner") String owner,
-//                                 @PathParam("name") String name,
-//                                 @PathParam("number") Integer number,
-//                                 IsApproved body) throws Exception {
-//
-//    return ;
-//    }
+    @Path("getApprovals")
+    @GET
+    public Response getIsApprove(@PathParam("owner") String owner,
+                                 @PathParam("name") String name,
+                                 @PathParam("number") Integer number) throws Exception {
+        PullRequestIdentifier pull = new PullRequestIdentifier(owner, name, number);
+        Action<ApprovedPullRequest> action = databaseService.getApproval(pull);
+        return interpreter.evaluateToResponse(action);
+    }
 
     /**
      * Creates a pull request

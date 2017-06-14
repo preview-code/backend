@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * Information if a pull request or it's groups/hunks are approved
  */
-public class IsApproved {
+public class ApprovedPullRequest {
     /**
      * If the pull request is approved
      */
@@ -19,10 +19,10 @@ public class IsApproved {
      * The groups of this pull request
      */
     @JsonProperty("groups")
-    public Map<String, ApprovedGroup> groups;
+    public Map<Long, ApprovedGroup> groups;
 
     @JsonCreator
-    public IsApproved(@JsonProperty("approved") ApproveStatus approved, @JsonProperty("groups") Map<String, ApprovedGroup> groups ) {
+    public ApprovedPullRequest(@JsonProperty("approved") ApproveStatus approved, @JsonProperty("groups") Map<Long, ApprovedGroup> groups ) {
         this.approved = approved;
         this.groups = groups;
     }

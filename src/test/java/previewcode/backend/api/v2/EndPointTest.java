@@ -5,6 +5,7 @@ import io.vavr.collection.Seq;
 import org.junit.jupiter.api.Test;
 import previewcode.backend.APIModule;
 import previewcode.backend.DTO.ApproveRequest;
+import previewcode.backend.DTO.ApprovedPullRequest;
 import previewcode.backend.DTO.OrderingGroup;
 import previewcode.backend.DTO.PullRequestIdentifier;
 import previewcode.backend.test.helpers.ApiEndPointTest;
@@ -79,6 +80,11 @@ class TestModule extends APIModule implements IDatabaseService {
 
     @Override
     public Action<io.vavr.collection.List<PullRequestGroup>> fetchPullRequestGroups(PullRequestIdentifier pull) {
+        return new NoOp<>();
+    }
+
+    @Override
+    public Action<ApprovedPullRequest> getApproval(PullRequestIdentifier pull) {
         return new NoOp<>();
     }
 

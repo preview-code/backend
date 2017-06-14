@@ -4,10 +4,7 @@ import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
 import previewcode.backend.DTO.ApproveStatus;
 import previewcode.backend.DTO.PullRequestIdentifier;
-import previewcode.backend.database.GroupID;
-import previewcode.backend.database.HunkID;
-import previewcode.backend.database.PullRequestGroup;
-import previewcode.backend.database.PullRequestID;
+import previewcode.backend.database.*;
 import previewcode.backend.services.actiondsl.ActionDSL.*;
 
 public class DatabaseActions {
@@ -71,6 +68,14 @@ public class DatabaseActions {
         }
     }
 
+    public static class FetchHunkApprovals extends Action<List<ApproveStatus>> {
+        private final HunkID hunkID;
+
+        public FetchHunkApprovals(HunkID hunkID) {
+            this.hunkID = hunkID;
+        }
+    }
+
     public static class DeleteGroup extends Action<Unit> {
         public final GroupID groupID;
 
@@ -122,6 +127,10 @@ public class DatabaseActions {
         return new FetchHunksForGroup(groupID);
     }
 
+    public static FetchHunkApprovals fetchApprovals(HunkID hunkID) {
+        return new FetchHunkApprovals(hunkID);
+    }
+
     public static DeleteGroup delete(GroupID groupID) {
         return new DeleteGroup(groupID);
     }
@@ -129,4 +138,5 @@ public class DatabaseActions {
     public static ApproveHunk setApprove(PullRequestID pullRequestID, String hunkId, String githubUser, ApproveStatus approve) {
         return new ApproveHunk(pullRequestID, hunkId, githubUser, approve);
     }
+
 }
