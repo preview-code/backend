@@ -211,8 +211,8 @@ public class ActionDSL {
      * @param <A> The type of each action
      * @return A single action that returns if all sequenced actions have completed.
      */
-    public static <A> Action<Seq<A>> sequence(Seq<Action<A>> actions) {
-        Function<A, Function<? super Seq<A>, ? extends Seq<A>>> cons = x -> xs -> xs.append(x);
+    public static <A> Action<List<A>> sequence(List<Action<A>> actions) {
+        Function<A, Function<? super List<A>, ? extends List<A>>> cons = x -> xs -> xs.append(x);
         return actions.map(a -> a.map(cons)).foldLeft(pure(List.empty()), Action::ap);
     }
 
@@ -226,14 +226,14 @@ public class ActionDSL {
      * @param <B> Result type of the actions
      * @return  A single action that returns if all sequenced actions have completed.
      */
-    public static <A, B> Action<Seq<B>> traverse(Seq<A> xs, Function<? super A, ? extends Action<B>> f) {
+    public static <A, B> Action<List<B>> traverse(List<A> xs, Function<? super A, ? extends Action<B>> f) {
         return sequence(xs.map(f));
     }
 
     /**
      * Curried version of {@link #traverse(Seq, Function)}.
      */
-    public static <A, B> Function<Seq<A>, Action<Seq<B>>> traverse(Function<? super A, ? extends Action<B>> f) {
+    public static <A, B> Function<List<A>, Action<List<B>>> traverse(Function<? super A, ? extends Action<B>> f) {
         return xs -> sequence(xs.map(f));
     }
 

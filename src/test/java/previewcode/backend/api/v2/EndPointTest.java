@@ -1,7 +1,7 @@
 package previewcode.backend.api.v2;
 
 import io.atlassian.fugue.Unit;
-import io.vavr.collection.Seq;
+import io.vavr.collection.List;
 import org.junit.jupiter.api.Test;
 import previewcode.backend.APIModule;
 import previewcode.backend.DTO.*;
@@ -15,7 +15,6 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 import static previewcode.backend.services.actiondsl.ActionDSL.*;
@@ -38,12 +37,10 @@ public class EndPointTest {
 
     @Test
     public void orderingApiIsReachable(WebTarget target) {
-        List<OrderingGroup> emptyList = new ArrayList<>();
-
         Response response = target
                 .path("/v2/preview-code/backend/pulls/42/ordering")
                 .request("application/json")
-                .post(Entity.json(emptyList));
+                .post(Entity.json(new ArrayList<>()));
 
         assertThat(response.getLength()).isZero();
         assertThat(response.getStatus()).isEqualTo(200);
@@ -89,7 +86,7 @@ class TestModule extends APIModule implements IDatabaseService {
     public TestModule() {}
 
     @Override
-    public Action<Unit> updateOrdering(PullRequestIdentifier pullRequestIdentifier, Seq<OrderingGroup> body) {
+    public Action<Unit> updateOrdering(PullRequestIdentifier pullRequestIdentifier, List<OrderingGroup> body) {
         return new NoOp<>();
     }
 
@@ -109,7 +106,7 @@ class TestModule extends APIModule implements IDatabaseService {
     }
 
     @Override
-    public Action<Seq<HunkApprovals>> getHunkApprovals(PullRequestIdentifier pull) {
+    public Action<List<HunkApprovals>> getHunkApprovals(PullRequestIdentifier pull) {
         return new NoOp<>();
     }
 

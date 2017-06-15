@@ -1,6 +1,7 @@
 package previewcode.backend.api.v2;
 
 import io.atlassian.fugue.Unit;
+import io.vavr.collection.List;
 import io.vavr.collection.Seq;
 import previewcode.backend.DTO.*;
 import previewcode.backend.services.IDatabaseService;
@@ -57,7 +58,7 @@ public class ApprovalsAPI {
                                      @PathParam("name") String name,
                                      @PathParam("number") Integer number) throws Exception {
         PullRequestIdentifier pull = new PullRequestIdentifier(owner, name, number);
-        Action<Seq<HunkApprovals>> action = databaseService.getHunkApprovals(pull);
+        Action<List<HunkApprovals>> action = databaseService.getHunkApprovals(pull);
 
         return interpreter.evaluateToResponse(action);
     }

@@ -9,7 +9,7 @@ import previewcode.backend.database.PullRequestGroup;
 import static previewcode.backend.services.actiondsl.ActionDSL.*;
 
 public interface IDatabaseService {
-    Action<Unit> updateOrdering(PullRequestIdentifier pullRequestIdentifier, Seq<OrderingGroup> body);
+    Action<Unit> updateOrdering(PullRequestIdentifier pullRequestIdentifier, List<OrderingGroup> body);
 
     Action<Unit> setApproval(PullRequestIdentifier pullRequestIdentifier, ApproveRequest approval);
 
@@ -17,5 +17,5 @@ public interface IDatabaseService {
 
     Action<ApprovedPullRequest> getApproval(PullRequestIdentifier pull);
 
-    Action<Seq<HunkApprovals>> getHunkApprovals(PullRequestIdentifier pull);
+    Action<List<HunkApprovals>> getHunkApprovals(PullRequestIdentifier pull);
 }

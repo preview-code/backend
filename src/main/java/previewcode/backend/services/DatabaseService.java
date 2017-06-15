@@ -18,7 +18,7 @@ import static previewcode.backend.services.actions.DatabaseActions.fetchApproval
 public class DatabaseService implements IDatabaseService {
 
     @Override
-    public Action<Unit> updateOrdering(PullRequestIdentifier pull, Seq<OrderingGroup> groups) {
+    public Action<Unit> updateOrdering(PullRequestIdentifier pull, List<OrderingGroup> groups) {
         return insertPullIfNotExists(pull)
                 .then(this::clearExistingGroups)
                 .then(dbPullId -> traverse(groups, createGroup(dbPullId))).toUnit();
@@ -63,7 +63,7 @@ public class DatabaseService implements IDatabaseService {
     }
 
     @Override
-    public Action<Seq<HunkApprovals>> getHunkApprovals(PullRequestIdentifier pull) {
+    public Action<List<HunkApprovals>> getHunkApprovals(PullRequestIdentifier pull) {
 
 
         return fetchPullRequestGroups(pull)
@@ -93,7 +93,7 @@ public class DatabaseService implements IDatabaseService {
         );
     }
 
-    private static <A,B> Map<A,B> combineMaps(Seq<Map<A,B>> maps) {
+    private static <A,B> Map<A,B> combineMaps(List<Map<A,B>> maps) {
         return maps.fold(new HashMap<>(), (a, b) -> {
             a.putAll(b);
             return a;
