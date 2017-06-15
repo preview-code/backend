@@ -1,6 +1,7 @@
 package previewcode.backend.database;
 
 import io.vavr.Tuple2;
+import io.vavr.collection.List;
 import org.jooq.DSLContext;
 import org.jooq.exception.DataAccessException;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,7 +73,26 @@ public class DatabaseInterpreter_HunksTest extends DatabaseInterpreterTest {
         eval(assignToGroup(group_A_id, hunkID));
 
         Tuple2 record = db.select(HUNK.GROUP_ID, HUNK.ID).from(HUNK).fetchOneInto(Tuple2.class);
-        assertThat(record).isEqualTo(new Tuple2(group_A_id.id, hunkID));
+        assertThat(record).isEqualTo(new Tuple2<>(group_A_id.id, hunkID));
+    }
+
+    @Test
+    void fetchHunks_forUnknownGroup_returnsEmpty() throws Exception {
+        List<HunkID> hunkIDS = eval(fetchHunks(new GroupID(-1L)));
+        assertThat(hunkIDS).isEmpty();
+    }
+
+    @Test
+    void fetchHunks_returnsAllHunks(DSLContext db) throws Exception {
+        db.insertInto(HUNK)
+                .columns(HUNK.ID, HUNK.GROUP_ID)
+                .values("X", group_A_id.id)
+                .values("Y", group_A_id.id)
+                .values("Z", group_B_id.id)
+                .execute();
+
+        List<HunkID> hunkIDS = eval(fetchHunks(group_A_id));
+        assertThat(hunkIDS).containsOnly(new HunkID("X"), new HunkID("Y"));
     }
 
 }

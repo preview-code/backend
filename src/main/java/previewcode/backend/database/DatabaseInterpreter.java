@@ -5,6 +5,7 @@ import io.vavr.collection.List;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.postgresql.util.PSQLException;
+import previewcode.backend.database.model.tables.Hunk;
 import previewcode.backend.services.actiondsl.Interpreter;
 import previewcode.backend.services.actions.DatabaseActions;
 
@@ -26,10 +27,18 @@ public class DatabaseInterpreter extends Interpreter {
         on(FetchPull.class).apply(this::fetchPullRequest);
         on(InsertPullIfNotExists.class).apply(this::insertPull);
         on(NewGroup.class).apply(this::insertNewGroup);
-        on(FetchGroupsForPull.class).apply(this::fetchGroups);
         on(AssignHunkToGroup.class).apply(toUnit(this::assignHunk));
+        on(FetchGroupsForPull.class).apply(this::fetchGroups);
+        on(FetchHunksForGroup.class).apply(this::fetchHunks);
+        // TODO: on(FetchHunkApprovals.class).apply(this::fetchApprovals);
         on(DeleteGroup.class).apply(toUnit(this::deleteGroup));
         on(ApproveHunk.class).apply(toUnit(this::approveHunk));
+    }
+
+    private List<HunkID> fetchHunks(FetchHunksForGroup action) {
+        return List.ofAll(db.selectFrom(HUNK)
+                .where(HUNK.GROUP_ID.eq(action.groupID.id))
+                .fetch(HUNK.ID)).map(HunkID::new);
     }
 
     protected void deleteGroup(DeleteGroup deleteGroup) {
