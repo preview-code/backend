@@ -302,6 +302,7 @@ public class DatabaseServiceTest {
     void getHunkApproval_no_action_after_fetching_hunkapprovals() throws Exception {
         Action<?> dbAction = service.getHunkApprovals(pullIdentifier);
         userApprovals.put("Eva", ApproveStatus.DISAPPROVED);
+        userApprovals.put("Thomas", ApproveStatus.APPROVED);
 
         Interpreter.Stepper<?> stepper = interpret()
                 .on(FetchPull.class).returnA(pullRequestID)

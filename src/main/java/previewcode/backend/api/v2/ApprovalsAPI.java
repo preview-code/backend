@@ -12,6 +12,9 @@ import javax.ws.rs.core.Response;
 
 import static previewcode.backend.services.actiondsl.ActionDSL.*;
 
+/**
+ * API for getting and setting the approvals on a pullrequest
+ */
 @Path("v2/{owner}/{name}/pulls/{number}/")
 public class ApprovalsAPI {
 
@@ -24,6 +27,13 @@ public class ApprovalsAPI {
         this.databaseService = databaseService;
     }
 
+    /**
+     * Fetches all approvals and shows if pr/groups/hunks are (dis)approved
+     * @param owner     The owner of the repository
+     * @param name      The name of the repository
+     * @param number    The pullrequest number
+     * @return if the pullrequest and the groups and hunks are disapproved or approved
+     */
     @Path("getApprovals")
     @GET
     public Response getApprovals(@PathParam("owner") String owner,
@@ -34,6 +44,13 @@ public class ApprovalsAPI {
         return interpreter.evaluateToResponse(action);
     }
 
+    /**
+     * Fetches all approvals and shows per hunk whom (dis)approved
+     * @param owner     The owner of the repository
+     * @param name      The name of the repository
+     * @param number    The pullrequest number
+     * @return per hunk the approval status of the reviewers
+     */
     @Path("getHunkApprovals")
     @GET
     public Response getHunkApprovals(@PathParam("owner") String owner,
@@ -41,21 +58,18 @@ public class ApprovalsAPI {
                                      @PathParam("number") Integer number) throws Exception {
         PullRequestIdentifier pull = new PullRequestIdentifier(owner, name, number);
         Action<Seq<HunkApprovals>> action = databaseService.getHunkApprovals(pull);
+
         return interpreter.evaluateToResponse(action);
     }
 
     /**
-     * Creates a pull request
+     * Sets the approval from a user on a hunk.
      *
-     * @param owner
-     *            The owner of the repository on which the pull request is created
-     * @param name
-     *            The owner of the repository on which the pull request is created
-     * @param body
-     *            The body of the pull request
-     * @param number
-     *            The number of the pull request
-     * @return The number of the newly made pull request
+     * @param owner     The owner of the repository
+     * @param name      The name of the repository
+     * @param number    The pullrequest number
+     * @param body      Hunk approval information
+     * @return A unit response
      */
     @Path("setApprove")
     @POST
@@ -63,6 +77,8 @@ public class ApprovalsAPI {
                               @PathParam("name") String name,
                               @PathParam("number") Integer number,
                               ApproveRequest body) throws Exception {
+
+        //TODO: check if user may submit this approval pull-request
 //        GHMyself user = githubService.getLoggedInUser();
 //        if (body.githubLogin != user.getId()) {
 //            throw new IllegalArgumentException("Can not set status status of other user");
@@ -71,6 +87,7 @@ public class ApprovalsAPI {
 
         PullRequestIdentifier pull = new PullRequestIdentifier(owner, name, number);
         Action<Unit> action = databaseService.setApproval(pull, body);
+
         return interpreter.evaluateToResponse(action);
     }
 }
