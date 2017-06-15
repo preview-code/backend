@@ -3,7 +3,6 @@ package previewcode.backend.services;
 
 import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
-import io.vavr.collection.Seq;
 import previewcode.backend.DTO.*;
 import previewcode.backend.database.*;
 import previewcode.backend.services.actions.DatabaseActions;
@@ -69,15 +68,15 @@ public class DatabaseService implements IDatabaseService {
                 .then(traverse(group -> fetchHunks(group.id)))
                 .map(flatten())
                 .then(traverse(id -> fetchApprovalsUser(id).map(approveStatuses ->
-                        new HunkApprovals(id.hunkID, approveStatuses)
+                        new HunkApprovals(id.checksum, approveStatuses)
                 )));
     }
 
     private static Action<ApprovedGroup> getGroupApproval(GroupID groupID) {
-        Function<HunkID, Action<Map<String, ApproveStatus>>> fetchHunkApprovals =
+        Function<HunkChecksum, Action<Map<String, ApproveStatus>>> fetchHunkApprovals =
                 id -> fetchApprovals(id).map(statuses -> {
                     Map<String, ApproveStatus> map = new HashMap<>();
-                    map.put(id.hunkID, isHunkApproved(statuses));
+                    map.put(id.checksum, isHunkApproved(statuses));
                     return map;
                 });
 

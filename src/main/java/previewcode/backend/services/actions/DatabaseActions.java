@@ -3,6 +3,7 @@ package previewcode.backend.services.actions;
 import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
 import previewcode.backend.DTO.ApproveStatus;
+import previewcode.backend.DTO.HunkChecksum;
 import previewcode.backend.DTO.PullRequestIdentifier;
 import previewcode.backend.database.*;
 import previewcode.backend.services.actiondsl.ActionDSL.*;
@@ -65,11 +66,11 @@ public class DatabaseActions {
     public static class AssignHunkToGroup extends Action<Unit> {
 
         public final GroupID groupID;
-        public final String hunkIdentifier;
+        public final String hunkChecksum;
 
-        public AssignHunkToGroup(GroupID groupID, String hunkIdentifier) {
+        public AssignHunkToGroup(GroupID groupID, String hunkChecksum) {
             this.groupID = groupID;
-            this.hunkIdentifier = hunkIdentifier;
+            this.hunkChecksum = hunkChecksum;
         }
     }
 
@@ -96,7 +97,7 @@ public class DatabaseActions {
         }
     }
 
-    public static class FetchHunksForGroup extends Action<List<HunkID>> {
+    public static class FetchHunksForGroup extends Action<List<HunkChecksum>> {
 
         public final GroupID groupID;
 
@@ -121,7 +122,7 @@ public class DatabaseActions {
     }
 
     public static class FetchHunkApprovals extends Action<List<ApproveStatus>> {
-        private final HunkID hunkID;
+        private final HunkChecksum hunkChecksum;
 
         @Override
         public boolean equals(Object o) {
@@ -130,24 +131,24 @@ public class DatabaseActions {
 
             FetchHunkApprovals that = (FetchHunkApprovals) o;
 
-            return hunkID.equals(that.hunkID);
+            return hunkChecksum.equals(that.hunkChecksum);
         }
 
         @Override
         public int hashCode() {
-            return hunkID.hashCode();
+            return hunkChecksum.hashCode();
         }
 
-        public FetchHunkApprovals(HunkID hunkID) {
-            this.hunkID = hunkID;
+        public FetchHunkApprovals(HunkChecksum hunkChecksum) {
+            this.hunkChecksum = hunkChecksum;
         }
     }
 
     public static class FetchHunkApprovalsUser extends Action<Map<String, ApproveStatus>> {
-        private final HunkID hunkID;
+        private final HunkChecksum hunkChecksum;
 
-        public FetchHunkApprovalsUser(HunkID hunkID) {
-            this.hunkID = hunkID;
+        public FetchHunkApprovalsUser(HunkChecksum hunkChecksum) {
+            this.hunkChecksum = hunkChecksum;
         }
 
         @Override
@@ -157,12 +158,12 @@ public class DatabaseActions {
 
             FetchHunkApprovalsUser that = (FetchHunkApprovalsUser) o;
 
-            return hunkID.equals(that.hunkID);
+            return hunkChecksum.equals(that.hunkChecksum);
         }
 
         @Override
         public int hashCode() {
-            return hunkID.hashCode();
+            return hunkChecksum.hashCode();
         }
     }
 
@@ -176,14 +177,14 @@ public class DatabaseActions {
 
     public static class ApproveHunk extends Action<Unit> {
         public final PullRequestID pullRequestID;
-        public final String hunkId;
+        public final String hunkChecksum;
         public final String githubUser;
         public final ApproveStatus status;
 
-        public ApproveHunk(PullRequestID pullRequestID, String hunkId, String githubUser, ApproveStatus status) {
+        public ApproveHunk(PullRequestID pullRequestID, String hunkChecksum, String githubUser, ApproveStatus status) {
 
             this.pullRequestID = pullRequestID;
-            this.hunkId = hunkId;
+            this.hunkChecksum = hunkChecksum;
             this.githubUser = githubUser;
             this.status = status;
         }
@@ -217,12 +218,12 @@ public class DatabaseActions {
         return new FetchHunksForGroup(groupID);
     }
 
-    public static FetchHunkApprovals fetchApprovals(HunkID hunkID) {
-        return new FetchHunkApprovals(hunkID);
+    public static FetchHunkApprovals fetchApprovals(HunkChecksum hunkChecksum) {
+        return new FetchHunkApprovals(hunkChecksum);
     }
 
-    public static FetchHunkApprovalsUser fetchApprovalsUser(HunkID hunkID) {
-        return new FetchHunkApprovalsUser(hunkID);
+    public static FetchHunkApprovalsUser fetchApprovalsUser(HunkChecksum hunkChecksum) {
+        return new FetchHunkApprovalsUser(hunkChecksum);
     }
 
     public static DeleteGroup delete(GroupID groupID) {

@@ -1,11 +1,11 @@
 package previewcode.backend.database;
 
-import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
 import org.jooq.DSLContext;
 import org.jooq.exception.DataAccessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import previewcode.backend.DTO.HunkChecksum;
 import previewcode.backend.database.model.tables.records.GroupsRecord;
 import previewcode.backend.services.actiondsl.Interpreter;
 
@@ -134,7 +134,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
                 .values(1234L, dbPullId.id, "A", "B")
                 .execute();
 
-        Action<List<HunkID>> hunkFetchAction = eval(fetchGroups(dbPullId)).get(0).fetchHunks;
+        Action<List<HunkChecksum>> hunkFetchAction = eval(fetchGroups(dbPullId)).get(0).fetchHunks;
 
         Interpreter i = interpret()
                 .on(FetchHunksForGroup.class).stop(
@@ -165,7 +165,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
                 .execute();
 
         db.insertInto(HUNK)
-                .columns(HUNK.ID, HUNK.GROUP_ID)
+                .columns(HUNK.CHECKSUM, HUNK.GROUP_ID)
                 .values("abc", 1234L)
                 .execute();
 

@@ -7,7 +7,7 @@ import io.vavr.control.Option;
 import org.junit.jupiter.api.Test;
 import previewcode.backend.DTO.*;
 import previewcode.backend.database.GroupID;
-import previewcode.backend.database.HunkID;
+import previewcode.backend.DTO.HunkChecksum;
 import previewcode.backend.database.PullRequestGroup;
 import previewcode.backend.database.PullRequestID;
 import previewcode.backend.services.actiondsl.Interpreter;
@@ -45,14 +45,14 @@ public class DatabaseServiceTest {
         new OrderingGroupWithID(group, Lists.newLinkedList())
     );
 
-    private List<HunkID> hunkIDs = List.of(
-            new HunkID("abcd"), new HunkID("efgh"), new HunkID("ijkl"));
+    private List<HunkChecksum> hunkIDs = List.of(
+            new HunkChecksum("abcd"), new HunkChecksum("efgh"), new HunkChecksum("ijkl"));
 
     private List<OrderingGroup> groupsWithHunks = groups.map(group ->
-        new OrderingGroupWithID(group, hunkIDs.map(id -> id.hunkID).toJavaList())
+        new OrderingGroupWithID(group, hunkIDs.map(id -> id.checksum).toJavaList())
     );
 
-    private ApproveRequest approveStatus = new ApproveRequest("hunkID", ApproveStatus.DISAPPROVED, 1);
+    private ApproveRequest approveStatus = new ApproveRequest("checksum", ApproveStatus.DISAPPROVED, 1);
 
     private List<ApproveStatus> hunkApprovals =  List.of(
                 ApproveStatus.APPROVED
@@ -138,7 +138,7 @@ public class DatabaseServiceTest {
     public void insertsNewGroupsWithHunks() throws Exception {
         Action<Unit> dbAction = service.updateOrdering(pullIdentifier, groupsWithHunks);
 
-        Collection<HunkID> hunksAdded = Lists.newArrayList();
+        Collection<HunkChecksum> hunksAdded = Lists.newArrayList();
 
         Interpreter interpreter =
                 interpret()
@@ -148,7 +148,7 @@ public class DatabaseServiceTest {
                     groups.find(g -> g.title.equals(action.title)).get().id)
                 .on(AssignHunkToGroup.class).apply(toUnit(action -> {
                     assertThat(groups.find(g -> g.id.equals(action.groupID))).isNotEmpty();
-                    Option<HunkID> hunkID = hunkIDs.find(id -> id.hunkID.equals(action.hunkIdentifier));
+                    Option<HunkChecksum> hunkID = hunkIDs.find(id -> id.checksum.equals(action.hunkChecksum));
                     assertThat(hunkID).isNotEmpty();
                     hunksAdded.add(hunkID.get());
                 }));
@@ -171,8 +171,8 @@ public class DatabaseServiceTest {
                                     .isEqualTo(ApproveStatus.DISAPPROVED);
                             assertThat(approveHunk.githubUser)
                                     .isEqualTo("1");
-                            assertThat(approveHunk.hunkId)
-                                    .isEqualTo("hunkID");
+                            assertThat(approveHunk.hunkChecksum)
+                                    .isEqualTo("checksum");
                             assertThat(approveHunk.pullRequestID)
                                     .isEqualTo(pullRequestID);
                         });
@@ -224,8 +224,8 @@ public class DatabaseServiceTest {
     void getApproval_fetches_hunk_approvals() throws Exception {
         Action<?> dbAction = service.getApproval(pullIdentifier);
 
-        HunkID id = new HunkID("abcd");
-        List<HunkID> oneHunk = List.of(id);
+        HunkChecksum id = new HunkChecksum("abcd");
+        List<HunkChecksum> oneHunk = List.of(id);
 
         Interpreter.Stepper<?> stepper = interpret()
                 .on(FetchPull.class).returnA(pullRequestID)
@@ -281,8 +281,8 @@ public class DatabaseServiceTest {
     void getHunkApproval_fetches_hunk_approvals() throws Exception {
         Action<?> dbAction = service.getHunkApprovals(pullIdentifier);
 
-        HunkID id = new HunkID("abcd");
-        List<HunkID> oneHunk = List.of(id);
+        HunkChecksum id = new HunkChecksum("abcd");
+        List<HunkChecksum> oneHunk = List.of(id);
 
         Interpreter.Stepper<?> stepper = interpret()
                 .on(FetchPull.class).returnA(pullRequestID)

@@ -39,7 +39,7 @@ public class SchemaTest {
 
     @Test
     public void approvalsTable_isEmpty(DSLContext db) {
-        int rows = db.select(APPROVAL.PULL_REQUEST_ID, APPROVAL.HUNK_ID, APPROVAL.APPROVER, APPROVAL.STATUS)
+        int rows = db.select(APPROVAL.HUNK_ID, APPROVAL.APPROVER, APPROVAL.STATUS)
                 .from(APPROVAL).execute();
 
         assertThat(rows).isZero();

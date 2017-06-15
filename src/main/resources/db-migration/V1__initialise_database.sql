@@ -27,22 +27,24 @@ CREATE TABLE preview_code.groups (
 CREATE INDEX fk_group_pull_id ON preview_code.groups (pull_request_id);
 
 
+CREATE SEQUENCE preview_code.seq_pk_hunk;
+
 CREATE TABLE preview_code.hunk (
-  id VARCHAR NOT NULL,
+  id BIGINT DEFAULT nextval('preview_code.seq_pk_hunk') NOT NULL CONSTRAINT pk_hunk PRIMARY KEY,
+  checksum VARCHAR NOT NULL,
   group_id BIGINT NOT NULL CONSTRAINT fk_hunk_group_id REFERENCES preview_code.groups(id) ON DELETE CASCADE,
 
-  CONSTRAINT unique_hunkId_groupId UNIQUE (id, group_id)
+  CONSTRAINT unique_hunkId_groupId UNIQUE (checksum, group_id)
 );
 
 CREATE INDEX idx_fk_hunk_group_id ON preview_code.hunk (group_id);
 
 
 CREATE TABLE preview_code.approval (
-  pull_request_id BIGINT NOT NULL CONSTRAINT fk_approval_pull_request REFERENCES preview_code.pull_request(id),
-  hunk_id VARCHAR NOT NULL,
+  hunk_id BIGINT NOT NULL CONSTRAINT fk_approval_hunk REFERENCES preview_code.hunk(id),
   approver VARCHAR NOT NULL,
   status VARCHAR NOT NULL,
 
-  CONSTRAINT pk_approval PRIMARY KEY (pull_request_id, hunk_id, approver)
+  CONSTRAINT pk_approval PRIMARY KEY (hunk_id, approver)
 )
 

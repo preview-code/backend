@@ -10,7 +10,7 @@ public class ApproveRequest {
     /**
      * The hunk which is approved
      */
-    @JsonProperty("hunkId")
+    @JsonProperty("hunkChecksum")
     public final String hunkId;
     /**
      * If the hunk is approved or disapproved
@@ -24,7 +24,7 @@ public class ApproveRequest {
     public final int githubLogin;
 
     @JsonCreator
-    public ApproveRequest(@JsonProperty("hunkId") String hunkId, @JsonProperty("isApproved")
+    public ApproveRequest(@JsonProperty("hunkChecksum") String hunkId, @JsonProperty("isApproved")
             ApproveStatus isApproved, @JsonProperty("githubLogin") int githubLogin) {
         this.hunkId = hunkId;
         this.isApproved = isApproved;

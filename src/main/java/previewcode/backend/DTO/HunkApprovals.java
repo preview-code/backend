@@ -1,8 +1,6 @@
 package previewcode.backend.DTO;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import previewcode.backend.database.HunkID;
 
 import java.util.Map;
 

@@ -1,6 +1,7 @@
 package previewcode.backend.database;
 
 import io.vavr.collection.List;
+import previewcode.backend.DTO.HunkChecksum;
 import previewcode.backend.database.model.tables.records.GroupsRecord;
 
 import static previewcode.backend.services.actiondsl.ActionDSL.*;
@@ -31,7 +32,7 @@ public class PullRequestGroup {
      * Evaluating this action should result in the list of
      * hunk-ids of all hunks in this group.
      */
-    public final Action<List<HunkID>> fetchHunks;
+    public final Action<List<HunkChecksum>> fetchHunks;
 
     public PullRequestGroup(GroupID id, String title, String description) {
         this.id = id;

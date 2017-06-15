@@ -1,19 +1,17 @@
 package previewcode.backend.database;
 
-import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
 import org.jooq.*;
 import org.jooq.exception.DataAccessException;
+import org.jooq.impl.DSL;
 import org.postgresql.util.PSQLException;
-import previewcode.backend.database.model.tables.Hunk;
+import previewcode.backend.DTO.HunkChecksum;
 import previewcode.backend.services.actiondsl.Interpreter;
-import previewcode.backend.services.actions.DatabaseActions;
 
 import javax.inject.Inject;
 
 import static previewcode.backend.database.model.Tables.*;
 import static previewcode.backend.services.actiondsl.ActionDSL.toUnit;
-import static previewcode.backend.services.actiondsl.ActionDSL.unit;
 import static previewcode.backend.services.actions.DatabaseActions.*;
 
 public class DatabaseInterpreter extends Interpreter {
@@ -35,10 +33,10 @@ public class DatabaseInterpreter extends Interpreter {
         on(ApproveHunk.class).apply(toUnit(this::approveHunk));
     }
 
-    private List<HunkID> fetchHunks(FetchHunksForGroup action) {
+    private List<HunkChecksum> fetchHunks(FetchHunksForGroup action) {
         return List.ofAll(db.selectFrom(HUNK)
                 .where(HUNK.GROUP_ID.eq(action.groupID.id))
-                .fetch(HUNK.ID)).map(HunkID::new);
+                .fetch(HUNK.CHECKSUM)).map(HunkChecksum::new);
     }
 
     protected void deleteGroup(DeleteGroup deleteGroup) {
@@ -49,18 +47,29 @@ public class DatabaseInterpreter extends Interpreter {
 
     protected void assignHunk(AssignHunkToGroup action) {
         db.insertInto(HUNK)
-                .columns(HUNK.GROUP_ID, HUNK.ID)
-                .values(action.groupID.id, action.hunkIdentifier)
+                .columns(HUNK.GROUP_ID, HUNK.CHECKSUM)
+                .values(action.groupID.id, action.hunkChecksum)
                 .execute();
     }
 
     protected void approveHunk(ApproveHunk action) {
-      db.insertInto(APPROVAL)
-              .columns(APPROVAL.PULL_REQUEST_ID, APPROVAL.HUNK_ID, APPROVAL.APPROVER, APPROVAL.STATUS)
-              .values(action.pullRequestID.id, action.hunkId, action.githubUser, action.status.getApproved())
-              .onDuplicateKeyUpdate()
-              .set(APPROVAL.STATUS, action.status.getApproved())
-              .execute();
+
+        int result = db.insertInto(APPROVAL)
+                .columns(APPROVAL.HUNK_ID, APPROVAL.APPROVER, APPROVAL.STATUS)
+                .select(
+                        db.select(HUNK.ID, DSL.val(action.githubUser), DSL.val(action.status.getApproved()))
+                                .from(GROUPS)
+                                .join(HUNK).on(GROUPS.ID.eq(HUNK.GROUP_ID))
+                                .where(GROUPS.PULL_REQUEST_ID.eq(action.pullRequestID.id)
+                                        .and(HUNK.CHECKSUM.eq(action.hunkChecksum))
+                                )
+                ).onDuplicateKeyUpdate()
+                .set(APPROVAL.STATUS, action.status.getApproved())
+                .execute();
+
+        if (result == 0) {
+            throw new DatabaseException("Pull request or hunk checksum not found.");
+        }
     }
 
 
