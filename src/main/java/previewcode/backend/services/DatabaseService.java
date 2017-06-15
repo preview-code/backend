@@ -49,6 +49,20 @@ public class DatabaseService implements IDatabaseService {
         );
     }
 
+    public Function<OrderingGroup, Action<Unit>> createGroup(PullRequestID dbPullId) {
+        return group ->
+                newGroup(dbPullId, group.info.title, group.info.description).then(
+                    groupID -> traverse(List.ofAll(group.diff), hunkId -> assignToGroup(groupID, hunkId))
+                ).toUnit();
+    }
+
+    public Action<PullRequestID> clearExistingGroups(PullRequestID dbPullId) {
+        return fetchGroups(dbPullId)
+                .then(traverse(group -> delete(group.id)))
+                .map(unit -> dbPullId);
+    }
+
+
     private static Action<ApprovedGroup> getGroupApproval(GroupID groupID) {
         Function<HunkID, Action<Map<String, ApproveStatus>>> fetchHunkApprovals =
                 id -> fetchApprovals(id).map(statuses -> {
@@ -101,20 +115,6 @@ public class DatabaseService implements IDatabaseService {
         } else {
             return ApproveStatus.NONE;
         }
-    }
-
-
-    public Function<OrderingGroup, Action<Unit>> createGroup(PullRequestID dbPullId) {
-        return group ->
-                newGroup(dbPullId, group.info.title, group.info.description).then(
-                    groupID -> traverse(List.ofAll(group.diff), hunkId -> assignToGroup(groupID, hunkId))
-                ).toUnit();
-    }
-
-    public Action<PullRequestID> clearExistingGroups(PullRequestID dbPullId) {
-        return fetchGroups(dbPullId)
-                .then(traverse(group -> delete(group.id)))
-                .map(unit -> dbPullId);
     }
 
 }

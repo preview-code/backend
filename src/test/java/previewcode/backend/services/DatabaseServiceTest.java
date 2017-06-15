@@ -214,7 +214,7 @@ public class DatabaseServiceTest {
                 .stepwiseEval(dbAction);
         stepper.next();
         List<Action<?>> next = stepper.next();
-         assertThat(next).containsOnly(fetchHunks(oneGroup.head().id));
+        assertThat(next).containsOnly(fetchHunks(oneGroup.head().id));
     }
 
     @Test
@@ -228,12 +228,13 @@ public class DatabaseServiceTest {
                 .on(FetchPull.class).returnA(pullRequestID)
                 .on(FetchGroupsForPull.class).returnA(groups)
                 .on(FetchHunksForGroup.class).returnA(oneHunk)
+                .on(FetchHunkApprovals.class).returnA(hunkApprovals)
                 .stepwiseEval(dbAction);
         stepper.next();
         stepper.next();
 
         List<Action<?>> next = stepper.next();
-
         assertThat(next).containsOnly(new FetchHunkApprovals(id));
+        assertThat(stepper.next()).isEmpty();
     }
 }

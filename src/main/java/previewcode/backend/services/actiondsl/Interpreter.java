@@ -242,7 +242,7 @@ public class Interpreter {
             if (currentAction == null) {
                 throw new DoneException();
             } else {
-                Try<Either<A, Action<A>>> stepped = unwrap(currentAction);
+                Try<Either<A, Action<A>>> stepped = step(currentAction);
 
                 if (stepped.isSuccess()) {
                     Either<A, Action<A>> result = stepped.toEither().right().get();
@@ -284,7 +284,7 @@ public class Interpreter {
         }
 
         protected List<Action<?>> peek(Action<?> action) {
-            if (action instanceof Return) {
+            if (action == null || action instanceof Return) {
                 return List.empty();
             } else if (action instanceof Suspend) {
                 return peek(((Suspend) action).action);
@@ -295,11 +295,11 @@ public class Interpreter {
             }
         }
 
-        protected  <B, X> Try<Either<B, Action<B>>> unwrap(Action<B> action) {
+        protected  <B, X> Try<Either<B, Action<B>>> step(Action<B> action) {
             if (action instanceof Suspend) {
                 Suspend<B, X> suspendedAction = (Suspend<B, X>) action;
 
-                return unwrap(suspendedAction.action).map(result -> {
+                return step(suspendedAction.action).map(result -> {
                     if (result.isLeft()) {
                         return Either.right(suspendedAction.f.apply(result.left().get()));
                     } else {
@@ -309,7 +309,7 @@ public class Interpreter {
             } else if (action instanceof Apply) {
                 Apply<B, X> applyAction = (Apply<B, X>) action;
 
-                return unwrap(applyAction.action).flatMap(resultOrAction -> unwrap(applyAction.f).map(funOrAction -> {
+                return step(applyAction.action).flatMap(resultOrAction -> step(applyAction.f).map(funOrAction -> {
                     if (resultOrAction.isLeft()) {
                         if (funOrAction.isLeft()) {
                             return Either.left(funOrAction.left().get().apply(resultOrAction.left().get()));
