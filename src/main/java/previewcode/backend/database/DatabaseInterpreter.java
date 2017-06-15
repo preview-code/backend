@@ -6,10 +6,12 @@ import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.postgresql.util.PSQLException;
 import previewcode.backend.services.actiondsl.Interpreter;
+import previewcode.backend.services.actions.DatabaseActions;
 
 import javax.inject.Inject;
 
 import static previewcode.backend.database.model.Tables.*;
+import static previewcode.backend.services.actiondsl.ActionDSL.toUnit;
 import static previewcode.backend.services.actiondsl.ActionDSL.unit;
 import static previewcode.backend.services.actions.DatabaseActions.*;
 
@@ -25,26 +27,31 @@ public class DatabaseInterpreter extends Interpreter {
         on(InsertPullIfNotExists.class).apply(this::insertPull);
         on(NewGroup.class).apply(this::insertNewGroup);
         on(FetchGroupsForPull.class).apply(this::fetchGroups);
-        on(AssignHunkToGroup.class).apply(this::assignHunk);
-        on(ApproveHunk.class).apply(this::approveHunk);
+        on(AssignHunkToGroup.class).apply(toUnit(this::assignHunk));
+        on(DeleteGroup.class).apply(toUnit(this::deleteGroup));
+        on(ApproveHunk.class).apply(toUnit(this::approveHunk));
     }
 
-    protected Unit assignHunk(AssignHunkToGroup action) {
+    protected void deleteGroup(DeleteGroup deleteGroup) {
+        db.deleteFrom(GROUPS)
+                .where(GROUPS.ID.eq(deleteGroup.groupID.id))
+                .execute();
+    }
+
+    protected void assignHunk(AssignHunkToGroup action) {
         db.insertInto(HUNK)
                 .columns(HUNK.GROUP_ID, HUNK.ID)
                 .values(action.groupID.id, action.hunkIdentifier)
                 .execute();
-        return unit;
     }
 
-    protected Unit approveHunk(ApproveHunk action) {
+    protected void approveHunk(ApproveHunk action) {
       db.insertInto(APPROVAL)
               .columns(APPROVAL.PULL_REQUEST_ID, APPROVAL.HUNK_ID, APPROVAL.APPROVER, APPROVAL.STATUS)
               .values(action.pullRequestID.id, action.hunkId, action.githubUser, action.status.getApproved())
               .onDuplicateKeyUpdate()
               .set(APPROVAL.STATUS, action.status.getApproved())
               .execute();
-      return unit;
     }
 
 

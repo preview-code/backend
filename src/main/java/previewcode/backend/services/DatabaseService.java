@@ -65,11 +65,10 @@ public class DatabaseService implements IDatabaseService {
     @Override
     public Action<List<HunkApprovals>> getHunkApprovals(PullRequestIdentifier pull) {
 
-
         return fetchPullRequestGroups(pull)
-                .then(pullRequestGroups -> traverse(pullRequestGroups, group -> fetchHunks(group.id)))
-                .map(lists -> lists.fold(List.empty(), List::appendAll))
-                .then(hunkIDS -> traverse(hunkIDS, id -> fetchApprovalsUser(id).map(approveStatuses ->
+                .then(traverse(group -> fetchHunks(group.id)))
+                .map(flatten())
+                .then(traverse(id -> fetchApprovalsUser(id).map(approveStatuses ->
                         new HunkApprovals(id.hunkID, approveStatuses)
                 )));
     }

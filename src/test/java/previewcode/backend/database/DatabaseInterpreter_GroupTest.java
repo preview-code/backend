@@ -1,5 +1,6 @@
 package previewcode.backend.database;
 
+import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
 import org.jooq.DSLContext;
 import org.jooq.exception.DataAccessException;
@@ -11,6 +12,7 @@ import previewcode.backend.services.actiondsl.Interpreter;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static previewcode.backend.database.model.Tables.GROUPS;
+import static previewcode.backend.database.model.Tables.HUNK;
 import static previewcode.backend.database.model.Tables.PULL_REQUEST;
 import static previewcode.backend.services.actiondsl.ActionDSL.*;
 import static previewcode.backend.services.actions.DatabaseActions.*;
@@ -140,5 +142,49 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
 
         assertThatExceptionOfType(Interpreter.StoppedException.class)
                 .isThrownBy(() -> i.unsafeEvaluate(hunkFetchAction));
+    }
+
+    @Test
+    void deleteGroup_groupID_mustExist(DSLContext db) throws Exception {
+        db.insertInto(GROUPS)
+                .columns(GROUPS.ID, GROUPS.PULL_REQUEST_ID, GROUPS.TITLE, GROUPS.DESCRIPTION)
+                .values(1234L, dbPullId.id, "A", "B")
+                .execute();
+
+        eval(delete(new GroupID(984351L)));
+
+        Integer groupCount = db.selectCount().from(GROUPS).fetchOne().value1();
+        assertThat(groupCount).isOne();
+    }
+
+    @Test
+    void deleteGroup_cascades_deletesHunks(DSLContext db) throws Exception {
+        db.insertInto(GROUPS)
+                .columns(GROUPS.ID, GROUPS.PULL_REQUEST_ID, GROUPS.TITLE, GROUPS.DESCRIPTION)
+                .values(1234L, dbPullId.id, "A", "B")
+                .execute();
+
+        db.insertInto(HUNK)
+                .columns(HUNK.ID, HUNK.GROUP_ID)
+                .values("abc", 1234L)
+                .execute();
+
+        eval(delete(new GroupID(1234L)));
+
+        Integer hunkCount = db.selectCount().from(HUNK).fetchOne().value1();
+        assertThat(hunkCount).isZero();
+    }
+
+    @Test
+    void deleteGroup_deletesGroup(DSLContext db) throws Exception {
+        db.insertInto(GROUPS)
+                .columns(GROUPS.ID, GROUPS.PULL_REQUEST_ID, GROUPS.TITLE, GROUPS.DESCRIPTION)
+                .values(1234L, dbPullId.id, "A", "B")
+                .execute();
+
+        eval(delete(new GroupID(1234L)));
+
+        Integer groupCount = db.selectCount().from(GROUPS).fetchOne().value1();
+        assertThat(groupCount).isZero();
     }
 }

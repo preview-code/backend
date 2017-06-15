@@ -204,6 +204,14 @@ public class ActionDSL {
         return new Return<>(value);
     }
 
+    public static <A> Function<A, A> identity() {
+        return a -> a;
+    }
+
+    public static <A> Function<List<List<A>>, List<A>> flatten() {
+        return lists -> lists.flatMap(a -> a);
+    }
+
     /**
      * Take a sequence of actions and turn them into a single action.
      *

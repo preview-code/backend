@@ -29,7 +29,7 @@ CREATE INDEX fk_group_pull_id ON preview_code.groups (pull_request_id);
 
 CREATE TABLE preview_code.hunk (
   id VARCHAR NOT NULL,
-  group_id BIGINT NOT NULL CONSTRAINT fk_hunk_group_id REFERENCES preview_code.groups(id),
+  group_id BIGINT NOT NULL CONSTRAINT fk_hunk_group_id REFERENCES preview_code.groups(id) ON DELETE CASCADE,
 
   CONSTRAINT unique_hunkId_groupId UNIQUE (id, group_id)
 );

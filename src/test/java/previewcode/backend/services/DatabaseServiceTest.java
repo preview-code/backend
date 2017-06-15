@@ -236,8 +236,7 @@ public class DatabaseServiceTest {
         stepper.next();
         stepper.next();
 
-        List<Action<?>> next = stepper.next();
-        assertThat(next).containsOnly(new FetchHunkApprovals(id));
+        assertThat(stepper.next()).containsOnly(new FetchHunkApprovals(id));
         assertThat(stepper.next()).isEmpty();
     }
 
