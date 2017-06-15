@@ -11,9 +11,10 @@ import previewcode.backend.database.HunkID;
 import previewcode.backend.database.PullRequestGroup;
 import previewcode.backend.database.PullRequestID;
 import previewcode.backend.services.actiondsl.Interpreter;
-import previewcode.backend.services.actions.DatabaseActions;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -56,6 +57,8 @@ public class DatabaseServiceTest {
     private List<ApproveStatus> hunkApprovals =  List.of(
                 ApproveStatus.APPROVED
             );
+
+    private Map<String, ApproveStatus> userApprovals = new HashMap<String, ApproveStatus>();
 
     @Test
     public void insertsPullIfNotExists() throws Exception {
@@ -236,5 +239,81 @@ public class DatabaseServiceTest {
         List<Action<?>> next = stepper.next();
         assertThat(next).containsOnly(new FetchHunkApprovals(id));
         assertThat(stepper.next()).isEmpty();
+    }
+
+    @Test
+    void getHunkApproval_fetches_pull_pullRequest() {
+        Action<?> dbAction = service.getHunkApprovals(pullIdentifier);
+
+        Interpreter.Stepper<?> stepper = interpret().stepwiseEval(dbAction);
+        List<Action<?>> peek = stepper.peek();
+        assertThat(peek).containsOnly(fetchPull(pullIdentifier));
+    }
+
+    @Test
+    void getHunkApproval_fetches_pull_groups() throws Exception {
+        Action<?> dbAction = service.getHunkApprovals(pullIdentifier);
+
+        Interpreter.Stepper<?> stepper = interpret()
+                .on(FetchPull.class).returnA(pullRequestID)
+                .stepwiseEval(dbAction);
+        List<Action<?>> next = stepper.next();
+        assertThat(next).containsOnly(fetchGroups(pullRequestID));
+    }
+
+    @Test
+    void getHunkApproval_fetches_hunks() throws Exception {
+        Action<?> dbAction = service.getHunkApprovals(pullIdentifier);
+
+        List<PullRequestGroup> oneGroup = List.of(
+                new PullRequestGroup(new GroupID(42L), "Group A", "Description A")
+        );
+
+        Interpreter.Stepper<?> stepper = interpret()
+                .on(FetchPull.class).returnA(pullRequestID)
+                .on(FetchGroupsForPull.class).returnA(oneGroup)
+                .stepwiseEval(dbAction);
+        stepper.next();
+        List<Action<?>> next = stepper.next();
+        assertThat(next).containsOnly(fetchHunks(oneGroup.head().id));
+    }
+
+    @Test
+    void getHunkApproval_fetches_hunk_approvals() throws Exception {
+        Action<?> dbAction = service.getHunkApprovals(pullIdentifier);
+
+        HunkID id = new HunkID("abcd");
+        List<HunkID> oneHunk = List.of(id);
+
+        Interpreter.Stepper<?> stepper = interpret()
+                .on(FetchPull.class).returnA(pullRequestID)
+                .on(FetchGroupsForPull.class).returnA(groups)
+                .on(FetchHunksForGroup.class).returnA(oneHunk)
+                .stepwiseEval(dbAction);
+        stepper.next();
+        stepper.next();
+
+        List<Action<?>> next = stepper.next();
+        assertThat(next).containsOnly(new FetchHunkApprovalsUser(id));
+
+    }
+
+    @Test
+    void getHunkApproval_no_action_after_fetching_hunkapprovals() throws Exception {
+        Action<?> dbAction = service.getHunkApprovals(pullIdentifier);
+        userApprovals.put("Eva", ApproveStatus.DISAPPROVED);
+
+        Interpreter.Stepper<?> stepper = interpret()
+                .on(FetchPull.class).returnA(pullRequestID)
+                .on(FetchGroupsForPull.class).returnA(groups)
+                .on(FetchHunksForGroup.class).returnA(hunkIDs)
+                .on(FetchHunkApprovalsUser.class).returnA(userApprovals)
+                .stepwiseEval(dbAction);
+        stepper.next();
+        stepper.next();
+        stepper.next();
+
+        List<Action<?>> next = stepper.next();
+        assertThat(next).isEmpty();
     }
 }

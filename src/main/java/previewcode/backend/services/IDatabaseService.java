@@ -17,5 +17,5 @@ public interface IDatabaseService {
 
     Action<ApprovedPullRequest> getApproval(PullRequestIdentifier pull);
 
-    Action<Seq<HunkApprovals>> getUserApprovals(PullRequestIdentifier pull);
+    Action<Seq<HunkApprovals>> getHunkApprovals(PullRequestIdentifier pull);
 }

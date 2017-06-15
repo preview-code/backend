@@ -149,6 +149,21 @@ public class DatabaseActions {
         public FetchHunkApprovalsUser(HunkID hunkID) {
             this.hunkID = hunkID;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            FetchHunkApprovalsUser that = (FetchHunkApprovalsUser) o;
+
+            return hunkID.equals(that.hunkID);
+        }
+
+        @Override
+        public int hashCode() {
+            return hunkID.hashCode();
+        }
     }
 
     public static class DeleteGroup extends Action<Unit> {

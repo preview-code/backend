@@ -63,7 +63,7 @@ public class DatabaseService implements IDatabaseService {
     }
 
     @Override
-    public Action<Seq<HunkApprovals>> getUserApprovals(PullRequestIdentifier pull) {
+    public Action<Seq<HunkApprovals>> getHunkApprovals(PullRequestIdentifier pull) {
 
 
         return fetchPullRequestGroups(pull)

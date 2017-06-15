@@ -40,7 +40,7 @@ public class ApprovalsAPI {
                                      @PathParam("name") String name,
                                      @PathParam("number") Integer number) throws Exception {
         PullRequestIdentifier pull = new PullRequestIdentifier(owner, name, number);
-        Action<Seq<HunkApprovals>> action = databaseService.getUserApprovals(pull);
+        Action<Seq<HunkApprovals>> action = databaseService.getHunkApprovals(pull);
         return interpreter.evaluateToResponse(action);
     }
 

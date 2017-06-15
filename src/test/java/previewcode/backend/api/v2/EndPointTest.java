@@ -70,6 +70,18 @@ public class EndPointTest {
         assertThat(response.getLength()).isZero();
         assertThat(response.getStatus()).isEqualTo(200);
     }
+
+
+    @Test
+    public void getHunkApprovalsApiIsReachable(WebTarget target) {
+        Response response = target
+                .path("/v2/preview-code/backend/pulls/42/getHunkApprovals")
+                .request("application/json")
+                .get();
+
+        assertThat(response.getLength()).isZero();
+        assertThat(response.getStatus()).isEqualTo(200);
+    }
 }
 
 class TestModule extends APIModule implements IDatabaseService {
@@ -97,7 +109,7 @@ class TestModule extends APIModule implements IDatabaseService {
     }
 
     @Override
-    public Action<Seq<HunkApprovals>> getUserApprovals(PullRequestIdentifier pull) {
+    public Action<Seq<HunkApprovals>> getHunkApprovals(PullRequestIdentifier pull) {
         return new NoOp<>();
     }
 
