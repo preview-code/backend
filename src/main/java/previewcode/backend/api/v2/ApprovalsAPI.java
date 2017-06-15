@@ -1,9 +1,8 @@
 package previewcode.backend.api.v2;
 
 import io.atlassian.fugue.Unit;
-import previewcode.backend.DTO.ApproveRequest;
-import previewcode.backend.DTO.ApprovedPullRequest;
-import previewcode.backend.DTO.PullRequestIdentifier;
+import io.vavr.collection.Seq;
+import previewcode.backend.DTO.*;
 import previewcode.backend.services.IDatabaseService;
 import previewcode.backend.services.actiondsl.Interpreter;
 
@@ -32,6 +31,16 @@ public class ApprovalsAPI {
                                  @PathParam("number") Integer number) throws Exception {
         PullRequestIdentifier pull = new PullRequestIdentifier(owner, name, number);
         Action<ApprovedPullRequest> action = databaseService.getApproval(pull);
+        return interpreter.evaluateToResponse(action);
+    }
+
+    @Path("getHunkApprovals")
+    @GET
+    public Response getHunkApprovals(@PathParam("owner") String owner,
+                                     @PathParam("name") String name,
+                                     @PathParam("number") Integer number) throws Exception {
+        PullRequestIdentifier pull = new PullRequestIdentifier(owner, name, number);
+        Action<Seq<HunkApprovals>> action = databaseService.getUserApprovals(pull);
         return interpreter.evaluateToResponse(action);
     }
 

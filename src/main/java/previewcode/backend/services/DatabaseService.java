@@ -2,7 +2,6 @@ package previewcode.backend.services;
 
 
 import io.atlassian.fugue.Unit;
-import io.vavr.Tuple2;
 import io.vavr.collection.List;
 import io.vavr.collection.Seq;
 import previewcode.backend.DTO.*;
@@ -14,6 +13,7 @@ import java.util.Map;
 import java.util.function.Function;
 import static previewcode.backend.services.actiondsl.ActionDSL.*;
 import static previewcode.backend.services.actions.DatabaseActions.*;
+import static previewcode.backend.services.actions.DatabaseActions.fetchApprovals;
 
 public class DatabaseService implements IDatabaseService {
 
@@ -62,6 +62,17 @@ public class DatabaseService implements IDatabaseService {
                 .map(unit -> dbPullId);
     }
 
+    @Override
+    public Action<Seq<HunkApprovals>> getUserApprovals(PullRequestIdentifier pull) {
+
+
+        return fetchPullRequestGroups(pull)
+                .then(pullRequestGroups -> traverse(pullRequestGroups, group -> fetchHunks(group.id)))
+                .map(lists -> lists.fold(List.empty(), List::appendAll))
+                .then(hunkIDS -> traverse(hunkIDS, id -> fetchApprovalsUser(id).map(approveStatuses ->
+                        new HunkApprovals(id.hunkID, approveStatuses)
+                )));
+    }
 
     private static Action<ApprovedGroup> getGroupApproval(GroupID groupID) {
         Function<HunkID, Action<Map<String, ApproveStatus>>> fetchHunkApprovals =

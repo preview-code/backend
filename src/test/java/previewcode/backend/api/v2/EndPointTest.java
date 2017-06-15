@@ -4,10 +4,7 @@ import io.atlassian.fugue.Unit;
 import io.vavr.collection.Seq;
 import org.junit.jupiter.api.Test;
 import previewcode.backend.APIModule;
-import previewcode.backend.DTO.ApproveRequest;
-import previewcode.backend.DTO.ApprovedPullRequest;
-import previewcode.backend.DTO.OrderingGroup;
-import previewcode.backend.DTO.PullRequestIdentifier;
+import previewcode.backend.DTO.*;
 import previewcode.backend.test.helpers.ApiEndPointTest;
 import previewcode.backend.database.PullRequestGroup;
 import previewcode.backend.services.IDatabaseService;
@@ -96,6 +93,11 @@ class TestModule extends APIModule implements IDatabaseService {
 
     @Override
     public Action<ApprovedPullRequest> getApproval(PullRequestIdentifier pull) {
+        return new NoOp<>();
+    }
+
+    @Override
+    public Action<Seq<HunkApprovals>> getUserApprovals(PullRequestIdentifier pull) {
         return new NoOp<>();
     }
 

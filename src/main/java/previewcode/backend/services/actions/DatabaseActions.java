@@ -7,6 +7,8 @@ import previewcode.backend.DTO.PullRequestIdentifier;
 import previewcode.backend.database.*;
 import previewcode.backend.services.actiondsl.ActionDSL.*;
 
+import java.util.Map;
+
 public class DatabaseActions {
 
     public static class FetchPull extends Action<PullRequestID> {
@@ -141,6 +143,14 @@ public class DatabaseActions {
         }
     }
 
+    public static class FetchHunkApprovalsUser extends Action<Map<String, ApproveStatus>> {
+        private final HunkID hunkID;
+
+        public FetchHunkApprovalsUser(HunkID hunkID) {
+            this.hunkID = hunkID;
+        }
+    }
+
     public static class DeleteGroup extends Action<Unit> {
         public final GroupID groupID;
 
@@ -194,6 +204,10 @@ public class DatabaseActions {
 
     public static FetchHunkApprovals fetchApprovals(HunkID hunkID) {
         return new FetchHunkApprovals(hunkID);
+    }
+
+    public static FetchHunkApprovalsUser fetchApprovalsUser(HunkID hunkID) {
+        return new FetchHunkApprovalsUser(hunkID);
     }
 
     public static DeleteGroup delete(GroupID groupID) {
