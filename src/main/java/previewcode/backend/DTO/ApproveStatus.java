@@ -3,6 +3,8 @@ package previewcode.backend.DTO;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+import java.util.Objects;
+
 public enum ApproveStatus {
     APPROVED("approved"),
     DISAPPROVED("disapproved"),
@@ -16,9 +18,8 @@ public enum ApproveStatus {
 
     @JsonCreator
     public static ApproveStatus fromString(String approved) {
-        return approved == null
-                ? null
-                : ApproveStatus.valueOf(approved.toUpperCase());
+        Objects.requireNonNull(approved);
+        return ApproveStatus.valueOf(approved.toUpperCase());
     }
 
     @JsonValue
