@@ -81,7 +81,7 @@ public class MainModule extends APIModule {
         }
         this.bind(IJWTTokenCreator.class).to(JWTTokenCreator.class);
 
-        ActionCache.Builder b = new ActionCache.Builder()
+        ActionCache.Builder b = new ActionCache.Builder();
         ActionCache cache = GitHubAuthInterpreter
                 .configure(b).maximumEntries(10000).build();
 

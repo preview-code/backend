@@ -5,11 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import previewcode.backend.DTO.GitHubPullRequest;
-import previewcode.backend.DTO.GitHubRepository;
-import previewcode.backend.DTO.OrderingStatus;
-import previewcode.backend.DTO.PRComment;
-import previewcode.backend.DTO.PullRequestIdentifier;
+import previewcode.backend.DTO.*;
 import previewcode.backend.services.FirebaseService;
 import previewcode.backend.services.GithubService;
 
@@ -62,8 +58,12 @@ public class WebhookAPI {
 
                 firebaseService.addDefaultData(new PullRequestIdentifier(repoAndPull.first, repoAndPull.second));
 
-                githubService.placePullRequestComment(repoAndPull.second, comment);
-                githubService.setOrderingStatus(repoAndPull.second, pendingStatus);
+//                githubService.placePullRequestComment(repoAndPull.second, comment);
+//                githubService.setOrderingStatus(repoAndPull.second, pendingStatus);
+
+                Diff diff = githubService.fetchDiff(repoAndPull.second);
+
+                //TODO: fetch all hunks and store in database
 
             } else if (action.equals("synchronize")) {
                 Pair<GitHubRepository, GitHubPullRequest> repoAndPull = readRepoAndPullFromWebhook(body);
