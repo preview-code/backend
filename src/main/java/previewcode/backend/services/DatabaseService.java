@@ -4,6 +4,7 @@ package previewcode.backend.services;
 import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
 import previewcode.backend.DTO.*;
+import previewcode.backend.api.v2.ApprovalsAPI;
 import previewcode.backend.database.*;
 import previewcode.backend.services.actions.DatabaseActions;
 
@@ -12,7 +13,6 @@ import java.util.Map;
 import java.util.function.Function;
 import static previewcode.backend.services.actiondsl.ActionDSL.*;
 import static previewcode.backend.services.actions.DatabaseActions.*;
-import static previewcode.backend.services.actions.DatabaseActions.fetchApprovals;
 
 public class DatabaseService implements IDatabaseService {
 
@@ -26,7 +26,7 @@ public class DatabaseService implements IDatabaseService {
     @Override
     public Action<Unit> setApproval(PullRequestIdentifier pull, ApproveRequest approve) {
         return insertPullIfNotExists(pull).then(dbPullId ->
-                setApprove(dbPullId, approve.hunkId, Integer.toString(approve.githubLogin), approve.isApproved));
+                setApprove(dbPullId, approve.hunkId, approve.githubLogin, approve.isApproved));
     }
 
     @Override
@@ -67,27 +67,26 @@ public class DatabaseService implements IDatabaseService {
         return fetchPullRequestGroups(pull)
                 .then(traverse(group -> fetchHunks(group.id)))
                 .map(flatten())
-                .then(traverse(id -> fetchApprovalsUser(id).map(approveStatuses ->
-                        new HunkApprovals(id.checksum, approveStatuses)
-                )));
+                .then(traverse(hunk -> hunk.fetchApprovals.map(approvals -> {
+                    Map<String, ApproveStatus> m = new HashMap<>();
+                    approvals.forEach(approval -> m.put(approval.approver, approval.approveStatus));
+                    return new HunkApprovals(hunk.checksum, m);
+                })));
     }
 
     private static Action<ApprovedGroup> getGroupApproval(GroupID groupID) {
-        Function<HunkChecksum, Action<Map<String, ApproveStatus>>> fetchHunkApprovals =
-                id -> fetchApprovals(id).map(statuses -> {
-                    Map<String, ApproveStatus> map = new HashMap<>();
-                    map.put(id.checksum, isHunkApproved(statuses));
-                    return map;
-                });
-
         return fetchHunks(groupID).then(
-                hunkIDS -> traverse(hunkIDS, fetchHunkApprovals)
-                        .map(DatabaseService::combineMaps)
-                        .map(hunkApprovals ->  new ApprovedGroup(
-                                isGroupApproved(hunkIDS.length(), hunkApprovals),
-                                hunkApprovals,
-                                groupID)
-                        )
+                hunks -> traverse(hunks, (Hunk h) -> h.fetchApprovals.map(approvals -> {
+                    Map<String, ApproveStatus> map = new HashMap<>();
+                    map.put(h.checksum.checksum, isHunkApproved(approvals.map(a -> a.approveStatus)));
+                    return map;
+                }))
+                .map(DatabaseService::combineMaps)
+                .map(approvals -> new ApprovedGroup(
+                        isGroupApproved(hunks.length(), approvals),
+                        approvals,
+                        groupID)
+                )
         );
     }
 

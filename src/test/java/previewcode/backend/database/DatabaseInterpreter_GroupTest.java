@@ -134,7 +134,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
                 .values(1234L, dbPullId.id, "A", "B")
                 .execute();
 
-        Action<List<HunkChecksum>> hunkFetchAction = eval(fetchGroups(dbPullId)).get(0).fetchHunks;
+        Action<?> hunkFetchAction = eval(fetchGroups(dbPullId)).get(0).fetchHunks;
 
         Interpreter i = interpret()
                 .on(FetchHunksForGroup.class).stop(

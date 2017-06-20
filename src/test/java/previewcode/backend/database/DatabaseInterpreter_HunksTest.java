@@ -82,8 +82,8 @@ public class DatabaseInterpreter_HunksTest extends DatabaseInterpreterTest {
 
     @Test
     void fetchHunks_forUnknownGroup_returnsEmpty() throws Exception {
-        List<HunkChecksum> hunkIDS = eval(fetchHunks(new GroupID(-1L)));
-        assertThat(hunkIDS).isEmpty();
+        List<?> hunks = eval(fetchHunks(new GroupID(-1L)));
+        assertThat(hunks).isEmpty();
     }
 
     @Test
@@ -95,7 +95,7 @@ public class DatabaseInterpreter_HunksTest extends DatabaseInterpreterTest {
                 .values("Z", group_B_id.id, dbPullId.id)
                 .execute();
 
-        List<HunkChecksum> hunkIDS = eval(fetchHunks(group_A_id));
+        List<HunkChecksum> hunkIDS = eval(fetchHunks(group_A_id)).map(h -> h.checksum);
         assertThat(hunkIDS).containsOnly(new HunkChecksum("X"), new HunkChecksum("Y"));
     }
 

@@ -3,6 +3,7 @@ package previewcode.backend.database;
 import io.vavr.collection.List;
 import org.jooq.DSLContext;
 import org.jooq.exception.DataAccessException;
+import org.jooq.impl.DSL;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import previewcode.backend.DTO.ApproveStatus;
@@ -84,4 +85,13 @@ public class DatabaseInterpreter_ApprovalTest extends DatabaseInterpreterTest {
                 s -> assertThat(s).isEqualTo(second.status)
         );
     }
+
+    @Test
+    void fetchApprovals_requiresHunkID(DSLContext db) {
+
+    }
+
+    @Test
+    void fetchApprovals_returnsAllApprovals(DSLContext db) {}
+
 }

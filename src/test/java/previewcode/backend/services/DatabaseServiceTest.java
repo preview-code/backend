@@ -6,10 +6,8 @@ import io.vavr.collection.List;
 import io.vavr.control.Option;
 import org.junit.jupiter.api.Test;
 import previewcode.backend.DTO.*;
-import previewcode.backend.database.GroupID;
+import previewcode.backend.database.*;
 import previewcode.backend.DTO.HunkChecksum;
-import previewcode.backend.database.PullRequestGroup;
-import previewcode.backend.database.PullRequestID;
 import previewcode.backend.services.actiondsl.Interpreter;
 
 import java.util.Collection;
@@ -19,6 +17,7 @@ import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.Assert.fail;
 import static previewcode.backend.services.actiondsl.ActionDSL.*;
 import static previewcode.backend.services.actions.DatabaseActions.*;
 
@@ -52,11 +51,7 @@ public class DatabaseServiceTest {
         new OrderingGroupWithID(group, hunkIDs.map(id -> id.checksum).toJavaList())
     );
 
-    private ApproveRequest approveStatus = new ApproveRequest("checksum", ApproveStatus.DISAPPROVED, 1);
-
-    private List<ApproveStatus> hunkApprovals =  List.of(
-                ApproveStatus.APPROVED
-            );
+    private ApproveRequest approveStatus = new ApproveRequest("checksum", ApproveStatus.DISAPPROVED, "txsmith");
 
     private Map<String, ApproveStatus> userApprovals = new HashMap<String, ApproveStatus>();
 
@@ -170,7 +165,7 @@ public class DatabaseServiceTest {
                             assertThat(approveHunk.status)
                                     .isEqualTo(ApproveStatus.DISAPPROVED);
                             assertThat(approveHunk.githubUser)
-                                    .isEqualTo("1");
+                                    .isEqualTo("txsmith");
                             assertThat(approveHunk.hunkChecksum)
                                     .isEqualTo("checksum");
                             assertThat(approveHunk.pullRequestID)
@@ -224,8 +219,11 @@ public class DatabaseServiceTest {
     void getApproval_fetches_hunk_approvals() throws Exception {
         Action<?> dbAction = service.getApproval(pullIdentifier);
 
-        HunkChecksum id = new HunkChecksum("abcd");
-        List<HunkChecksum> oneHunk = List.of(id);
+        HunkChecksum checksum = new HunkChecksum("abcd");
+        HunkID id = new HunkID(1L);
+        List<Hunk> oneHunk = List.of(new Hunk(id, new GroupID(2L), checksum));
+
+        List<HunkApproval> hunkApprovals =  List.of(new HunkApproval(ApproveStatus.APPROVED, "txsmith"));
 
         Interpreter.Stepper<?> stepper = interpret()
                 .on(FetchPull.class).returnA(pullRequestID)
@@ -244,8 +242,7 @@ public class DatabaseServiceTest {
     void getHunkApproval_fetches_pull_pullRequest() {
         Action<?> dbAction = service.getHunkApprovals(pullIdentifier);
 
-        Interpreter.Stepper<?> stepper = interpret().stepwiseEval(dbAction);
-        List<Action<?>> peek = stepper.peek();
+        List<Action<?>> peek = interpret().stepwiseEval(dbAction).peek();
         assertThat(peek).containsOnly(fetchPull(pullIdentifier));
     }
 
@@ -281,8 +278,9 @@ public class DatabaseServiceTest {
     void getHunkApproval_fetches_hunk_approvals() throws Exception {
         Action<?> dbAction = service.getHunkApprovals(pullIdentifier);
 
-        HunkChecksum id = new HunkChecksum("abcd");
-        List<HunkChecksum> oneHunk = List.of(id);
+        HunkChecksum checksum = new HunkChecksum("abcd");
+        HunkID id = new HunkID(1L);
+        List<Hunk> oneHunk = List.of(new Hunk(id, new GroupID(2L), checksum));
 
         Interpreter.Stepper<?> stepper = interpret()
                 .on(FetchPull.class).returnA(pullRequestID)
@@ -293,8 +291,8 @@ public class DatabaseServiceTest {
         stepper.next();
 
         List<Action<?>> next = stepper.next();
-        assertThat(next).containsOnly(new FetchHunkApprovalsUser(id));
-
+//        assertThat(next).containsOnly(new FetchHunkApprovalsUser(id));
+        fail();
     }
 
     @Test
@@ -306,8 +304,8 @@ public class DatabaseServiceTest {
         Interpreter.Stepper<?> stepper = interpret()
                 .on(FetchPull.class).returnA(pullRequestID)
                 .on(FetchGroupsForPull.class).returnA(groups)
-                .on(FetchHunksForGroup.class).returnA(hunkIDs)
-                .on(FetchHunkApprovalsUser.class).returnA(userApprovals)
+                .on(FetchHunksForGroup.class).returnA(hunkIDs.map(id -> new Hunk(new HunkID(-1L), new GroupID(2L), id)))
+//                .on(FetchHunkApprovalsUser.class).returnA(userApprovals)
                 .stepwiseEval(dbAction);
         stepper.next();
         stepper.next();
@@ -315,5 +313,6 @@ public class DatabaseServiceTest {
 
         List<Action<?>> next = stepper.next();
         assertThat(next).isEmpty();
+        fail();
     }
 }

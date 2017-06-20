@@ -97,7 +97,7 @@ public class DatabaseActions {
         }
     }
 
-    public static class FetchHunksForGroup extends Action<List<HunkChecksum>> {
+    public static class FetchHunksForGroup extends Action<List<Hunk>> {
 
         public final GroupID groupID;
 
@@ -121,8 +121,8 @@ public class DatabaseActions {
         }
     }
 
-    public static class FetchHunkApprovals extends Action<List<ApproveStatus>> {
-        private final HunkChecksum hunkChecksum;
+    public static class FetchHunkApprovals extends Action<List<HunkApproval>> {
+        private final HunkID hunkID;
 
         @Override
         public boolean equals(Object o) {
@@ -131,39 +131,16 @@ public class DatabaseActions {
 
             FetchHunkApprovals that = (FetchHunkApprovals) o;
 
-            return hunkChecksum.equals(that.hunkChecksum);
+            return hunkID.equals(that.hunkID);
         }
 
         @Override
         public int hashCode() {
-            return hunkChecksum.hashCode();
+            return hunkID.hashCode();
         }
 
-        public FetchHunkApprovals(HunkChecksum hunkChecksum) {
-            this.hunkChecksum = hunkChecksum;
-        }
-    }
-
-    public static class FetchHunkApprovalsUser extends Action<Map<String, ApproveStatus>> {
-        private final HunkChecksum hunkChecksum;
-
-        public FetchHunkApprovalsUser(HunkChecksum hunkChecksum) {
-            this.hunkChecksum = hunkChecksum;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            FetchHunkApprovalsUser that = (FetchHunkApprovalsUser) o;
-
-            return hunkChecksum.equals(that.hunkChecksum);
-        }
-
-        @Override
-        public int hashCode() {
-            return hunkChecksum.hashCode();
+        public FetchHunkApprovals(HunkID hunkID) {
+            this.hunkID = hunkID;
         }
     }
 
@@ -218,12 +195,8 @@ public class DatabaseActions {
         return new FetchHunksForGroup(groupID);
     }
 
-    public static FetchHunkApprovals fetchApprovals(HunkChecksum hunkChecksum) {
-        return new FetchHunkApprovals(hunkChecksum);
-    }
-
-    public static FetchHunkApprovalsUser fetchApprovalsUser(HunkChecksum hunkChecksum) {
-        return new FetchHunkApprovalsUser(hunkChecksum);
+    public static FetchHunkApprovals fetchApprovals(HunkID hunkID) {
+        return new FetchHunkApprovals(hunkID);
     }
 
     public static DeleteGroup delete(GroupID groupID) {

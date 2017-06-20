@@ -358,7 +358,6 @@
                             <includes>.*</includes>
                             <inputSchema>${db.schema}</inputSchema>
                         </database>
-
                         <target>
                             <packageName>previewcode.backend.database.model</packageName>
                             <directory>src/main/java</directory>

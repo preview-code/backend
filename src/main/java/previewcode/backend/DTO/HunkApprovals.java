@@ -11,7 +11,7 @@ public class HunkApprovals {
 
 
     @JsonProperty("hunkID")
-    public String hunkID;
+    public String hunkChecksum;
 
     /**
      * Per user the approvals status
@@ -19,9 +19,9 @@ public class HunkApprovals {
     @JsonProperty("approvals")
     public Map<String, ApproveStatus> approvals;
 
-    public HunkApprovals(String hunkID, Map<String, ApproveStatus> approvals) {
+    public HunkApprovals(HunkChecksum hunkChecksum, Map<String, ApproveStatus> approvals) {
         this.approvals = approvals;
-        this.hunkID = hunkID;
+        this.hunkChecksum = hunkChecksum.checksum;
     }
 
 

@@ -2,7 +2,7 @@ package previewcode.backend.services.actiondsl;
 
 import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
-import io.vavr.collection.Seq;
+import io.vavr.collection.List;
 import previewcode.backend.services.actiondsl.WithSyntax.*;
 
 import java.util.function.Consumer;
@@ -64,9 +64,9 @@ public class ActionDSL {
          * {@code ap} is quite a 'low level' operator, so most of the time it will
          * be more convenient to use one of the following (which use {@code ap} internally):
          * <br>
-         *     {@link ActionDSL#sequence(Seq)}, <br>
+         *     {@link ActionDSL#sequence(List)}, <br>
      *         {@link ActionDSL#traverse(Function)} or <br>
-     *         {@link ActionDSL#traverse(Seq, Function)}
+     *         {@link ActionDSL#traverse(List, Function)}
          * <br>
          * <br>
          * Example:
@@ -239,7 +239,7 @@ public class ActionDSL {
     }
 
     /**
-     * Curried version of {@link #traverse(Seq, Function)}.
+     * Curried version of {@link #traverse(List, Function)}.
      */
     public static <A, B> Function<List<A>, Action<List<B>>> traverse(Function<? super A, ? extends Action<B>> f) {
         return xs -> sequence(xs.map(f));

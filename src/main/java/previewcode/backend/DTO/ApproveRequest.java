@@ -21,11 +21,11 @@ public class ApproveRequest {
      * Which user approves this hunk
      */
     @JsonProperty("githubLogin")
-    public final int githubLogin;
+    public final String githubLogin;
 
     @JsonCreator
     public ApproveRequest(@JsonProperty("hunkChecksum") String hunkId, @JsonProperty("isApproved")
-            ApproveStatus isApproved, @JsonProperty("githubLogin") int githubLogin) {
+            ApproveStatus isApproved, @JsonProperty("githubLogin") String githubLogin) {
         this.hunkId = hunkId;
         this.isApproved = isApproved;
         this.githubLogin = githubLogin;

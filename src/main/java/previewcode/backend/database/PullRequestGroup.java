@@ -32,7 +32,7 @@ public class PullRequestGroup {
      * Evaluating this action should result in the list of
      * hunk-ids of all hunks in this group.
      */
-    public final Action<List<HunkChecksum>> fetchHunks;
+    public final Action<List<Hunk>> fetchHunks;
 
     public PullRequestGroup(GroupID id, String title, String description) {
         this.id = id;

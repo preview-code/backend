@@ -8,6 +8,7 @@ import io.vavr.collection.List;
 import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -215,7 +216,10 @@ public class Interpreter {
         protected Action<A> currentAction;
         protected final Interpreter evaluator;
 
+        private final class Done<A> extends Action<A> {}
+
         Stepper(Interpreter interpreter, Action<A> currentAction) {
+            Objects.requireNonNull(currentAction);
             this.currentAction = currentAction;
             evaluator = interpreter;
         }
@@ -239,7 +243,7 @@ public class Interpreter {
          * @throws Exception when evaluation fails.
          */
         public List<Action<?>> next() throws Exception {
-            if (currentAction == null) {
+            if (currentAction instanceof Done) {
                 throw new DoneException();
             } else {
                 Try<Either<A, Action<A>>> stepped = step(currentAction);
@@ -247,7 +251,7 @@ public class Interpreter {
                 if (stepped.isSuccess()) {
                     Either<A, Action<A>> result = stepped.toEither().right().get();
                     if (result.isLeft()) {
-                        currentAction = null;
+                        currentAction = new Done<>();
                     } else {
                         currentAction = result.right().get();
                     }
@@ -284,7 +288,7 @@ public class Interpreter {
         }
 
         protected List<Action<?>> peek(Action<?> action) {
-            if (action == null || action instanceof Return) {
+            if (action instanceof Done || action instanceof Return) {
                 return List.empty();
             } else if (action instanceof Suspend) {
                 return peek(((Suspend) action).action);

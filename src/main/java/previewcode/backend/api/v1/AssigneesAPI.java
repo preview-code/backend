@@ -48,7 +48,7 @@ public class AssigneesAPI {
                                      @PathParam("number") String number,
                                      ApproveRequest body) throws IOException {
         GHMyself user = githubService.getLoggedInUser();
-        if (body.githubLogin != user.getId()) {
+        if (!body.githubLogin.equals(user.getLogin())) {
             throw new IllegalArgumentException("Can not set approve status of other user");
         }
         firebaseService.setApproved(owner, name, number, body);
