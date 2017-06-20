@@ -46,10 +46,18 @@ public class DatabaseInterpreter extends Interpreter {
     }
 
     protected void assignHunk(AssignHunkToGroup action) {
-        db.insertInto(HUNK)
-                .columns(HUNK.GROUP_ID, HUNK.CHECKSUM)
-                .values(action.groupID.id, action.hunkChecksum)
+        int result = db.insertInto(HUNK)
+                .columns(HUNK.PULL_REQUEST_ID, HUNK.GROUP_ID, HUNK.CHECKSUM)
+                .select(
+                        db.select(GROUPS.PULL_REQUEST_ID, DSL.val(action.groupID.id), DSL.val(action.hunkChecksum))
+                                .from(GROUPS)
+                                .where(GROUPS.ID.eq(action.groupID.id))
+                )
                 .execute();
+
+        if (result == 0) {
+            throw new DatabaseException("Group not found.");
+        }
     }
 
     protected void approveHunk(ApproveHunk action) {

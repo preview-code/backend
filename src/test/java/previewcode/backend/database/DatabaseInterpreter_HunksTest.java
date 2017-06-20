@@ -1,5 +1,6 @@
 package previewcode.backend.database;
 
+import io.atlassian.fugue.Unit;
 import io.vavr.Tuple2;
 import io.vavr.collection.List;
 import org.jooq.DSLContext;
@@ -7,6 +8,8 @@ import org.jooq.exception.DataAccessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import previewcode.backend.DTO.HunkChecksum;
+import previewcode.backend.services.actiondsl.ActionDSL;
+import previewcode.backend.services.actiondsl.ActionDSL.Action;
 
 import static org.assertj.core.api.Assertions.*;
 import static previewcode.backend.database.model.Tables.GROUPS;
@@ -39,7 +42,7 @@ public class DatabaseInterpreter_HunksTest extends DatabaseInterpreterTest {
     @Test
     public void assignHunk_groupMustExist() throws Exception {
         GroupID invalidID = new GroupID(-1L);
-        assertThatExceptionOfType(DataAccessException.class)
+        assertThatExceptionOfType(DatabaseException.class)
                 .isThrownBy(() -> eval(assignToGroup(invalidID, hunkChecksum)));
     }
 
@@ -61,12 +64,12 @@ public class DatabaseInterpreter_HunksTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void assignHunk_canInsertDuplicates(DSLContext db) throws Exception {
-        eval(assignToGroup(group_A_id, hunkChecksum).then(assignToGroup(group_B_id, hunkChecksum)));
-
-        assertThat(
-                db.selectCount().from(HUNK).fetchOneInto(Integer.class)
-        ).isEqualTo(2);
+    public void assignHunk_cannotAssignTwice_toDifferentGroup(DSLContext db) throws Exception {
+        Action<?> assignDouble = assignToGroup(group_A_id, hunkChecksum).then(assignToGroup(group_B_id, hunkChecksum));
+        assertThatExceptionOfType(DataAccessException.class)
+                .isThrownBy(() ->
+                        eval(assignDouble)
+        );
     }
 
     @Test
@@ -86,10 +89,10 @@ public class DatabaseInterpreter_HunksTest extends DatabaseInterpreterTest {
     @Test
     void fetchHunks_returnsAllHunks(DSLContext db) throws Exception {
         db.insertInto(HUNK)
-                .columns(HUNK.CHECKSUM, HUNK.GROUP_ID)
-                .values("X", group_A_id.id)
-                .values("Y", group_A_id.id)
-                .values("Z", group_B_id.id)
+                .columns(HUNK.CHECKSUM, HUNK.GROUP_ID, HUNK.PULL_REQUEST_ID)
+                .values("X", group_A_id.id, dbPullId.id)
+                .values("Y", group_A_id.id, dbPullId.id)
+                .values("Z", group_B_id.id, dbPullId.id)
                 .execute();
 
         List<HunkChecksum> hunkIDS = eval(fetchHunks(group_A_id));

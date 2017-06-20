@@ -33,8 +33,9 @@ CREATE TABLE preview_code.hunk (
   id BIGINT DEFAULT nextval('preview_code.seq_pk_hunk') NOT NULL CONSTRAINT pk_hunk PRIMARY KEY,
   checksum VARCHAR NOT NULL,
   group_id BIGINT NOT NULL CONSTRAINT fk_hunk_group_id REFERENCES preview_code.groups(id) ON DELETE CASCADE,
+  pull_request_id BIGINT NOT NULL CONSTRAINT fk_hunk_pull_id REFERENCES preview_code.pull_request(id),
 
-  CONSTRAINT unique_hunkId_groupId UNIQUE (checksum, group_id)
+  CONSTRAINT unique_hunkId_groupId UNIQUE (checksum, pull_request_id)
 );
 
 CREATE INDEX idx_fk_hunk_group_id ON preview_code.hunk (group_id);

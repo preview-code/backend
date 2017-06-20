@@ -34,12 +34,12 @@ public class DatabaseInterpreter_ApprovalTest extends DatabaseInterpreterTest {
         db.insertInto(GROUPS, GROUPS.TITLE, GROUPS.DESCRIPTION, GROUPS.PULL_REQUEST_ID)
                 .values("Group A", "AA", dbPullId.id).execute();
 
-        db.insertInto(HUNK, HUNK.GROUP_ID, HUNK.CHECKSUM)
-                .values(1L, "abc")
-                .values(1L, "def")
-                .values(1L, "ghi")
-                .values(1L, "jkl")
-                .values(1L, "mno")
+        db.insertInto(HUNK, HUNK.GROUP_ID, HUNK.CHECKSUM, HUNK.PULL_REQUEST_ID)
+                .values(1L, "abc", dbPullId.id)
+                .values(1L, "def", dbPullId.id)
+                .values(1L, "ghi", dbPullId.id)
+                .values(1L, "jkl", dbPullId.id)
+                .values(1L, "mno", dbPullId.id)
                 .execute();
     }
 

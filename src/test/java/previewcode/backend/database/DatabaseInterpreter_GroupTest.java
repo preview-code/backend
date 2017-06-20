@@ -165,8 +165,8 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
                 .execute();
 
         db.insertInto(HUNK)
-                .columns(HUNK.CHECKSUM, HUNK.GROUP_ID)
-                .values("abc", 1234L)
+                .columns(HUNK.CHECKSUM, HUNK.GROUP_ID, HUNK.PULL_REQUEST_ID)
+                .values("abc", 1234L, dbPullId.id)
                 .execute();
 
         eval(delete(new GroupID(1234L)));
