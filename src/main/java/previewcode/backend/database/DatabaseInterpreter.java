@@ -2,10 +2,9 @@ package previewcode.backend.database;
 
 import io.vavr.collection.List;
 import org.jooq.*;
-import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
-import org.postgresql.util.PSQLException;
 import previewcode.backend.DTO.HunkChecksum;
+import previewcode.backend.database.model.tables.records.PullRequestRecord;
 import previewcode.backend.services.actiondsl.Interpreter;
 
 import javax.inject.Inject;
@@ -17,7 +16,6 @@ import static previewcode.backend.services.actions.DatabaseActions.*;
 public class DatabaseInterpreter extends Interpreter {
 
     private final DSLContext db;
-    private static final String UNIQUE_CONSTRAINT_VIOLATION = "23505";
 
     @Inject
     public DatabaseInterpreter(DSLContext db) {
@@ -82,21 +80,18 @@ public class DatabaseInterpreter extends Interpreter {
 
 
     protected PullRequestID insertPull(InsertPullIfNotExists action) {
-        try {
-            return new PullRequestID(
-                    db.insertInto(PULL_REQUEST, PULL_REQUEST.OWNER, PULL_REQUEST.NAME, PULL_REQUEST.NUMBER)
-                            .values(action.owner, action.name, action.number)
-                            .returning(PULL_REQUEST.ID)
-                            .fetchOne().getId()
-            );
-        } catch (DataAccessException e) {
-            if (e.getCause() instanceof PSQLException &&
-                    ((PSQLException) e.getCause()).getSQLState().equals(UNIQUE_CONSTRAINT_VIOLATION)) {
-                return this.fetchPullRequest(fetchPull(action.owner, action.name, action.number));
-            } else {
-                throw e;
-            }
-        }
+        // Unchecked cast to InsertReturningStep because jOOQ 3.9.x does not support:
+        //   INSERT INTO ... ON CONFLICT ... RETURNING
+        //noinspection unchecked
+        return new PullRequestID(
+                ((InsertReturningStep<PullRequestRecord>)
+                        db.insertInto(PULL_REQUEST, PULL_REQUEST.OWNER, PULL_REQUEST.NAME, PULL_REQUEST.NUMBER)
+                                .values(action.owner, action.name, action.number)
+                                .onConflict(PULL_REQUEST.OWNER, PULL_REQUEST.NAME, PULL_REQUEST.NUMBER)
+                                .doUpdate()
+                                .set(PULL_REQUEST.OWNER, action.owner))
+                        .returning(PULL_REQUEST.ID).fetchOne().getId()
+        );
     }
 
     protected PullRequestID fetchPullRequest(FetchPull action) {
