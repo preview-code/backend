@@ -53,8 +53,6 @@ public class DatabaseServiceTest {
 
     private ApproveRequest approveStatus = new ApproveRequest("checksum", ApproveStatus.DISAPPROVED, "txsmith");
 
-    private Map<String, ApproveStatus> userApprovals = new HashMap<String, ApproveStatus>();
-
     @Test
     public void insertsPullIfNotExists() throws Exception {
         Action<Unit> dbAction = service.updateOrdering(pullIdentifier, List.empty());
@@ -291,21 +289,19 @@ public class DatabaseServiceTest {
         stepper.next();
 
         List<Action<?>> next = stepper.next();
-//        assertThat(next).containsOnly(new FetchHunkApprovalsUser(id));
-        fail();
+        assertThat(next.length()).isEqualTo(2);
+        assertThat(next).containsOnly(fetchApprovals(id));
     }
 
     @Test
     void getHunkApproval_no_action_after_fetching_hunkapprovals() throws Exception {
         Action<?> dbAction = service.getHunkApprovals(pullIdentifier);
-        userApprovals.put("Eva", ApproveStatus.DISAPPROVED);
-        userApprovals.put("Thomas", ApproveStatus.APPROVED);
 
         Interpreter.Stepper<?> stepper = interpret()
                 .on(FetchPull.class).returnA(pullRequestID)
                 .on(FetchGroupsForPull.class).returnA(groups)
                 .on(FetchHunksForGroup.class).returnA(hunkIDs.map(id -> new Hunk(new HunkID(-1L), new GroupID(2L), id)))
-//                .on(FetchHunkApprovalsUser.class).returnA(userApprovals)
+                .on(FetchHunkApprovals.class).returnA(List.empty())
                 .stepwiseEval(dbAction);
         stepper.next();
         stepper.next();
@@ -313,6 +309,5 @@ public class DatabaseServiceTest {
 
         List<Action<?>> next = stepper.next();
         assertThat(next).isEmpty();
-        fail();
     }
 }
