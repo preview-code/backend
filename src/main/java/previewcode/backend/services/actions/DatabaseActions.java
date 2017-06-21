@@ -122,7 +122,7 @@ public class DatabaseActions {
     }
 
     public static class FetchHunkApprovals extends Action<List<HunkApproval>> {
-        private final HunkID hunkID;
+        public final HunkID hunkID;
 
         @Override
         public boolean equals(Object o) {

@@ -1,13 +1,12 @@
 package previewcode.backend.database;
 
 import io.vavr.collection.List;
-import org.jooq.*;
+import org.jooq.DSLContext;
+import org.jooq.InsertReturningStep;
+import org.jooq.Record1;
 import org.jooq.impl.DSL;
-import previewcode.backend.DTO.ApproveStatus;
-import previewcode.backend.DTO.HunkChecksum;
 import previewcode.backend.database.model.tables.records.PullRequestRecord;
 import previewcode.backend.services.actiondsl.Interpreter;
-import previewcode.backend.services.actions.DatabaseActions;
 
 import javax.inject.Inject;
 
@@ -27,21 +26,24 @@ public class DatabaseInterpreter extends Interpreter {
         on(NewGroup.class).apply(this::insertNewGroup);
         on(AssignHunkToGroup.class).apply(toUnit(this::assignHunk));
         on(FetchGroupsForPull.class).apply(this::fetchGroups);
-        // TODO: on(FetchHunksForGroup.class).apply(this::fetchHunks);
-        // TODO: on(FetchHunkApprovals.class).apply(this::fetchApprovals);
+        on(FetchHunksForGroup.class).apply(this::fetchHunks);
+        on(FetchHunkApprovals.class).apply(this::fetchApprovals);
         on(DeleteGroup.class).apply(toUnit(this::deleteGroup));
         on(ApproveHunk.class).apply(toUnit(this::approveHunk));
     }
 
-//    private List<ApproveStatus> fetchApprovals(FetchHunkApprovals action) {
-//        return null;
-//    }
-//
-//    private List<HunkID> fetchHunks(FetchHunksForGroup action) {
-//        return List.ofAll(db.selectFrom(HUNK)
-//                .where(HUNK.GROUP_ID.eq(action.groupID.id))
-//                .fetch(HUNK.CHECKSUM)).map(HunkChecksum::new);
-//    }
+    private List<HunkApproval> fetchApprovals(FetchHunkApprovals action) {
+        return List.ofAll(db.selectFrom(APPROVAL)
+                .where(APPROVAL.HUNK_ID.eq(action.hunkID.id))
+                .fetch()
+                .map(HunkApproval::fromRecord));
+    }
+
+    private List<Hunk> fetchHunks(FetchHunksForGroup action) {
+        return List.ofAll(db.selectFrom(HUNK)
+                .where(HUNK.GROUP_ID.eq(action.groupID.id))
+                .fetch(Hunk::fromRecord));
+    }
 
     protected void deleteGroup(DeleteGroup deleteGroup) {
         db.deleteFrom(GROUPS)

@@ -2,8 +2,8 @@ package previewcode.backend.database;
 
 import io.vavr.collection.List;
 import previewcode.backend.DTO.HunkChecksum;
+import previewcode.backend.database.model.tables.records.HunkRecord;
 import previewcode.backend.services.actiondsl.ActionDSL.Action;
-import previewcode.backend.services.actions.DatabaseActions;
 
 import static previewcode.backend.services.actions.DatabaseActions.fetchApprovals;
 
@@ -18,6 +18,10 @@ public class Hunk {
         this.groupID = groupID;
         this.checksum = checksum;
         this.fetchApprovals = fetchApprovals(id);
+    }
+
+    public static Hunk fromRecord(HunkRecord record) {
+        return new Hunk(new HunkID(record.getId()), new GroupID(record.getGroupId()), new HunkChecksum(record.getChecksum()));
     }
 
     @Override

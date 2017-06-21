@@ -87,11 +87,26 @@ public class DatabaseInterpreter_ApprovalTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    void fetchApprovals_requiresHunkID(DSLContext db) {
-
+    void fetchApprovals_requiresHunkID(DSLContext db) throws Exception {
+        FetchHunkApprovals action = fetchApprovals(new HunkID(-1L));
+        List<HunkApproval> result = eval(action);
+        assertThat(result).isEmpty();
     }
 
     @Test
-    void fetchApprovals_returnsAllApprovals(DSLContext db) {}
+    void fetchApprovals_returnsAllApprovals(DSLContext db) throws Exception {
+        db.insertInto(APPROVAL, APPROVAL.HUNK_ID, APPROVAL.APPROVER, APPROVAL.STATUS)
+                .values(1L, "txsmith", ApproveStatus.APPROVED.getApproved())
+                .values(1L, "eanker", ApproveStatus.DISAPPROVED.getApproved())
+                .values(2L, "txsmith", ApproveStatus.DISAPPROVED.getApproved())
+                .execute();
+
+        FetchHunkApprovals action = fetchApprovals(new HunkID(1L));
+        List<HunkApproval> result = eval(action);
+        assertThat(result).containsOnly(
+                new HunkApproval(ApproveStatus.APPROVED, "txsmith"),
+                new HunkApproval(ApproveStatus.DISAPPROVED, "eanker")
+        );
+    }
 
 }
