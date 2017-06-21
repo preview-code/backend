@@ -3,11 +3,17 @@ package previewcode.backend.api.v1;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.atlassian.fugue.Unit;
+import io.vavr.collection.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import previewcode.backend.DTO.*;
+import previewcode.backend.database.DatabaseInterpreter;
 import previewcode.backend.services.FirebaseService;
 import previewcode.backend.services.GithubService;
+import previewcode.backend.services.IDatabaseService;
+import previewcode.backend.services.actiondsl.ActionDSL;
+import previewcode.backend.services.actiondsl.Interpreter;
 
 import javax.inject.Inject;
 import javax.ws.rs.HeaderParam;
@@ -30,18 +36,28 @@ public class WebhookAPI {
     private static final Response BAD_REQUEST = Response.status(Response.Status.BAD_REQUEST).build();
     private static final Response OK = Response.ok().build();
 
+    private final IDatabaseService databaseService;
+    private final Interpreter interpreter;
+
+
     @Inject
     private GithubService githubService;
 
     @Inject
     private FirebaseService firebaseService;
 
+    @Inject
+    public WebhookAPI(IDatabaseService databaseService, DatabaseInterpreter interpreter) {
+        this.databaseService = databaseService;
+        this.interpreter = interpreter;
+    }
+
     @POST
     public Response onWebhookPost(
             String postData,
             @HeaderParam(GITHUB_WEBHOOK_EVENT_HEADER) String eventType,
             @HeaderParam(GITHUB_WEBHOOK_DELIVERY_HEADER) String delivery)
-            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException {
+            throws Exception {
 
         logger.info("Receiving Webhook call {" + delivery + "} for event {" + eventType + "}");
 
@@ -62,8 +78,9 @@ public class WebhookAPI {
 //                githubService.setOrderingStatus(repoAndPull.second, pendingStatus);
 
                 Diff diff = githubService.fetchDiff(repoAndPull.second);
-
-                //TODO: fetch all hunks and store in database
+                OrderingGroup defaultGroup = new OrderingGroup("Default group", "Default group", diff.hunkChecksums);
+                ActionDSL.Action<Unit> groupAction = databaseService.updateOrdering(new PullRequestIdentifier(repoAndPull.first, repoAndPull.second), List.of(defaultGroup));
+                interpreter.evaluateToResponse(groupAction);
 
             } else if (action.equals("synchronize")) {
                 Pair<GitHubRepository, GitHubPullRequest> repoAndPull = readRepoAndPullFromWebhook(body);

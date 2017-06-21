@@ -124,9 +124,9 @@ public class MainModule extends APIModule {
             logger.info("Instantiating connection pool...");
             BoneCPDataSource result = new BoneCPDataSource();
             result.setDriverClass("org.postgresql.Driver");
-            result.setJdbcUrl("jdbc:postgresql:library");
-            result.setUsername("postgres");
-            result.setPassword("test");
+            result.setJdbcUrl("jdbc:postgresql://localhost:5432/preview_code");
+            result.setUsername("admin");
+            result.setPassword("password");
             result.setDefaultAutoCommit(true);
             result.setPartitionCount(4);
             result.setMinConnectionsPerPartition(1);
