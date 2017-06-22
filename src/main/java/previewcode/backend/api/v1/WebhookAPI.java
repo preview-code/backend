@@ -20,10 +20,6 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 
 @Path("v1/webhook")
 public class WebhookAPI {
@@ -74,12 +70,13 @@ public class WebhookAPI {
 
                 firebaseService.addDefaultData(new PullRequestIdentifier(repoAndPull.first, repoAndPull.second));
 
-//                githubService.placePullRequestComment(repoAndPull.second, comment);
-//                githubService.setOrderingStatus(repoAndPull.second, pendingStatus);
+                githubService.placePullRequestComment(repoAndPull.second, comment);
+                githubService.setOrderingStatus(repoAndPull.second, pendingStatus);
 
+                //Add hunks to database
                 Diff diff = githubService.fetchDiff(repoAndPull.second);
-                OrderingGroup defaultGroup = new OrderingGroup("Default group", "Default group", diff.hunkChecksums);
-                ActionDSL.Action<Unit> groupAction = databaseService.updateOrdering(new PullRequestIdentifier(repoAndPull.first, repoAndPull.second), List.of(defaultGroup));
+                OrderingGroup defaultGroup = new OrderingGroup("Default group", "Default group", diff.getHunkChecksums());
+                ActionDSL.Action<Unit> groupAction = databaseService.insertDefaultGroup(new PullRequestIdentifier(repoAndPull.first, repoAndPull.second), List.of(defaultGroup));
                 interpreter.evaluateToResponse(groupAction);
 
             } else if (action.equals("synchronize")) {

@@ -1,14 +1,15 @@
 package previewcode.backend.api.v2;
 
+import com.google.inject.name.Names;
 import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
 import org.junit.jupiter.api.Test;
 import previewcode.backend.APIModule;
 import previewcode.backend.DTO.*;
+import previewcode.backend.services.actiondsl.Interpreter;
 import previewcode.backend.test.helpers.ApiEndPointTest;
 import previewcode.backend.database.PullRequestGroup;
 import previewcode.backend.services.IDatabaseService;
-import previewcode.backend.services.actiondsl.Interpreter;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -91,6 +92,11 @@ class TestModule extends APIModule implements IDatabaseService {
     }
 
     @Override
+    public Action<Unit> insertDefaultGroup(PullRequestIdentifier pullRequestIdentifier, List<OrderingGroup> body) {
+        return new NoOp<>();
+    }
+
+    @Override
     public Action<Unit> setApproval(PullRequestIdentifier pullRequestIdentifier, ApproveRequest approve) {
         return new NoOp<>();
     }
@@ -118,8 +124,8 @@ class TestModule extends APIModule implements IDatabaseService {
         // The DatabaseService always returns a no-op action
         this.bind(IDatabaseService.class).toInstance(this);
 
-        // The interpreter always evaluates any action to Unit
-        this.bind(Interpreter.class).toInstance(
+//         The interpreter always evaluates any action to Unit
+        this.bind(Interpreter.class).annotatedWith(Names.named("database-interp")).toInstance(
                 interpret().on(NoOp.class).apply(x -> unit)
         );
     }

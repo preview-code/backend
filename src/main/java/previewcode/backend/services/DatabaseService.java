@@ -20,7 +20,14 @@ public class DatabaseService implements IDatabaseService {
     public Action<Unit> updateOrdering(PullRequestIdentifier pull, List<OrderingGroup> groups) {
         return insertPullIfNotExists(pull)
                 .then(this::clearExistingGroups)
-                .then(dbPullId -> traverse(groups, createGroup(dbPullId))).toUnit();
+                .then(dbPullId -> traverse(groups, createGroup(dbPullId, null))).toUnit();
+    }
+
+    @Override
+    public Action<Unit> insertDefaultGroup(PullRequestIdentifier pull, List<OrderingGroup> groups) {
+        return insertPullIfNotExists(pull)
+                .then(this::clearExistingGroups)
+                .then(dbPullId -> traverse(groups, createGroup(dbPullId, true))).toUnit();
     }
 
     @Override
@@ -48,9 +55,9 @@ public class DatabaseService implements IDatabaseService {
         );
     }
 
-    public Function<OrderingGroup, Action<Unit>> createGroup(PullRequestID dbPullId) {
+    public Function<OrderingGroup, Action<Unit>> createGroup(PullRequestID dbPullId, Boolean defaultGroup) {
         return group ->
-                newGroup(dbPullId, group.info.title, group.info.description).then(
+                newGroup(dbPullId, group.info.title, group.info.description, defaultGroup).then(
                     groupID -> traverse(List.ofAll(group.diff), hunkId -> assignToGroup(groupID, hunkId))
                 ).toUnit();
     }

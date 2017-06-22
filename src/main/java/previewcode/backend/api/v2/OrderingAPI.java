@@ -1,15 +1,16 @@
 package previewcode.backend.api.v2;
 
+import com.google.inject.Inject;
 import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
 import previewcode.backend.DTO.OrderingGroup;
 import previewcode.backend.DTO.PullRequestIdentifier;
 import previewcode.backend.services.IDatabaseService;
-import static previewcode.backend.services.actiondsl.ActionDSL.*;
-
 import previewcode.backend.services.actiondsl.Interpreter;
 
-import javax.inject.Inject;
+import static previewcode.backend.services.actiondsl.ActionDSL.*;
+
+import javax.inject.Named;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -22,7 +23,7 @@ public class OrderingAPI {
     private final IDatabaseService databaseService;
 
     @Inject
-    public OrderingAPI(Interpreter interpreter, IDatabaseService databaseService) {
+    public OrderingAPI(@Named("database-interp") Interpreter interpreter, IDatabaseService databaseService) {
         this.interpreter = interpreter;
         this.databaseService = databaseService;
     }

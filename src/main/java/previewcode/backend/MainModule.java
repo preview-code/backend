@@ -7,6 +7,7 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.inject.Provides;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import com.google.inject.servlet.RequestScoped;
 import com.jolbox.bonecp.BoneCPDataSource;
 import org.jboss.resteasy.plugins.providers.jackson.ResteasyJackson2Provider;
@@ -22,6 +23,7 @@ import previewcode.backend.api.filter.GitHubAccessTokenFilter;
 import previewcode.backend.api.filter.IJWTTokenCreator;
 import previewcode.backend.api.filter.JWTTokenCreator;
 import previewcode.backend.api.v1.*;
+<<<<<<< 84cd7a0944beeac91449e2112a18ddba6b30cff9
 import previewcode.backend.services.interpreters.GitHubAuthInterpreter;
 import previewcode.backend.services.http.HttpRequestExecutor;
 import previewcode.backend.services.http.IHttpRequestExecutor;
@@ -29,6 +31,15 @@ import previewcode.backend.services.DatabaseService;
 import previewcode.backend.services.GithubService;
 import previewcode.backend.services.IDatabaseService;
 import previewcode.backend.services.actiondsl.ActionCache;
+=======
+import previewcode.backend.api.v2.OrderingAPI;
+import previewcode.backend.database.DatabaseInterpreter;
+import previewcode.backend.services.DatabaseService;
+import previewcode.backend.services.GithubService;
+import previewcode.backend.services.IDatabaseService;
+import previewcode.backend.services.actiondsl.ActionDSL;
+import previewcode.backend.services.actiondsl.Interpreter;
+>>>>>>> On webhook opened all hunks are added to the database
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.sql.DataSource;
@@ -40,6 +51,9 @@ import java.io.IOException;
 import java.security.KeyFactory;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
+
+import static previewcode.backend.services.actiondsl.ActionDSL.interpret;
+import static previewcode.backend.services.actiondsl.ActionDSL.unit;
 
 /**
  * The main module of the backend
@@ -66,6 +80,7 @@ public class MainModule extends APIModule {
         this.bind(AssigneesAPI.class);
         this.bind(TrackerAPI.class);
         this.bind(WebhookAPI.class);
+        this.bind(OrderingAPI.class);
 
         this.bind(GitHubAccessTokenFilter.class);
         this.bind(ResteasyJackson2Provider.class);
@@ -86,6 +101,7 @@ public class MainModule extends APIModule {
                 .configure(b).maximumEntries(10000).build();
 
         this.bind(ActionCache.class).toInstance(cache);
+        this.bind(Interpreter.class).annotatedWith(Names.named("database-interp")).to(DatabaseInterpreter.class);
 
         initializeFireBase();
     }

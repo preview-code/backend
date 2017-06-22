@@ -80,7 +80,7 @@
             <version>${jetty.version}</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/net.sourceforge.jregex/jregex -->
+        <!-- regex parser -->
         <dependency>
             <groupId>net.sourceforge.jregex</groupId>
             <artifactId>jregex</artifactId>

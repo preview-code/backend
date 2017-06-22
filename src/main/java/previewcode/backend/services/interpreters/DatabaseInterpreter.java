@@ -121,8 +121,8 @@ public class DatabaseInterpreter extends Interpreter {
 
     protected GroupID insertNewGroup(NewGroup newGroup) {
         return new GroupID(
-                db.insertInto(GROUPS, GROUPS.PULL_REQUEST_ID, GROUPS.TITLE, GROUPS.DESCRIPTION)
-                .values(newGroup.pullRequestId.id, newGroup.title, newGroup.description)
+                db.insertInto(GROUPS, GROUPS.PULL_REQUEST_ID, GROUPS.TITLE, GROUPS.DESCRIPTION, GROUPS.DEFAULT_GROUP)
+                .values(newGroup.pullRequestId.id, newGroup.title, newGroup.description, newGroup.defaultGroup)
                 .returning(GROUPS.ID).fetchOne().getId()
         );
     }
