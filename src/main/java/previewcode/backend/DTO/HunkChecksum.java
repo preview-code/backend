@@ -1,19 +1,20 @@
 package previewcode.backend.DTO;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import previewcode.backend.DTO.deserialize.WrappedTypeConverter;
 
 /**
  * DTO representing a group of hunks as stored in the database.
  */
+@JsonDeserialize(converter = HunkChecksum.Converter.class)
 public class HunkChecksum {
+    static class Converter extends WrappedTypeConverter<String, HunkChecksum> {}
 
     @JsonProperty("hunkID")
     public final String checksum;
 
-
-    @JsonCreator
-    public HunkChecksum(@JsonProperty("hunkID") String checksum) {
+    public HunkChecksum(String checksum) {
         this.checksum = checksum;
     }
 
