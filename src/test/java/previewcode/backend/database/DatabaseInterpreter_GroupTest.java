@@ -22,7 +22,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
 
     private static final String groupTitle = "Title";
     private static final String groupDescription = "Description";
-    private static final Boolean defaultGroup = null;
+    private static final Boolean defaultGroup = false;
 
     @BeforeEach
     @Override
@@ -36,7 +36,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
 
     @Test
     public void newGroup_insertsGroup(DSLContext db) {
-        GroupID groupID = eval(newGroup(dbPullId, groupTitle, groupDescription, null));
+        GroupID groupID = eval(newGroup(dbPullId, groupTitle, groupDescription, false));
         assertThat(groupID.id).isPositive();
 
         Integer groupCount = db.selectCount().from(GROUPS).fetchOne().value1();
@@ -91,7 +91,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
         assertThat(groupsRecord.getPullRequestId()).isEqualTo(create.pullRequestId.id);
         assertThat(groupsRecord.getTitle()).isEqualTo(create.title);
         assertThat(groupsRecord.getDescription()).isEqualTo(create.description);
-        assertThat(groupsRecord.getDefaultGroup()).isEqualTo(defaultGroup);
+        assertThat(groupsRecord.getDefaultGroup()).isEqualTo(null);
     }
 
     @Test

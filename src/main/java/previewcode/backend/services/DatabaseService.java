@@ -4,7 +4,6 @@ package previewcode.backend.services;
 import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
 import previewcode.backend.DTO.*;
-import previewcode.backend.api.v2.ApprovalsAPI;
 import previewcode.backend.database.*;
 import previewcode.backend.services.actions.DatabaseActions;
 
@@ -20,20 +19,19 @@ public class DatabaseService implements IDatabaseService {
     public Action<Unit> updateOrdering(PullRequestIdentifier pull, List<OrderingGroup> groups) {
         return insertPullIfNotExists(pull)
                 .then(this::clearExistingGroups)
-                .then(dbPullId -> traverse(groups, createGroup(dbPullId, null))).toUnit();
+                .then(dbPullId -> traverse(groups, createGroup(dbPullId, false))).toUnit();
     }
 
     @Override
-    public Action<Unit> insertDefaultGroup(PullRequestIdentifier pull, List<OrderingGroup> groups) {
+    public Action<Unit> insertDefaultGroup(PullRequestIdentifier pull, OrderingGroup group) {
         return insertPullIfNotExists(pull)
-                .then(this::clearExistingGroups)
-                .then(dbPullId -> traverse(groups, createGroup(dbPullId, true))).toUnit();
+                .then(dbPullId -> createGroup(dbPullId, true).apply(group)).toUnit();
     }
 
     @Override
     public Action<Unit> setApproval(PullRequestIdentifier pull, ApproveRequest approve) {
         return insertPullIfNotExists(pull).then(dbPullId ->
-                setApprove(dbPullId, approve.hunkId, approve.githubLogin, approve.isApproved));
+                setApprove(dbPullId, approve.hunkChecksum, approve.githubLogin, approve.isApproved));
     }
 
     @Override
@@ -58,7 +56,7 @@ public class DatabaseService implements IDatabaseService {
     public Function<OrderingGroup, Action<Unit>> createGroup(PullRequestID dbPullId, Boolean defaultGroup) {
         return group ->
                 newGroup(dbPullId, group.info.title, group.info.description, defaultGroup).then(
-                    groupID -> traverse(List.ofAll(group.diff), hunkId -> assignToGroup(groupID, hunkId))
+                    groupID -> traverse(List.ofAll(group.hunkChecksums), hunkId -> assignToGroup(groupID, hunkId.checksum))
                 ).toUnit();
     }
 

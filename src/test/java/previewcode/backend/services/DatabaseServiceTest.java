@@ -40,14 +40,14 @@ public class DatabaseServiceTest {
     );
 
     private List<OrderingGroup> groupsWithoutHunks= groups.map(group ->
-        new OrderingGroupWithID(group, Lists.newLinkedList())
+            new OrderingGroupWithID(group, Lists.newLinkedList())
     );
 
     private List<HunkChecksum> hunkIDs = List.of(
             new HunkChecksum("abcd"), new HunkChecksum("efgh"), new HunkChecksum("ijkl"));
 
     private List<OrderingGroup> groupsWithHunks = groups.map(group ->
-        new OrderingGroupWithID(group, hunkIDs.map(id -> id.checksum).toJavaList())
+            new OrderingGroupWithID(group, hunkIDs.map(id -> id).toJavaList())
     );
 
     private ApproveRequest approveStatus = new ApproveRequest("checksum", ApproveStatus.DISAPPROVED, "txsmith");
@@ -77,9 +77,9 @@ public class DatabaseServiceTest {
 
         Interpreter interpreter =
                 interpret()
-                .on(InsertPullIfNotExists.class).returnA(pullRequestID)
-                .on(FetchGroupsForPull.class).returnA(groups)
-                .on(DeleteGroup.class).apply(toUnit(action -> {
+                        .on(InsertPullIfNotExists.class).returnA(pullRequestID)
+                        .on(FetchGroupsForPull.class).returnA(groups)
+                        .on(DeleteGroup.class).apply(toUnit(action -> {
                     assertThat(groups).extracting("id").contains(action.groupID);
                     removedGroups.add(groups.find(group -> group.id.equals(action.groupID)).get());
                 }));
@@ -96,8 +96,8 @@ public class DatabaseServiceTest {
 
         Interpreter interpreter =
                 interpret()
-                .on(InsertPullIfNotExists.class).returnA(pullRequestID)
-                .on(FetchGroupsForPull.class).returnA(List.empty());
+                        .on(InsertPullIfNotExists.class).returnA(pullRequestID)
+                        .on(FetchGroupsForPull.class).returnA(List.empty());
 
         interpreter.unsafeEvaluate(dbAction);
     }
@@ -110,9 +110,9 @@ public class DatabaseServiceTest {
 
         Interpreter interpreter =
                 interpret()
-                .on(InsertPullIfNotExists.class).returnA(pullRequestID)
-                .on(FetchGroupsForPull.class).returnA(List.empty())
-                .on(NewGroup.class).apply(action -> {
+                        .on(InsertPullIfNotExists.class).returnA(pullRequestID)
+                        .on(FetchGroupsForPull.class).returnA(List.empty())
+                        .on(NewGroup.class).apply(action -> {
                     assertThat(action.pullRequestId).isEqualTo(pullRequestID);
                     PullRequestGroup group = groups.find(g -> g.title.equals(action.title)).get();
                     assertThat(group.description).isEqualTo(action.description);
@@ -134,11 +134,11 @@ public class DatabaseServiceTest {
 
         Interpreter interpreter =
                 interpret()
-                .on(InsertPullIfNotExists.class).returnA(pullRequestID)
-                .on(FetchGroupsForPull.class).returnA(List.empty())
-                .on(NewGroup.class).apply(action ->
-                    groups.find(g -> g.title.equals(action.title)).get().id)
-                .on(AssignHunkToGroup.class).apply(toUnit(action -> {
+                        .on(InsertPullIfNotExists.class).returnA(pullRequestID)
+                        .on(FetchGroupsForPull.class).returnA(List.empty())
+                        .on(NewGroup.class).apply(action ->
+                        groups.find(g -> g.title.equals(action.title)).get().id)
+                        .on(AssignHunkToGroup.class).apply(toUnit(action -> {
                     assertThat(groups.find(g -> g.id.equals(action.groupID))).isNotEmpty();
                     Option<HunkChecksum> hunkID = hunkIDs.find(id -> id.checksum.equals(action.hunkChecksum));
                     assertThat(hunkID).isNotEmpty();
@@ -154,7 +154,7 @@ public class DatabaseServiceTest {
     @Test
     public void insertsDefaultGroup() throws Exception {
         PullRequestGroup group = new PullRequestGroup(new GroupID(42L), "Group A", "Description A", true);
-        List<OrderingGroup> defaultGroup = List.of(new OrderingGroupWithID(group, hunkIDs.map(id -> id.checksum).toJavaList()));
+        OrderingGroup defaultGroup = new OrderingGroupWithID(group, hunkIDs.map(id -> id).toJavaList());
         Action<Unit> dbAction = service.insertDefaultGroup(pullIdentifier, defaultGroup);
 
         Collection<PullRequestGroup> groupsAdded = Lists.newArrayList();
@@ -165,7 +165,6 @@ public class DatabaseServiceTest {
                         .on(FetchGroupsForPull.class).returnA(List.empty())
                         .on(NewGroup.class).apply(action -> {
                     assertThat(action.defaultGroup).isEqualTo(true);
-                    assertThat(group.defaultGroup).isEqualTo(true);
                     groupsAdded.add(group);
                     return group.id;
                 })
@@ -189,15 +188,15 @@ public class DatabaseServiceTest {
                 interpret()
                         .on(InsertPullIfNotExists.class).returnA(pullRequestID)
                         .on(ApproveHunk.class).stop(approveHunk -> {
-                            assertThat(approveHunk.status)
-                                    .isEqualTo(ApproveStatus.DISAPPROVED);
-                            assertThat(approveHunk.githubUser)
-                                    .isEqualTo("txsmith");
-                            assertThat(approveHunk.hunkChecksum)
-                                    .isEqualTo("checksum");
-                            assertThat(approveHunk.pullRequestID)
-                                    .isEqualTo(pullRequestID);
-                        });
+                    assertThat(approveHunk.status)
+                            .isEqualTo(ApproveStatus.DISAPPROVED);
+                    assertThat(approveHunk.githubUser)
+                            .isEqualTo("txsmith");
+                    assertThat(approveHunk.hunkChecksum)
+                            .isEqualTo("checksum");
+                    assertThat(approveHunk.pullRequestID)
+                            .isEqualTo(pullRequestID);
+                });
 
         assertThatExceptionOfType(Interpreter.StoppedException.class)
                 .isThrownBy(() -> interpreter.unsafeEvaluate(dbAction));

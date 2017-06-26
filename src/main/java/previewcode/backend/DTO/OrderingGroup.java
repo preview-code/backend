@@ -16,7 +16,7 @@ public class OrderingGroup {
      * The list of diffs in the pul request
      */
     @JsonProperty("diff")
-    public final List<String> diff;
+    public final List<HunkChecksum> hunkChecksums;
 
     /**
      * The body of the group
@@ -27,14 +27,21 @@ public class OrderingGroup {
 
     @JsonCreator
     public OrderingGroup(
-            @JsonProperty("diff") List<String> diff,
+            @JsonProperty("diff") List<HunkChecksum> hunkChecksums,
             @JsonProperty("info") TitleDescription info) {
-        this.diff = diff;
-        this.info = info;
+        this.hunkChecksums = hunkChecksums;
+        String title = info.title;
+        if(title == null){
+            title = "";
+        }
+        this.info = new TitleDescription(title, info.description);
     }
 
-    public OrderingGroup(String title, String description, List<String> hunks) {
-        this.diff = hunks;
+    public OrderingGroup(String title, String description, List<HunkChecksum> hunks) {
+        this.hunkChecksums = hunks;
+        if(title == null){
+            title = "";
+        }
         this.info = new TitleDescription(title, description);
     }
 }

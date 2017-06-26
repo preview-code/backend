@@ -4,6 +4,7 @@ package previewcode.backend.services;
 import jregex.Matcher;
 import jregex.Pattern;
 import org.apache.commons.codec.binary.Base64;
+import previewcode.backend.DTO.HunkChecksum;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +19,8 @@ public class DiffParser {
      * @param diff to parse
      * @return list of hunkChecksums
      */
-    public List<String> parseDiff(String diff) {
-       ArrayList<String> hunkChecksums = new ArrayList<>();
+    public List<HunkChecksum> parseDiff(String diff) {
+       ArrayList<HunkChecksum> hunkChecksums = new ArrayList<>();
 
         if (diff != "") {
             String ANYTHING = "(?:.|\n)+?";
@@ -45,7 +46,7 @@ public class DiffParser {
                 if (hunk == null) {
                     //Done to be compatible with the frontend
                     String toEncode = fileName + ",undefined,undefined";
-                    hunkChecksums.add(new String(Base64.encodeBase64(toEncode.getBytes())));
+                    hunkChecksums.add(new HunkChecksum(new String(Base64.encodeBase64(toEncode.getBytes()))));
                 } else {
 
                     Matcher matchHunk = new Pattern(HUNK_EXPRESSION).matcher(hunk);
@@ -56,7 +57,7 @@ public class DiffParser {
                             hunkList.add(newFind);
                         }
                         String toEncode = fileName + "," + hunkList.get(2) + "," + hunkList.get(4);
-                        hunkChecksums.add(new String(Base64.encodeBase64(toEncode.getBytes())));
+                        hunkChecksums.add(new HunkChecksum(new String(Base64.encodeBase64(toEncode.getBytes()))));
                     }
                 }
             }

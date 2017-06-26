@@ -76,7 +76,7 @@ public class WebhookAPI {
                 //Add hunks to database
                 Diff diff = githubService.fetchDiff(repoAndPull.second);
                 OrderingGroup defaultGroup = new OrderingGroup("Default group", "Default group", diff.getHunkChecksums());
-                ActionDSL.Action<Unit> groupAction = databaseService.insertDefaultGroup(new PullRequestIdentifier(repoAndPull.first, repoAndPull.second), List.of(defaultGroup));
+                ActionDSL.Action<Unit> groupAction = databaseService.insertDefaultGroup(new PullRequestIdentifier(repoAndPull.first, repoAndPull.second), defaultGroup);
                 interpreter.evaluateToResponse(groupAction);
 
             } else if (action.equals("synchronize")) {

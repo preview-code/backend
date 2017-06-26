@@ -15,12 +15,12 @@ public class Diff {
     /**
      * The hunkChecksums for the diff.
      */
-    private final List hunkChecksums;
+    private final List<HunkChecksum> hunkChecksums;
 
     /**
      * @return the hunkChecksums
      */
-    public List getHunkChecksums() {
+    public List<HunkChecksum> getHunkChecksums() {
         return hunkChecksums;
     }
 

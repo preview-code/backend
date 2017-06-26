@@ -16,7 +16,7 @@ public class OrderingGroupWithID extends OrderingGroup {
     public final String id;
 
 
-    public OrderingGroupWithID(PullRequestGroup dbGroup, List<String> hunkIds) {
+    public OrderingGroupWithID(PullRequestGroup dbGroup, List<HunkChecksum> hunkIds) {
         super(dbGroup.title, dbGroup.description, hunkIds);
         this.id = dbGroup.id.id.toString();
     }

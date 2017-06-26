@@ -11,7 +11,7 @@ import static previewcode.backend.services.actiondsl.ActionDSL.*;
 public interface IDatabaseService {
     Action<Unit> updateOrdering(PullRequestIdentifier pullRequestIdentifier, List<OrderingGroup> body);
 
-    Action<Unit> insertDefaultGroup(PullRequestIdentifier pullRequestIdentifier, List<OrderingGroup> body);
+    Action<Unit> insertDefaultGroup(PullRequestIdentifier pullRequestIdentifier, OrderingGroup body);
 
     Action<Unit> setApproval(PullRequestIdentifier pullRequestIdentifier, ApproveRequest approval);
 

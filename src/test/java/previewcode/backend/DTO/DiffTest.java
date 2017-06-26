@@ -20,7 +20,7 @@ public class DiffTest {
                 "+one line");
 
         assertEquals(diff.getHunkChecksums().size(), 1);
-        assertEquals(diff.getHunkChecksums().get(0), "YSwwLDE=");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "YSwwLDE=");
     }
 
     @Test
@@ -34,7 +34,7 @@ public class DiffTest {
                 "+line two");
 
         assertEquals(diff.getHunkChecksums().size(), 1);
-        assertEquals(diff.getHunkChecksums().get(0), "YiwxLDE=");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "YiwxLDE=");
     }
 
     @Test
@@ -49,7 +49,7 @@ public class DiffTest {
                 " line two");
 
         assertEquals(diff.getHunkChecksums().size(), 1);
-        assertEquals(diff.getHunkChecksums().get(0), "YywxLDE=");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "YywxLDE=");
     }
 
     @Test
@@ -66,7 +66,7 @@ public class DiffTest {
                 " line two");
 
         assertEquals(diff.getHunkChecksums().size(), 1);
-        assertEquals(diff.getHunkChecksums().get(0), "ZCwxLDE=");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "ZCwxLDE=");
     }
     @Test
     public void Diff5() {
@@ -83,7 +83,7 @@ public class DiffTest {
                 " line two");
 
         assertEquals(diff.getHunkChecksums().size(), 1);
-        assertEquals(diff.getHunkChecksums().get(0), "ZSwxLDE=");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "ZSwxLDE=");
     }
     @Test
     public void Diff6() {
@@ -100,7 +100,7 @@ public class DiffTest {
                 " line two");
 
         assertEquals(diff.getHunkChecksums().size(), 1);
-        assertEquals(diff.getHunkChecksums().get(0), "ZiwxLDE=");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "ZiwxLDE=");
     }
     @Test
     public void Diff7() {
@@ -116,7 +116,7 @@ public class DiffTest {
                 " line two");
 
         assertEquals(diff.getHunkChecksums().size(), 1);
-        assertEquals(diff.getHunkChecksums().get(0), "ZywxLDE=");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "ZywxLDE=");
     }
     @Test
     public void Diff8() {
@@ -131,7 +131,7 @@ public class DiffTest {
                 "-line two");
 
         assertEquals(diff.getHunkChecksums().size(), 1);
-        assertEquals(diff.getHunkChecksums().get(0), "aCwxLDE=");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "aCwxLDE=");
     }
     @Test
     public void Diff9() {
@@ -146,7 +146,7 @@ public class DiffTest {
                 "+add last");
 
         assertEquals(diff.getHunkChecksums().size(), 1);
-        assertEquals(diff.getHunkChecksums().get(0), "aSwxLDE=");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "aSwxLDE=");
     }
     @Test
     public void Diff10() {
@@ -160,7 +160,7 @@ public class DiffTest {
                 " add last");
 
         assertEquals(diff.getHunkChecksums().size(), 1);
-        assertEquals(diff.getHunkChecksums().get(0), "aiwxLDE=");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "aiwxLDE=");
     }
     @Test
     public void Diff11() {
@@ -173,7 +173,7 @@ public class DiffTest {
               "-add last");
 
         assertEquals(diff.getHunkChecksums().size(), 1);
-        assertEquals(diff.getHunkChecksums().get(0), "aywxLDA=");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "aywxLDA=");
     }
     @Test
     public void Diff12() {
@@ -201,8 +201,8 @@ public class DiffTest {
                 " Suspendisse tempus purus ac tellus pharetra fringilla.");
 
         assertEquals(diff.getHunkChecksums().size(), 2);
-        assertEquals(diff.getHunkChecksums().get(0), "bCwzLDM=");
-        assertEquals(diff.getHunkChecksums().get(1), "bCwzNDAsMzM4");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "bCwzLDM=");
+        assertEquals(diff.getHunkChecksums().get(1).checksum, "bCwzNDAsMzM4");
     }
     @Test
     public void Diff13() {
@@ -218,7 +218,7 @@ public class DiffTest {
                 "+Nulla ac justo non tellus convallis suscipit.");
 
         assertEquals(diff.getHunkChecksums().size(), 1);
-        assertEquals(diff.getHunkChecksums().get(0), "bSwzNDMsMzQx");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "bSwzNDMsMzQx");
     }
     @Test
     public void Diff14() {
@@ -234,7 +234,7 @@ public class DiffTest {
                 "-Nulla ac justo non tellus convallis suscipit.");
 
         assertEquals(diff.getHunkChecksums().size(), 1);
-        assertEquals(diff.getHunkChecksums().get(0), "biwzNDEsMzQz");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "biwzNDEsMzQz");
     }
     @Test
     public void Diff15() {
@@ -250,7 +250,7 @@ public class DiffTest {
                 "-Nulla ac justo non tellus convallis suscipit.");
 
         assertEquals(diff.getHunkChecksums().size(), 1);
-        assertEquals(diff.getHunkChecksums().get(0), "bywzNDEsMzQz");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "bywzNDEsMzQz");
     }
     @Test
     public void Diff16() {
@@ -271,9 +271,9 @@ public class DiffTest {
                 "+Last line in last hunk.");
 
         assertEquals(diff.getHunkChecksums().size(), 3);
-        assertEquals(diff.getHunkChecksums().get(0), "cSwzLDM=");
-        assertEquals(diff.getHunkChecksums().get(1), "cSwzNDAsMzM4");
-        assertEquals(diff.getHunkChecksums().get(2), "cSw1MTIsNTE0");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "cSwzLDM=");
+        assertEquals(diff.getHunkChecksums().get(1).checksum, "cSwzNDAsMzM4");
+        assertEquals(diff.getHunkChecksums().get(2).checksum, "cSw1MTIsNTE0");
     }
     @Test
     public void Diff17() {
@@ -283,7 +283,7 @@ public class DiffTest {
                 "rename to renamed.");
 
         assertEquals(diff.getHunkChecksums().size(), 1);
-        assertEquals(diff.getHunkChecksums().get(0), "cyx1bmRlZmluZWQsdW5kZWZpbmVk");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "cyx1bmRlZmluZWQsdW5kZWZpbmVk");
 
     }
 
@@ -298,7 +298,7 @@ public class DiffTest {
                 "+ @@ -3,2 +3,1 @@");
 
         assertEquals(diff.getHunkChecksums().size(), 1);
-        assertEquals(diff.getHunkChecksums().get(0), "ciwzLDM=");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "ciwzLDM=");
 
     }
 
@@ -317,6 +317,6 @@ public class DiffTest {
                         "-Nulla ac justo non tellus convallis suscipit.");
 
         assertEquals(diff.getHunkChecksums().size(), 1);
-        assertEquals(diff.getHunkChecksums().get(0), "cCwzNDEsMzQz");
+        assertEquals(diff.getHunkChecksums().get(0).checksum, "cCwzNDEsMzQz");
     }
 }

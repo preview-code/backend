@@ -80,7 +80,6 @@ public class MainModule extends APIModule {
         this.bind(AssigneesAPI.class);
         this.bind(TrackerAPI.class);
         this.bind(WebhookAPI.class);
-        this.bind(OrderingAPI.class);
 
         this.bind(GitHubAccessTokenFilter.class);
         this.bind(ResteasyJackson2Provider.class);

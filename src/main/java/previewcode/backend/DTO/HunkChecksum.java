@@ -8,6 +8,7 @@ import previewcode.backend.DTO.serializers.WrappedTypeToJson;
 /**
  * DTO representing a group of hunks as stored in the database.
  */
+
 @JsonDeserialize(converter = HunkChecksum.FromJson.class)
 @JsonSerialize(converter = HunkChecksum.ToJson.class)
 public class HunkChecksum {

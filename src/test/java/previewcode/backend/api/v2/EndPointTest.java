@@ -92,7 +92,7 @@ class TestModule extends APIModule implements IDatabaseService {
     }
 
     @Override
-    public Action<Unit> insertDefaultGroup(PullRequestIdentifier pullRequestIdentifier, List<OrderingGroup> body) {
+    public Action<Unit> insertDefaultGroup(PullRequestIdentifier pullRequestIdentifier, OrderingGroup body) {
         return new NoOp<>();
     }
 
