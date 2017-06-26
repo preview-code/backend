@@ -1,17 +1,19 @@
 package previewcode.backend.DTO;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import previewcode.backend.DTO.deserialize.WrappedTypeConverter;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import previewcode.backend.DTO.serializers.JsonToWrappedType;
+import previewcode.backend.DTO.serializers.WrappedTypeToJson;
 
 /**
  * DTO representing a group of hunks as stored in the database.
  */
-@JsonDeserialize(converter = HunkChecksum.Converter.class)
+@JsonDeserialize(converter = HunkChecksum.FromJson.class)
+@JsonSerialize(converter = HunkChecksum.ToJson.class)
 public class HunkChecksum {
-    static class Converter extends WrappedTypeConverter<String, HunkChecksum> {}
+    static class FromJson extends JsonToWrappedType<String, HunkChecksum> {}
+    static class ToJson extends WrappedTypeToJson<HunkChecksum, String> {}
 
-    @JsonProperty("hunkID")
     public final String checksum;
 
     public HunkChecksum(String checksum) {
@@ -37,4 +39,5 @@ public class HunkChecksum {
     public String toString() {
         return "HunkChecksum{" + checksum + '}';
     }
+
 }

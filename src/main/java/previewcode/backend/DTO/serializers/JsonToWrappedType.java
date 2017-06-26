@@ -1,4 +1,4 @@
-package previewcode.backend.DTO.deserialize;
+package previewcode.backend.DTO.serializers;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JavaType;
@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.util.Converter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 
-public class WrappedTypeConverter<Wrapped, This> implements Converter<Wrapped, This> {
+public class JsonToWrappedType<Wrapped, This> implements Converter<Wrapped, This> {
     @Override
     public JavaType getInputType(TypeFactory typeFactory) {
         return typeFactory.constructType(new TypeReference<Wrapped>(){});
