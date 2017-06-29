@@ -12,7 +12,7 @@ import static previewcode.backend.services.actions.DatabaseActions.*;
 class DatabaseInterpreter_PullRequestTest extends DatabaseInterpreterTest {
 
     @Test
-    public void fetchPull_selectsFromPullsTable(DSLContext db) throws Exception {
+    public void fetchPull_selectsFromPullsTable(DSLContext db){
         db.insertInto(PULL_REQUEST, PULL_REQUEST.ID, PULL_REQUEST.OWNER, PULL_REQUEST.NAME, PULL_REQUEST.NUMBER)
                 .values(41L, owner, name, number+1)
                 .values(42L, owner, name, number)
@@ -24,7 +24,7 @@ class DatabaseInterpreter_PullRequestTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void fetchPull_throwsWhenPullIsNotFound() throws Exception {
+    public void fetchPull_throwsWhenPullIsNotFound(){
         PullRequestIdentifier invalidIdentifier = new PullRequestIdentifier("x", "y", 0);
 
         assertThatExceptionOfType(DatabaseException.class).isThrownBy(
@@ -32,7 +32,7 @@ class DatabaseInterpreter_PullRequestTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void insertPull_definitelyInserts(DSLContext db) throws Exception {
+    public void insertPull_definitelyInserts(DSLContext db){
         PullRequestID pullRequestID = eval(insertPullIfNotExists(pullIdentifier));
         assertThat(pullRequestID.id).isPositive();
 
@@ -41,7 +41,7 @@ class DatabaseInterpreter_PullRequestTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void insertPull_returnsNewId(DSLContext db) throws Exception {
+    public void insertPull_returnsNewId(DSLContext db){
         db.insertInto(PULL_REQUEST, PULL_REQUEST.OWNER, PULL_REQUEST.NAME, PULL_REQUEST.NUMBER)
                 .values(owner, name, number+1)
                 .values(owner, name, number+2)
@@ -63,7 +63,7 @@ class DatabaseInterpreter_PullRequestTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void insertPull_duplicate_doesNotInsert(DSLContext db) throws Exception {
+    public void insertPull_duplicate_doesNotInsert(DSLContext db){
         PullRequestID existingId = new PullRequestID(
                 db.insertInto(PULL_REQUEST, PULL_REQUEST.OWNER, PULL_REQUEST.NAME, PULL_REQUEST.NUMBER)
                 .values(pullIdentifier.owner, pullIdentifier.name, pullIdentifier.number)
@@ -74,7 +74,7 @@ class DatabaseInterpreter_PullRequestTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void insertPull_duplicate_returnsOldId(DSLContext db) throws Exception {
+    public void insertPull_duplicate_returnsOldId(DSLContext db){
         PullRequestID existingId = new PullRequestID(
                 db.insertInto(PULL_REQUEST, PULL_REQUEST.OWNER, PULL_REQUEST.NAME, PULL_REQUEST.NUMBER)
                         .values(pullIdentifier.owner, pullIdentifier.name, pullIdentifier.number)

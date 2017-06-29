@@ -19,10 +19,16 @@ import org.kohsuke.github.GitHub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import previewcode.backend.api.filter.GitHubAccessTokenFilter;
+import previewcode.backend.api.filter.IJWTTokenCreator;
+import previewcode.backend.api.filter.JWTTokenCreator;
 import previewcode.backend.api.v1.*;
+import previewcode.backend.services.interpreters.GitHubAuthInterpreter;
+import previewcode.backend.services.http.HttpRequestExecutor;
+import previewcode.backend.services.http.IHttpRequestExecutor;
 import previewcode.backend.services.DatabaseService;
 import previewcode.backend.services.GithubService;
 import previewcode.backend.services.IDatabaseService;
+import previewcode.backend.services.actiondsl.ActionCache;
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.sql.DataSource;
@@ -65,6 +71,21 @@ public class MainModule extends APIModule {
         this.bind(ResteasyJackson2Provider.class);
 
         this.bind(IDatabaseService.class).to(DatabaseService.class);
+
+        try {
+            HttpRequestExecutor http = new HttpRequestExecutor();
+            this.bind(IHttpRequestExecutor.class).toInstance(http);
+        } catch (IOException e) {
+            logger.error("Failed to instantiate HTTP Cache!", e);
+            System.exit(-1);
+        }
+        this.bind(IJWTTokenCreator.class).to(JWTTokenCreator.class);
+
+        ActionCache.Builder b = new ActionCache.Builder()
+        ActionCache cache = GitHubAuthInterpreter
+                .configure(b).maximumEntries(10000).build();
+
+        this.bind(ActionCache.class).toInstance(cache);
 
         initializeFireBase();
     }
@@ -205,29 +226,7 @@ public class MainModule extends APIModule {
     }
 
     /**
-     * Method to declare Named key "github.installation.token" to obtain the current GitHub Installation token
-     * @throws Exception if key was not set
-     */
-    @Provides
-    @Named("github.installation.token")
-    @RequestScoped
-    public String provideGitHubInstallationToken() {
-        throw new NotAuthorizedException("Installation token must be received via an authorization call to the GitHub API.");
-    }
-
-    /**
-     * Method to declare Named key "github.user.token" to obtain the current GitHub user OAuth token
-     * @throws Exception if token was not set
-     */
-    @Provides
-    @Named("github.user.token")
-    @RequestScoped
-    public String provideGitHubUserToken() {
-        throw new NotAuthorizedException("User token must be received via request query parameter.");
-    }
-
-    /**
-     * Method to declare Named key "github.token.builder" to ammend a OKHTTP Request with authorization info.
+     * Method to declare Named key "github.token.builder" to amend a OKHTTP Request with authorization info.
      * @throws Exception if not set via GitHubAccessTokenFilter.
      */
     @Provides

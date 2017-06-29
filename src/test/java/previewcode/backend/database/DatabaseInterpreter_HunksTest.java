@@ -40,7 +40,7 @@ public class DatabaseInterpreter_HunksTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void assignHunk_groupMustExist() throws Exception {
+    public void assignHunk_groupMustExist(){
         GroupID invalidID = new GroupID(-1L);
         assertThatExceptionOfType(DatabaseException.class)
                 .isThrownBy(() -> eval(assignToGroup(invalidID, hunkChecksum)));
@@ -55,7 +55,7 @@ public class DatabaseInterpreter_HunksTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void assignHunk_insertsIntoHunkTable(DSLContext db) throws Exception {
+    public void assignHunk_insertsIntoHunkTable(DSLContext db){
         eval(assignToGroup(group_A_id, hunkChecksum));
 
         assertThat(
@@ -64,7 +64,7 @@ public class DatabaseInterpreter_HunksTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void assignHunk_cannotAssignTwice_toDifferentGroup(DSLContext db) throws Exception {
+    public void assignHunk_cannotAssignTwice_toDifferentGroup(DSLContext db){
         Action<?> assignDouble = assignToGroup(group_A_id, hunkChecksum).then(assignToGroup(group_B_id, hunkChecksum));
         assertThatExceptionOfType(DataAccessException.class)
                 .isThrownBy(() ->
@@ -73,7 +73,7 @@ public class DatabaseInterpreter_HunksTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void assignHunk_insertsCorrectData(DSLContext db) throws Exception {
+    public void assignHunk_insertsCorrectData(DSLContext db){
         eval(assignToGroup(group_A_id, hunkChecksum));
 
         Tuple2 record = db.select(HUNK.GROUP_ID, HUNK.CHECKSUM).from(HUNK).fetchOneInto(Tuple2.class);
@@ -81,13 +81,13 @@ public class DatabaseInterpreter_HunksTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    void fetchHunks_forUnknownGroup_returnsEmpty() throws Exception {
+    void fetchHunks_forUnknownGroup_returnsEmpty(){
         List<?> hunks = eval(fetchHunks(new GroupID(-1L)));
         assertThat(hunks).isEmpty();
     }
 
     @Test
-    void fetchHunks_returnsAllHunks(DSLContext db) throws Exception {
+    void fetchHunks_returnsAllHunks(DSLContext db){
         db.insertInto(HUNK)
                 .columns(HUNK.CHECKSUM, HUNK.GROUP_ID, HUNK.PULL_REQUEST_ID)
                 .values("X", group_A_id.id, dbPullId.id)

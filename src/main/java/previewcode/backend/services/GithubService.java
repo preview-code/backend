@@ -27,12 +27,10 @@ import previewcode.backend.api.exceptionmapper.GitHubApiException;
 import previewcode.backend.api.exceptionmapper.NoTokenException;
 import previewcode.backend.services.actiondsl.ActionDSL.Action;
 
-import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.container.ContainerRequestContext;
 import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 import static previewcode.backend.services.actions.GitHubActions.*;
 import static previewcode.backend.services.actiondsl.ActionDSL.*;
@@ -46,16 +44,11 @@ public class GithubService {
 
     public static class V2 {
 
-        private static final String GITHUB_WEBHOOK_USER_AGENT_PREFIX = "GitHub-Hookshot/";
         private static final String GITHUB_WEBHOOK_SECRET_HEADER = "X-Hub-Signature";
         private static final String TOKEN_PARAMETER = "access_token";
 
-
         public Action<Unit> authenticate() {
-            Predicate<String> notNull = Objects::nonNull;
-            Predicate<String> isWebHookUserAgent = s -> s.startsWith(GITHUB_WEBHOOK_USER_AGENT_PREFIX);
-
-            return getUserAgent.map(ua -> notNull.and(isWebHookUserAgent).test(ua)).then(isWebHook -> {
+            return getUserAgent.then(isWebHookUserAgent).then(isWebHook -> {
                 if (isWebHook) {
                     return with(getRequestBody)
                             .and(getHeader(GITHUB_WEBHOOK_SECRET_HEADER))

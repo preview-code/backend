@@ -111,6 +111,21 @@ public class GitHubActions {
         public IsWebHookUserAgent(String userAgent) {
             this.userAgent = userAgent;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            IsWebHookUserAgent that = (IsWebHookUserAgent) o;
+
+            return userAgent.equals(that.userAgent);
+        }
+
+        @Override
+        public int hashCode() {
+            return userAgent.hashCode();
+        }
     }
 
     public static class GetUser extends Action<GitHubUser> {
@@ -118,6 +133,21 @@ public class GitHubActions {
 
         public GetUser(GitHubUserToken token) {
             this.token = token;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            GetUser getUser = (GetUser) o;
+
+            return token.equals(getUser.token);
+        }
+
+        @Override
+        public int hashCode() {
+            return token.hashCode();
         }
     }
 

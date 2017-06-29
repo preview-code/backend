@@ -11,8 +11,6 @@ import previewcode.backend.DTO.HunkChecksum;
 import previewcode.backend.services.actiondsl.Interpreter;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,7 +52,7 @@ public class DatabaseServiceTest {
     private ApproveRequest approveStatus = new ApproveRequest("checksum", ApproveStatus.DISAPPROVED, "txsmith");
 
     @Test
-    public void insertsPullIfNotExists() throws Exception {
+    public void insertsPullIfNotExists(){
         Action<Unit> dbAction = service.updateOrdering(pullIdentifier, List.empty());
 
         Consumer<InsertPullIfNotExists> assertions = action -> {
@@ -71,7 +69,7 @@ public class DatabaseServiceTest {
     }
 
     @Test
-    public void removesExistingGroups() throws Exception {
+    public void removesExistingGroups(){
         Action<Unit> dbAction = service.updateOrdering(pullIdentifier, List.empty());
 
         Collection<PullRequestGroup> removedGroups = Lists.newArrayList();
@@ -92,7 +90,7 @@ public class DatabaseServiceTest {
     }
 
     @Test
-    public void doesNotRemoveGroups() throws Exception {
+    public void doesNotRemoveGroups(){
         Action<Unit> dbAction = service.updateOrdering(pullIdentifier, List.empty());
 
         Interpreter interpreter =
@@ -104,7 +102,7 @@ public class DatabaseServiceTest {
     }
 
     @Test
-    public void insertsNewGroupsWithoutHunks() throws Exception {
+    public void insertsNewGroupsWithoutHunks(){
         Action<Unit> dbAction = service.updateOrdering(pullIdentifier, groupsWithoutHunks);
 
         Collection<PullRequestGroup> groupsAdded = Lists.newArrayList();
@@ -128,7 +126,7 @@ public class DatabaseServiceTest {
     }
 
     @Test
-    public void insertsNewGroupsWithHunks() throws Exception {
+    public void insertsNewGroupsWithHunks(){
         Action<Unit> dbAction = service.updateOrdering(pullIdentifier, groupsWithHunks);
 
         Collection<HunkChecksum> hunksAdded = Lists.newArrayList();
@@ -153,7 +151,7 @@ public class DatabaseServiceTest {
     }
 
     @Test
-    public void insertApproval() throws Exception {
+    public void insertApproval(){
         Action<Unit> dbAction = service.setApproval(pullIdentifier, approveStatus);
 
         Interpreter interpreter =
@@ -186,7 +184,7 @@ public class DatabaseServiceTest {
     }
 
     @Test
-    void getApproval_fetches_pull_groups() throws Exception {
+    void getApproval_fetches_pull_groups(){
         Action<?> dbAction = service.getApproval(pullIdentifier);
 
         Interpreter.Stepper<?> stepper = interpret()
@@ -197,7 +195,7 @@ public class DatabaseServiceTest {
     }
 
     @Test
-    void getApproval_fetches_hunks() throws Exception {
+    void getApproval_fetches_hunks(){
         Action<?> dbAction = service.getApproval(pullIdentifier);
 
         List<PullRequestGroup> oneGroup = List.of(
@@ -214,7 +212,7 @@ public class DatabaseServiceTest {
     }
 
     @Test
-    void getApproval_fetches_hunk_approvals() throws Exception {
+    void getApproval_fetches_hunk_approvals(){
         Action<?> dbAction = service.getApproval(pullIdentifier);
 
         HunkChecksum checksum = new HunkChecksum("abcd");
@@ -245,7 +243,7 @@ public class DatabaseServiceTest {
     }
 
     @Test
-    void getHunkApproval_fetches_pull_groups() throws Exception {
+    void getHunkApproval_fetches_pull_groups(){
         Action<?> dbAction = service.getHunkApprovals(pullIdentifier);
 
         Interpreter.Stepper<?> stepper = interpret()
@@ -256,7 +254,7 @@ public class DatabaseServiceTest {
     }
 
     @Test
-    void getHunkApproval_fetches_hunks() throws Exception {
+    void getHunkApproval_fetches_hunks(){
         Action<?> dbAction = service.getHunkApprovals(pullIdentifier);
 
         List<PullRequestGroup> oneGroup = List.of(
@@ -273,7 +271,7 @@ public class DatabaseServiceTest {
     }
 
     @Test
-    void getHunkApproval_fetches_hunk_approvals() throws Exception {
+    void getHunkApproval_fetches_hunk_approvals(){
         Action<?> dbAction = service.getHunkApprovals(pullIdentifier);
 
         HunkChecksum checksum = new HunkChecksum("abcd");
@@ -294,7 +292,7 @@ public class DatabaseServiceTest {
     }
 
     @Test
-    void getHunkApproval_no_action_after_fetching_hunkapprovals() throws Exception {
+    void getHunkApproval_no_action_after_fetching_hunkapprovals(){
         Action<?> dbAction = service.getHunkApprovals(pullIdentifier);
 
         Interpreter.Stepper<?> stepper = interpret()

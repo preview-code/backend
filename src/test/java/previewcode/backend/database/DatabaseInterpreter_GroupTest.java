@@ -5,7 +5,6 @@ import org.jooq.DSLContext;
 import org.jooq.exception.DataAccessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import previewcode.backend.DTO.HunkChecksum;
 import previewcode.backend.database.model.tables.records.GroupsRecord;
 import previewcode.backend.services.actiondsl.Interpreter;
 
@@ -34,7 +33,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void newGroup_insertsGroup(DSLContext db) throws Exception {
+    public void newGroup_insertsGroup(DSLContext db){
         GroupID groupID = eval(newGroup(dbPullId, groupTitle, groupDescription));
         assertThat(groupID.id).isPositive();
 
@@ -43,7 +42,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void newGroup_returnsNewId(DSLContext db) throws Exception {
+    public void newGroup_returnsNewId(DSLContext db){
         db.insertInto(GROUPS)
                 .columns(GROUPS.PULL_REQUEST_ID, GROUPS.TITLE, GROUPS.DESCRIPTION)
                 .values(dbPullId.id, "A", "B")
@@ -62,7 +61,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void newGroup_canInsertDuplicates(DSLContext db) throws Exception {
+    public void newGroup_canInsertDuplicates(DSLContext db){
         NewGroup create = newGroup(dbPullId, groupTitle, groupDescription);
         eval(create.then(create));
 
@@ -71,7 +70,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void newGroup_insertsCorrectData(DSLContext db) throws Exception {
+    public void newGroup_insertsCorrectData(DSLContext db){
         NewGroup create = newGroup(dbPullId, groupTitle, groupDescription);
         eval(create);
 
@@ -91,7 +90,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
 
 
     @Test
-    public void fetchGroups_returnsAllGroups(DSLContext db) throws Exception {
+    public void fetchGroups_returnsAllGroups(DSLContext db){
         db.insertInto(PULL_REQUEST, PULL_REQUEST.ID, PULL_REQUEST.OWNER, PULL_REQUEST.NAME, PULL_REQUEST.NUMBER)
                 .values(dbPullId.id+1, "xyz", "pqr", number)
                 .execute();
@@ -109,14 +108,14 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void fetchGroups_invalidPull_returnsNoResults() throws Exception {
+    public void fetchGroups_invalidPull_returnsNoResults(){
         PullRequestID invalidID = new PullRequestID(-1L);
         List<PullRequestGroup> groups = eval(fetchGroups(invalidID));
         assertThat(groups).isEmpty();
     }
 
     @Test
-    public void fetchGroups_fetchesCorrectGroupData(DSLContext db) throws Exception {
+    public void fetchGroups_fetchesCorrectGroupData(DSLContext db){
         db.insertInto(GROUPS)
                 .columns(GROUPS.PULL_REQUEST_ID, GROUPS.TITLE, GROUPS.DESCRIPTION)
                 .values(dbPullId.id, "A", "B")
@@ -128,7 +127,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void fetchGroups_hasHunkFetchingAction(DSLContext db) throws Exception {
+    public void fetchGroups_hasHunkFetchingAction(DSLContext db){
         db.insertInto(GROUPS)
                 .columns(GROUPS.ID, GROUPS.PULL_REQUEST_ID, GROUPS.TITLE, GROUPS.DESCRIPTION)
                 .values(1234L, dbPullId.id, "A", "B")
@@ -145,7 +144,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    void deleteGroup_groupID_mustExist(DSLContext db) throws Exception {
+    void deleteGroup_groupID_mustExist(DSLContext db){
         db.insertInto(GROUPS)
                 .columns(GROUPS.ID, GROUPS.PULL_REQUEST_ID, GROUPS.TITLE, GROUPS.DESCRIPTION)
                 .values(1234L, dbPullId.id, "A", "B")
@@ -158,7 +157,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    void deleteGroup_cascades_deletesHunks(DSLContext db) throws Exception {
+    void deleteGroup_cascades_deletesHunks(DSLContext db){
         db.insertInto(GROUPS)
                 .columns(GROUPS.ID, GROUPS.PULL_REQUEST_ID, GROUPS.TITLE, GROUPS.DESCRIPTION)
                 .values(1234L, dbPullId.id, "A", "B")
@@ -176,7 +175,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    void deleteGroup_deletesGroup(DSLContext db) throws Exception {
+    void deleteGroup_deletesGroup(DSLContext db){
         db.insertInto(GROUPS)
                 .columns(GROUPS.ID, GROUPS.PULL_REQUEST_ID, GROUPS.TITLE, GROUPS.DESCRIPTION)
                 .values(1234L, dbPullId.id, "A", "B")

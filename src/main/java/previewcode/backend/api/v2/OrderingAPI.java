@@ -2,8 +2,6 @@ package previewcode.backend.api.v2;
 
 import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import previewcode.backend.DTO.OrderingGroup;
 import previewcode.backend.DTO.PullRequestIdentifier;
 import previewcode.backend.services.IDatabaseService;
@@ -35,7 +33,7 @@ public class OrderingAPI {
             @PathParam("name") String name,
             @PathParam("number") Integer number,
             java.util.List<OrderingGroup> body
-    ) throws Exception {
+    ){
 
         PullRequestIdentifier pull = new PullRequestIdentifier(owner, name, number);
         Action<Unit> action = databaseService.updateOrdering(pull, List.ofAll(body));

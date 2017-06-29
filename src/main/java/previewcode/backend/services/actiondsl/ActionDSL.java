@@ -1,6 +1,7 @@
 package previewcode.backend.services.actiondsl;
 
 import io.atlassian.fugue.Unit;
+import io.vavr.CheckedFunction1;
 import io.vavr.collection.List;
 import io.vavr.collection.List;
 import previewcode.backend.services.actiondsl.WithSyntax.*;
@@ -269,7 +270,7 @@ public class ActionDSL {
      * Takes a consumer, which is essentially a {@code Function<A, void>},
      * and represent it as a {@code Function<A, Unit>}.
      */
-    public static <A> Function<A, Unit> toUnit(Consumer<A> f) {
+    public static <A> CheckedFunction1<A, Unit> toUnit(Consumer<A> f) {
         return a -> {
             f.accept(a);
             return unit;

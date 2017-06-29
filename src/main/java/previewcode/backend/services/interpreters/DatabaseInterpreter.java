@@ -1,10 +1,11 @@
-package previewcode.backend.database;
+package previewcode.backend.services.interpreters;
 
 import io.vavr.collection.List;
 import org.jooq.DSLContext;
 import org.jooq.InsertReturningStep;
 import org.jooq.Record1;
 import org.jooq.impl.DSL;
+import previewcode.backend.database.*;
 import previewcode.backend.database.model.tables.records.PullRequestRecord;
 import previewcode.backend.services.actiondsl.Interpreter;
 

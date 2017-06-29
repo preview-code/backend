@@ -2,7 +2,6 @@ package previewcode.backend.api.v2;
 
 import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
-import io.vavr.collection.Seq;
 import previewcode.backend.DTO.*;
 import previewcode.backend.services.IDatabaseService;
 import previewcode.backend.services.actiondsl.Interpreter;
@@ -39,7 +38,7 @@ public class ApprovalsAPI {
     @GET
     public Response getApprovals(@PathParam("owner") String owner,
                                  @PathParam("name") String name,
-                                 @PathParam("number") Integer number) throws Exception {
+                                 @PathParam("number") Integer number) {
         PullRequestIdentifier pull = new PullRequestIdentifier(owner, name, number);
         Action<ApprovedPullRequest> action = databaseService.getApproval(pull);
         return interpreter.evaluateToResponse(action);
@@ -56,7 +55,7 @@ public class ApprovalsAPI {
     @GET
     public Response getHunkApprovals(@PathParam("owner") String owner,
                                      @PathParam("name") String name,
-                                     @PathParam("number") Integer number) throws Exception {
+                                     @PathParam("number") Integer number) {
         PullRequestIdentifier pull = new PullRequestIdentifier(owner, name, number);
         Action<List<HunkApprovals>> action = databaseService.getHunkApprovals(pull);
 
@@ -77,14 +76,9 @@ public class ApprovalsAPI {
     public Response setApprove(@PathParam("owner") String owner,
                               @PathParam("name") String name,
                               @PathParam("number") Integer number,
-                              ApproveRequest body) throws Exception {
+                              ApproveRequest body) {
 
-        //TODO: check if user may submit this approval pull-request
-//        GHMyself user = githubService.getLoggedInUser();
-//        if (body.githubLogin != user.getId()) {
-//            throw new IllegalArgumentException("Can not set status status of other user");
-//        }
-//        firebaseService.setApproved(owner, name, number, body);
+        // TODO: check if user is a reviewer on this PR
 
         PullRequestIdentifier pull = new PullRequestIdentifier(owner, name, number);
         Action<Unit> action = databaseService.setApproval(pull, body);

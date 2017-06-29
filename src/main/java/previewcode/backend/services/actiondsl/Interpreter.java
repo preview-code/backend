@@ -3,6 +3,7 @@ package previewcode.backend.services.actiondsl;
 import io.atlassian.fugue.Either;
 import io.atlassian.fugue.Try;
 import io.atlassian.fugue.Unit;
+import io.vavr.CheckedFunction1;
 import io.vavr.collection.List;
 
 import javax.ws.rs.core.Response;
@@ -43,7 +44,7 @@ public class Interpreter {
          * @param handler Function that handles actions of type {@code X}
          * @return An interpreter that handles {@code X}
          */
-        public Interpreter apply(Function<X, ? extends A> handler) {
+        public Interpreter apply(CheckedFunction1<X, ? extends A> handler) {
             interpreter.handlers.put(actionClass, handler);
             return interpreter;
         }
@@ -142,32 +143,34 @@ public class Interpreter {
      * This method does not encapsulate errors in {@code Try<A>},
      * which means that any error will be thrown immediately.
      *
-     * @param action The action to run
      * @param <A> Represents the result type
+     * @param action The action to run
      * @return The result of running the action
-     * @throws Exception when an error occurs during evaluation
      */
-    public <A> A unsafeEvaluate(Action<A> action) throws Exception {
+    public <A> A unsafeEvaluate(Action<A> action) {
         Either<Exception, A> result = evaluate(action).toEither();
 
         if (result.isLeft()) {
-            throw result.left().get();
+            return sneakyThrow(result.left().get());
         } else {
             return result.right().get();
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private static <T extends Throwable, R> R sneakyThrow(Throwable t) throws T {
+        throw (T) t;
+    }
+
     /**
-     * Evaluate an action and build a response from the action result.
+     * Evaluate an action and buildCache a response from the action result.
      * @param action The action to evaluate
      * @return The response built from the action result.
-     * @throws Exception when an error occurs during evaluation
      */
-    public Response evaluateToResponse(Action<?> action) throws Exception {
+    public Response evaluateToResponse(Action<?> action) {
         return Response.ok().entity(unsafeEvaluate(action)).build();
     }
 
-    @SuppressWarnings("unchecked")
     protected <A, X> Try<A> run(Action<A> action) {
         if (action == null) return Try.failure(new NullPointerException("Attempting to run a null action."));
 
@@ -183,21 +186,28 @@ public class Interpreter {
             Try<Function<? super X, ? extends A>> applier = run(applyAction.f);
             return applicant.flatMap(x -> applier.map(fXA -> fXA.apply(x)));
         } else {
-            if (handlers.containsKey(action.getClass())) {
-                Function<Action<A>, ? extends A> handler = (Function<Action<A>, ? extends A>) handlers.get(action.getClass());
-                try {
-                    A result = handler.apply(action);
-                    if (result != null) {
-                        return Try.successful(result);
-                    } else {
-                        throw new RuntimeException("Action handler for " + action.getClass().getSimpleName() + " returned null.");
-                    }
-                } catch (Exception e) {
-                    return Try.failure(e);
+            return runLeaf(action);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <A> Try<A> runLeaf(Action<A> action) {
+        if (handlers.containsKey(action.getClass())) {
+            CheckedFunction1<Action<A>, ? extends A> handler = (CheckedFunction1<Action<A>, ? extends A>) handlers.get(action.getClass());
+            try {
+                A result = handler.apply(action);
+                if (result != null) {
+                    return Try.successful(result);
+                } else {
+                    throw new RuntimeException("Action handler for " + action.getClass().getSimpleName() + " returned null.");
                 }
-            } else {
-                return Try.failure(new RuntimeException("Unexpected action: " + action));
+            } catch (Exception e) {
+                return Try.failure(e);
+            } catch (Throwable throwable) {
+                return sneakyThrow(throwable);
             }
+        } else {
+            return Try.failure(new RuntimeException("Unexpected action: " + action));
         }
     }
 
@@ -240,9 +250,8 @@ public class Interpreter {
          * </pre>
          * @return A list of all actions that will be evaluated on the next step.
          * @throws DoneException if there is nothing more to evaluate.
-         * @throws Exception when evaluation fails.
          */
-        public List<Action<?>> next() throws Exception {
+        public List<Action<?>> next() {
             if (currentAction instanceof Done) {
                 throw new DoneException();
             } else {
@@ -256,7 +265,7 @@ public class Interpreter {
                         currentAction = result.right().get();
                     }
                 } else {
-                    throw stepped.toEither().left().get();
+                    return sneakyThrow(stepped.toEither().left().get());
                 }
                 return peek();
             }

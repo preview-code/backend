@@ -45,7 +45,7 @@ public class DatabaseInterpreter_ApprovalTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void approveHunk_insertApproval(DSLContext db) throws Exception {
+    public void approveHunk_insertApproval(DSLContext db){
         eval(setApprove(dbPullId, hunkChecksum, githubUser, statusApproved));
 
         Integer approveCount = db.selectCount().from(APPROVAL).fetchOne().value1();
@@ -53,7 +53,7 @@ public class DatabaseInterpreter_ApprovalTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void approveHunk_insertsCorrectData(DSLContext db) throws Exception {
+    public void approveHunk_insertsCorrectData(DSLContext db){
         ApproveHunk approveHunk = setApprove(dbPullId, hunkChecksum, githubUser, statusApproved);
         eval(approveHunk);
 
@@ -64,13 +64,13 @@ public class DatabaseInterpreter_ApprovalTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void approveHunk_requiresPullRequest(DSLContext db) throws Exception {
+    public void approveHunk_requiresPullRequest(DSLContext db){
         ApproveHunk create = setApprove(new PullRequestID(424242424242L), hunkChecksum, githubUser, statusApproved);
         assertThatExceptionOfType(DatabaseException.class).isThrownBy(() -> eval(create));
     }
 
     @Test
-    public void approveHunk_onDuplicate_updatesStatus(DSLContext db) throws Exception {
+    public void approveHunk_onDuplicate_updatesStatus(DSLContext db){
         ApproveHunk first = setApprove(dbPullId, hunkChecksum, githubUser, statusApproved);
         ApproveHunk second = setApprove(dbPullId, hunkChecksum, githubUser, ApproveStatus.DISAPPROVED);
         eval(first.then(second));
@@ -87,14 +87,14 @@ public class DatabaseInterpreter_ApprovalTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    void fetchApprovals_requiresHunkID(DSLContext db) throws Exception {
+    void fetchApprovals_requiresHunkID(DSLContext db){
         FetchHunkApprovals action = fetchApprovals(new HunkID(-1L));
         List<HunkApproval> result = eval(action);
         assertThat(result).isEmpty();
     }
 
     @Test
-    void fetchApprovals_returnsAllApprovals(DSLContext db) throws Exception {
+    void fetchApprovals_returnsAllApprovals(DSLContext db){
         db.insertInto(APPROVAL, APPROVAL.HUNK_ID, APPROVAL.APPROVER, APPROVAL.STATUS)
                 .values(1L, "txsmith", ApproveStatus.APPROVED.getApproved())
                 .values(1L, "eanker", ApproveStatus.DISAPPROVED.getApproved())
