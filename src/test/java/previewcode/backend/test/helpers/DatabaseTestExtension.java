@@ -5,8 +5,6 @@ import org.jooq.SQLDialect;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 import org.junit.jupiter.api.extension.*;
-import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
-import org.junit.jupiter.api.extension.ExtensionContext.Store;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import previewcode.backend.database.model.DefaultCatalog;
@@ -14,12 +12,13 @@ import previewcode.backend.database.model.DefaultCatalog;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class DatabaseTestExtension implements ParameterResolver, AfterEachCallback {
+public class DatabaseTestExtension extends TestStore<DSLContext> implements ParameterResolver, AfterEachCallback {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseTestExtension.class);
 
     private static final String userName = "admin";
     private static final String password = "password";
     private static final String url = "jdbc:postgresql://localhost:5432/preview_code";
+
 
     @Override
     public boolean supports(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
@@ -35,7 +34,7 @@ public class DatabaseTestExtension implements ParameterResolver, AfterEachCallba
         logger.debug("Obtaining database connection from DriverManager...");
         try {
             DSLContext dslContext = DSL.using(DriverManager.getConnection(url, userName, password), SQLDialect.POSTGRES_9_5, settings);
-            putDslContext(extensionContext, dslContext);
+            putObjectToStore(extensionContext, dslContext);
             return dslContext;
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -44,7 +43,7 @@ public class DatabaseTestExtension implements ParameterResolver, AfterEachCallba
 
     @Override
     public void afterEach(TestExtensionContext context) throws Exception {
-        DSLContext db = getDslContext(context);
+        DSLContext db = getFromStore(context);
         if (db != null) {
             logger.debug("Commence database cleanup.");
             DefaultCatalog.DEFAULT_CATALOG.getSchemas().forEach(schema -> {
@@ -61,21 +60,5 @@ public class DatabaseTestExtension implements ParameterResolver, AfterEachCallba
 
             logger.debug("Database truncated.");
         }
-    }
-
-    private DSLContext getDslContext(ExtensionContext context) {
-        return getStore(context).get(getStoreKey(context), DSLContext.class);
-    }
-
-    private void putDslContext(ExtensionContext context, DSLContext db) {
-        getStore(context).put(getStoreKey(context), db);
-    }
-
-    private Object getStoreKey(ExtensionContext context) {
-        return context.getTestMethod().get();
-    }
-
-    private Store getStore(ExtensionContext context) {
-        return context.getStore(Namespace.create(getClass(), context));
     }
 }

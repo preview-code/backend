@@ -25,7 +25,7 @@ public class SchemaTest {
 
     @Test
     public void groupsTable_isEmpty(DSLContext db) {
-        int rows = db.select(GROUPS.ID, GROUPS.TITLE, GROUPS.DESCRIPTION)
+        int rows = db.select(GROUPS.ID, GROUPS.TITLE, GROUPS.DESCRIPTION, GROUPS.DEFAULT_GROUP)
                     .from(GROUPS).execute();
         assertThat(rows).isZero();
     }
@@ -34,6 +34,14 @@ public class SchemaTest {
     public void hunksTable_isEmpty(DSLContext db) {
         int rows = db.select(HUNK.ID, HUNK.GROUP_ID)
                     .from(HUNK).execute();
+        assertThat(rows).isZero();
+    }
+
+    @Test
+    public void approvalsTable_isEmpty(DSLContext db) {
+        int rows = db.select(APPROVAL.HUNK_ID, APPROVAL.APPROVER, APPROVAL.STATUS)
+                .from(APPROVAL).execute();
+
         assertThat(rows).isZero();
     }
 

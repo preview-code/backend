@@ -4,6 +4,7 @@ import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import previewcode.backend.DTO.PullRequestIdentifier;
 import previewcode.backend.services.actiondsl.ActionDSL;
+import previewcode.backend.services.interpreters.DatabaseInterpreter;
 import previewcode.backend.test.helpers.DatabaseTests;
 
 @DatabaseTests
@@ -26,7 +27,7 @@ public class DatabaseInterpreterTest {
         this.dbInterpreter = new DatabaseInterpreter(db);
     }
 
-    protected <T> T eval(ActionDSL.Action<T> action) throws Exception {
+    protected <T> T eval(ActionDSL.Action<T> action){
         return dbInterpreter.unsafeEvaluate(action);
     }
 }

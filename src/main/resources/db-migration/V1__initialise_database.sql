@@ -21,26 +21,35 @@ CREATE TABLE preview_code.groups (
   id BIGINT DEFAULT nextval('preview_code.seq_pk_groups') NOT NULL CONSTRAINT pk_groups PRIMARY KEY,
   title VARCHAR NOT NULL,
   description VARCHAR NOT NULL,
-  pull_request_id BIGINT NOT NULL CONSTRAINT fk_groups_pull_request REFERENCES preview_code.pull_request(id)
+  pull_request_id BIGINT NOT NULL CONSTRAINT fk_groups_pull_request REFERENCES preview_code.pull_request(id),
+  default_group BOOLEAN,
+
+  CONSTRAINT unique_default_group UNIQUE (default_group, pull_request_id)
+
 );
 
 CREATE INDEX fk_group_pull_id ON preview_code.groups (pull_request_id);
 
 
-CREATE TABLE preview_code.hunk (
-  id VARCHAR NOT NULL,
-  group_id BIGINT NOT NULL CONSTRAINT fk_hunk_group_id REFERENCES preview_code.groups(id),
+CREATE SEQUENCE preview_code.seq_pk_hunk;
 
-  CONSTRAINT unique_hunkId_groupId UNIQUE (id, group_id)
+CREATE TABLE preview_code.hunk (
+  id BIGINT DEFAULT nextval('preview_code.seq_pk_hunk') NOT NULL CONSTRAINT pk_hunk PRIMARY KEY,
+  checksum VARCHAR NOT NULL,
+  group_id BIGINT NOT NULL CONSTRAINT fk_hunk_group_id REFERENCES preview_code.groups(id) ON DELETE CASCADE,
+  pull_request_id BIGINT NOT NULL CONSTRAINT fk_hunk_pull_id REFERENCES preview_code.pull_request(id),
+
+  CONSTRAINT unique_hunkId_groupId UNIQUE (checksum, pull_request_id)
 );
 
 CREATE INDEX idx_fk_hunk_group_id ON preview_code.hunk (group_id);
 
 
 CREATE TABLE preview_code.approval (
-  pull_request_id BIGINT NOT NULL CONSTRAINT fk_approval_pull_request REFERENCES preview_code.pull_request(id),
-  hunk_id VARCHAR NOT NULL,
+  hunk_id BIGINT NOT NULL CONSTRAINT fk_approval_hunk REFERENCES preview_code.hunk(id),
+  approver VARCHAR NOT NULL,
+  status VARCHAR NOT NULL,
 
-  CONSTRAINT pk_approval PRIMARY KEY (pull_request_id, hunk_id)
+  CONSTRAINT pk_approval PRIMARY KEY (hunk_id, approver)
 )
 

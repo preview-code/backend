@@ -6,7 +6,7 @@ import com.google.firebase.database.Transaction.Result;
 import com.google.inject.Singleton;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
-import previewcode.backend.DTO.Approve;
+import previewcode.backend.DTO.ApproveRequest;
 import previewcode.backend.DTO.OrderingGroup;
 import previewcode.backend.DTO.PullRequestIdentifier;
 import previewcode.backend.DTO.Track;
@@ -52,9 +52,9 @@ public class FirebaseService {
      * @param LGTM
      *            The approved object with information for firebase
      */
-    public void setApproved(String owner, String name, String number, Approve LGTM) {
+    public void setApproved(String owner, String name, String number, ApproveRequest LGTM) {
         this.ref.child(owner).child(name).child("pulls").child(number)
-                .child("hunkApprovals").child(LGTM.hunkId).child(String.valueOf(LGTM.githubLogin)).setValue(LGTM.isApproved);
+                .child("hunkApprovals").child(LGTM.hunkChecksum).child(String.valueOf(LGTM.githubLogin)).setValue(LGTM.isApproved);
     }
 
     /**

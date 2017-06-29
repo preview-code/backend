@@ -1,8 +1,11 @@
 package previewcode.backend.services.actiondsl;
 
 import io.atlassian.fugue.Unit;
+import io.vavr.CheckedFunction1;
 import io.vavr.collection.List;
-import io.vavr.collection.Seq;
+import io.vavr.collection.List;
+import previewcode.backend.services.actiondsl.WithSyntax.*;
+
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -62,9 +65,9 @@ public class ActionDSL {
          * {@code ap} is quite a 'low level' operator, so most of the time it will
          * be more convenient to use one of the following (which use {@code ap} internally):
          * <br>
-         *     {@link ActionDSL#sequence(Seq)}, <br>
+         *     {@link ActionDSL#sequence(List)}, <br>
      *         {@link ActionDSL#traverse(Function)} or <br>
-     *         {@link ActionDSL#traverse(Seq, Function)}
+     *         {@link ActionDSL#traverse(List, Function)}
          * <br>
          * <br>
          * Example:
@@ -166,11 +169,6 @@ public class ActionDSL {
         public <B> Action<B> ap(Action<Function<? super A, ? extends B>> f) {
             return new Apply<>(this.f.ap(f.map(fBC -> fBC::compose)), action);
         }
-
-        @Override
-        public <B> Action<B> then(Function<? super A, ? extends Action<B>> f) {
-            return new Suspend<>(f, action.then(x -> this.f.map(fx -> fx.apply(x))));
-        }
     }
 
     public static class Suspend<A, X> extends Action<A> {
@@ -207,6 +205,14 @@ public class ActionDSL {
         return new Return<>(value);
     }
 
+    public static <A> Function<A, A> identity() {
+        return a -> a;
+    }
+
+    public static <A> Function<List<List<A>>, List<A>> flatten() {
+        return lists -> lists.flatMap(a -> a);
+    }
+
     /**
      * Take a sequence of actions and turn them into a single action.
      *
@@ -214,8 +220,8 @@ public class ActionDSL {
      * @param <A> The type of each action
      * @return A single action that returns if all sequenced actions have completed.
      */
-    public static <A> Action<Seq<A>> sequence(Seq<Action<A>> actions) {
-        Function<A, Function<? super Seq<A>, ? extends Seq<A>>> cons = x -> xs -> xs.append(x);
+    public static <A> Action<List<A>> sequence(List<Action<A>> actions) {
+        Function<A, Function<? super List<A>, ? extends List<A>>> cons = x -> xs -> xs.append(x);
         return actions.map(a -> a.map(cons)).foldLeft(pure(List.empty()), Action::ap);
     }
 
@@ -229,15 +235,20 @@ public class ActionDSL {
      * @param <B> Result type of the actions
      * @return  A single action that returns if all sequenced actions have completed.
      */
-    public static <A, B> Action<Seq<B>> traverse(Seq<A> xs, Function<? super A, ? extends Action<B>> f) {
+    public static <A, B> Action<List<B>> traverse(List<A> xs, Function<? super A, ? extends Action<B>> f) {
         return sequence(xs.map(f));
     }
 
     /**
-     * Curried version of {@link #traverse(Seq, Function)}.
+     * Curried version of {@link #traverse(List, Function)}.
      */
-    public static <A, B> Function<Seq<A>, Action<Seq<B>>> traverse(Function<? super A, ? extends Action<B>> f) {
+    public static <A, B> Function<List<A>, Action<List<B>>> traverse(Function<? super A, ? extends Action<B>> f) {
         return xs -> sequence(xs.map(f));
+    }
+
+
+    public static <A> W1<A> with(Action<A> a) {
+        return new W1<A>(a);
     }
 
     /**
@@ -259,7 +270,7 @@ public class ActionDSL {
      * Takes a consumer, which is essentially a {@code Function<A, void>},
      * and represent it as a {@code Function<A, Unit>}.
      */
-    public static <A> Function<A, Unit> toUnit(Consumer<A> f) {
+    public static <A> CheckedFunction1<A, Unit> toUnit(Consumer<A> f) {
         return a -> {
             f.accept(a);
             return unit;

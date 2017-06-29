@@ -61,6 +61,13 @@
             <version>${resteasy.version}</version>
         </dependency>
 
+        <!-- Should only be needed in test, but causes compiler error when doing so-->
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-client</artifactId>
+            <version>${resteasy.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
@@ -73,6 +80,12 @@
             <version>${jetty.version}</version>
         </dependency>
 
+        <!-- regex parser -->
+        <dependency>
+            <groupId>net.sourceforge.jregex</groupId>
+            <artifactId>jregex</artifactId>
+            <version>1.2_01</version>
+        </dependency>
 
         <!-- Decoding of JSON -->
         <dependency>
@@ -135,13 +148,19 @@
             <version>0.8.0.RELEASE</version>
         </dependency>
 
+        <!-- Cache results from the ActionDSL -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>2.5.2</version>
+        </dependency>
 
 
         <!-- GitHub -->
         <dependency>
-          <groupId>org.kohsuke</groupId>
-          <artifactId>github-api</artifactId>
-          <version>1.76</version>
+            <groupId>org.kohsuke</groupId>
+            <artifactId>github-api</artifactId>
+            <version>1.76</version>
         </dependency>
 
         <!-- Firebase -->
@@ -247,17 +266,31 @@
         </dependency>
 
         <dependency>
-            <groupId>org.jboss.resteasy</groupId>
-            <artifactId>resteasy-client</artifactId>
-            <version>${resteasy.version}</version>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <version>1.0.0-M4</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava-testlib</artifactId>
+            <version>22.0</version>
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>4.3.9.RELEASE</version>
+            <scope>test</scope>
+        </dependency>
+
+
         <!--<dependency>-->
-            <!--<groupId>org.mockito</groupId>-->
-            <!--<artifactId>mockito-core</artifactId>-->
-            <!--<version>2.7.22</version>-->
-            <!--<scope>test</scope>-->
+        <!--    <groupId>org.mockito</groupId>-->
+        <!--    <artifactId>mockito-core</artifactId>-->
+        <!--    <version>2.7.22</version>-->
+        <!--    <scope>test</scope>-->
         <!--</dependency>-->
     </dependencies>
 
@@ -351,12 +384,6 @@
                             <includes>.*</includes>
                             <inputSchema>${db.schema}</inputSchema>
                         </database>
-
-                        <generate>
-                            <pojos>true</pojos>
-                            <daos>true</daos>
-                        </generate>
-
                         <target>
                             <packageName>previewcode.backend.database.model</packageName>
                             <directory>src/main/java</directory>

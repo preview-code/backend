@@ -6,7 +6,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 
-import previewcode.backend.DTO.Approve;
+import previewcode.backend.DTO.ApproveRequest;
 import previewcode.backend.services.FirebaseService;
 
 import com.google.inject.Inject;
@@ -30,7 +30,7 @@ public class AssigneesAPI {
 
     /**
      * Creates a pull request
-     * 
+     *
      * @param owner
      *            The owner of the repository on which the pull request is created
      * @param name
@@ -43,12 +43,12 @@ public class AssigneesAPI {
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Approve setApprove(@PathParam("owner") String owner,
-                              @PathParam("name") String name,
-                              @PathParam("number") String number,
-                              Approve body) throws IOException {
+    public ApproveRequest setApprove(@PathParam("owner") String owner,
+                                     @PathParam("name") String name,
+                                     @PathParam("number") String number,
+                                     ApproveRequest body) throws IOException {
         GHMyself user = githubService.getLoggedInUser();
-        if (body.githubLogin != user.getId()) {
+        if (!body.githubLogin.equals(user.getLogin())) {
             throw new IllegalArgumentException("Can not set approve status of other user");
         }
         firebaseService.setApproved(owner, name, number, body);
