@@ -161,14 +161,13 @@ public class DatabaseServiceTest {
 
         Interpreter interpreter =
                 interpret()
-                        .on(InsertPullIfNotExists.class).returnA(pullRequestID)
-                        .on(FetchGroupsForPull.class).returnA(List.empty())
-                        .on(NewGroup.class).apply(action -> {
+                .on(InsertPullIfNotExists.class).returnA(pullRequestID)
+                .on(NewGroup.class).apply(action -> {
                     assertThat(action.defaultGroup).isEqualTo(true);
                     groupsAdded.add(group);
                     return group.id;
                 })
-                        .on(AssignHunkToGroup.class).apply(toUnit(action -> {
+                .on(AssignHunkToGroup.class).apply(toUnit(action -> {
                     assertThat(List.of(group).find(g -> g.id.equals(action.groupID))).isNotEmpty();
                     Option<HunkChecksum> hunkID = hunkIDs.find(id -> id.checksum.equals(action.hunkChecksum));
                     assertThat(hunkID).isNotEmpty();
@@ -186,8 +185,8 @@ public class DatabaseServiceTest {
 
         Interpreter interpreter =
                 interpret()
-                        .on(InsertPullIfNotExists.class).returnA(pullRequestID)
-                        .on(ApproveHunk.class).stop(approveHunk -> {
+                .on(InsertPullIfNotExists.class).returnA(pullRequestID)
+                .on(ApproveHunk.class).stop(approveHunk -> {
                     assertThat(approveHunk.status)
                             .isEqualTo(ApproveStatus.DISAPPROVED);
                     assertThat(approveHunk.githubUser)
