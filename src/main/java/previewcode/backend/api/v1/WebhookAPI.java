@@ -4,16 +4,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.atlassian.fugue.Unit;
-import io.vavr.collection.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import previewcode.backend.DTO.*;
-import previewcode.backend.database.DatabaseInterpreter;
 import previewcode.backend.services.FirebaseService;
 import previewcode.backend.services.GithubService;
 import previewcode.backend.services.IDatabaseService;
 import previewcode.backend.services.actiondsl.ActionDSL;
 import previewcode.backend.services.actiondsl.Interpreter;
+import previewcode.backend.services.interpreters.DatabaseInterpreter;
 
 import javax.inject.Inject;
 import javax.ws.rs.HeaderParam;

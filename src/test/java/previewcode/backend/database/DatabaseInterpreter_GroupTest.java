@@ -36,7 +36,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
 
     @Test
     public void newGroup_insertsGroup(DSLContext db) {
-        GroupID groupID = eval(newGroup(dbPullId, groupTitle, groupDescription, false));
+        GroupID groupID = eval(newGroup(dbPullId, groupTitle, groupDescription, defaultGroup));
         assertThat(groupID.id).isPositive();
 
         Integer groupCount = db.selectCount().from(GROUPS).fetchOne().value1();
@@ -63,13 +63,8 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
     }
 
     @Test
-<<<<<<< 84cd7a0944beeac91449e2112a18ddba6b30cff9
-    public void newGroup_canInsertDuplicates(DSLContext db){
-        NewGroup create = newGroup(dbPullId, groupTitle, groupDescription);
-=======
-    public void newGroup_canInsertDuplicates(DSLContext db) throws Exception {
+    public void newGroup_canInsertDuplicates(DSLContext db) {
         NewGroup create = newGroup(dbPullId, groupTitle, groupDescription, defaultGroup);
->>>>>>> On webhook opened all hunks are added to the database
         eval(create.then(create));
 
         Integer groupCount = db.selectCount().from(GROUPS).fetchOne().value1();
@@ -77,13 +72,8 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
     }
 
     @Test
-<<<<<<< 84cd7a0944beeac91449e2112a18ddba6b30cff9
-    public void newGroup_insertsCorrectData(DSLContext db){
-        NewGroup create = newGroup(dbPullId, groupTitle, groupDescription);
-=======
-    public void newGroup_insertsCorrectData(DSLContext db) throws Exception {
+    public void newGroup_insertsCorrectData(DSLContext db) {
         NewGroup create = newGroup(dbPullId, groupTitle, groupDescription, defaultGroup);
->>>>>>> On webhook opened all hunks are added to the database
         eval(create);
 
         GroupsRecord groupsRecord = db.selectFrom(GROUPS).fetchOne();

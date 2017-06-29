@@ -23,7 +23,7 @@ import previewcode.backend.api.filter.GitHubAccessTokenFilter;
 import previewcode.backend.api.filter.IJWTTokenCreator;
 import previewcode.backend.api.filter.JWTTokenCreator;
 import previewcode.backend.api.v1.*;
-<<<<<<< 84cd7a0944beeac91449e2112a18ddba6b30cff9
+import previewcode.backend.services.interpreters.DatabaseInterpreter;
 import previewcode.backend.services.interpreters.GitHubAuthInterpreter;
 import previewcode.backend.services.http.HttpRequestExecutor;
 import previewcode.backend.services.http.IHttpRequestExecutor;
@@ -31,15 +31,7 @@ import previewcode.backend.services.DatabaseService;
 import previewcode.backend.services.GithubService;
 import previewcode.backend.services.IDatabaseService;
 import previewcode.backend.services.actiondsl.ActionCache;
-=======
-import previewcode.backend.api.v2.OrderingAPI;
-import previewcode.backend.database.DatabaseInterpreter;
-import previewcode.backend.services.DatabaseService;
-import previewcode.backend.services.GithubService;
-import previewcode.backend.services.IDatabaseService;
-import previewcode.backend.services.actiondsl.ActionDSL;
 import previewcode.backend.services.actiondsl.Interpreter;
->>>>>>> On webhook opened all hunks are added to the database
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.sql.DataSource;
@@ -51,9 +43,6 @@ import java.io.IOException;
 import java.security.KeyFactory;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
-
-import static previewcode.backend.services.actiondsl.ActionDSL.interpret;
-import static previewcode.backend.services.actiondsl.ActionDSL.unit;
 
 /**
  * The main module of the backend

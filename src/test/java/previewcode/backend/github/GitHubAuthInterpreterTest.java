@@ -52,6 +52,11 @@ public class GitHubAuthInterpreterTest {
         protected void authViaOldApi(GetUser action) throws IOException {
             // Do nothing
         }
+
+        @Override
+        protected void registerUserToken(String token) {
+            // Do nothing
+        }
     }
 
     Interpreter ghInterpreter = new GitHubInterpreter(integrationId, sharedSecret, jwtCreator, defaultHttpExec, cache);
