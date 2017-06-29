@@ -1,14 +1,12 @@
 package previewcode.backend.services.actions;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
 import previewcode.backend.DTO.ApproveStatus;
-import previewcode.backend.DTO.HunkChecksum;
 import previewcode.backend.DTO.PullRequestIdentifier;
 import previewcode.backend.database.*;
 import previewcode.backend.services.actiondsl.ActionDSL.*;
-
-import java.util.Map;
 
 public class DatabaseActions {
 
@@ -55,11 +53,13 @@ public class DatabaseActions {
         public final PullRequestID pullRequestId;
         public final String title;
         public final String description;
+        public final Boolean defaultGroup;
 
-        public NewGroup(PullRequestID pullRequestId, String title, String description) {
+        public NewGroup(PullRequestID pullRequestId, String title, String description, Boolean defaultGroup) {
             this.pullRequestId = pullRequestId;
             this.title = title;
             this.description = description;
+            this.defaultGroup = defaultGroup;
         }
     }
 
@@ -179,8 +179,8 @@ public class DatabaseActions {
         return new FetchPull(new PullRequestIdentifier(owner, name, number));
     }
 
-    public static NewGroup newGroup(PullRequestID pullRequestId, String title, String description) {
-        return new NewGroup(pullRequestId, title, description);
+    public static NewGroup newGroup(PullRequestID pullRequestId, String title, String description, Boolean defaultGroup) {
+        return new NewGroup(pullRequestId, title, description, defaultGroup);
     }
 
     public static AssignHunkToGroup assignToGroup(GroupID groupID, String hunkId) {

@@ -25,10 +25,6 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
     @Inject
     private GithubService.V2 authService;
 
-    public GitHubAccessTokenFilter() {
-        super();
-    }
-
     @Override
     public void filter(ContainerRequestContext ctx) throws IOException {
         PreMatchContainerRequestContext context = (PreMatchContainerRequestContext) ctx;

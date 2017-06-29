@@ -1,12 +1,13 @@
 package previewcode.backend.api.v2;
 
+import com.google.inject.Inject;
 import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
 import previewcode.backend.DTO.*;
 import previewcode.backend.services.IDatabaseService;
 import previewcode.backend.services.actiondsl.Interpreter;
 
-import javax.inject.Inject;
+import javax.inject.Named;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
@@ -18,11 +19,11 @@ import static previewcode.backend.services.actiondsl.ActionDSL.*;
 @Path("v2/{owner}/{name}/pulls/{number}/")
 public class ApprovalsAPI {
 
-    private final Interpreter interpreter;
-    private final IDatabaseService databaseService;
+    private Interpreter interpreter;
+    private IDatabaseService databaseService;
 
     @Inject
-    public ApprovalsAPI(Interpreter interpreter, IDatabaseService databaseService) {
+    public ApprovalsAPI(@Named("database-interp") Interpreter interpreter, IDatabaseService databaseService) {
         this.interpreter = interpreter;
         this.databaseService = databaseService;
     }

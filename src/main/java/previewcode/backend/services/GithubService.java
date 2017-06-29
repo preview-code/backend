@@ -27,7 +27,6 @@ import previewcode.backend.api.exceptionmapper.GitHubApiException;
 import previewcode.backend.api.exceptionmapper.NoTokenException;
 import previewcode.backend.services.actiondsl.ActionDSL.Action;
 
-import javax.ws.rs.container.ContainerRequestContext;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -233,6 +232,18 @@ public class GithubService {
         return fromJson(response, GitHubPullRequest.class);
     }
 
+       public Diff fetchDiff(GitHubPullRequest pullRequest) throws IOException {
+                logger.info("Fetching diff from GitHub API...");
+
+                        Request getDiff = tokenBuilder.addToken(new Request.Builder())
+                                .url(pullRequest.links.self)
+                                .addHeader("Accept", "application/vnd.github.VERSION.diff")
+                                .get()
+                                .build();
+                String response = this.execute(getDiff);
+                return new Diff(response);
+       }
+
 
     /**
      * Sends a request to GitHub to place a comment at the given pull request.
@@ -306,7 +317,7 @@ public class GithubService {
             if (response.isSuccessful()) {
                 return body;
             } else {
-                throw new GitHubApiException(body, response.code());
+                throw new GitHubApiException(body, response.code(), request.url());
             }
         }
     }

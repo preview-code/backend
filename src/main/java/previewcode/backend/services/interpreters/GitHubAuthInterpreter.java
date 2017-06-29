@@ -116,12 +116,15 @@ public class GitHubAuthInterpreter extends CachingInterpreter {
         logger.info("Authenticating user via OAuth");
         authViaOldApi(action);
 
+        registerUserToken(action.token.token);
+        return fromJson(http.execute(r), GitHubUser.class);
+    }
+
+    protected void registerUserToken(String token) {
         GithubService.TokenBuilder builder = (Request.Builder request) ->
-                request.header("Authorization", "token " + action.token.token);
+                request.header("Authorization", "token " + token);
 
         context.setProperty(Key.get(GithubService.TokenBuilder.class, Names.named(CURRENT_TOKEN_BUILDER)).toString(), builder);
-
-        return fromJson(http.execute(r), GitHubUser.class);
     }
 
     protected void authViaOldApi(GetUser action) throws IOException {

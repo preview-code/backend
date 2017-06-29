@@ -10,6 +10,7 @@ import previewcode.backend.services.actiondsl.Interpreter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.Assert.assertNull;
 import static previewcode.backend.database.model.Tables.GROUPS;
 import static previewcode.backend.database.model.Tables.HUNK;
 import static previewcode.backend.database.model.Tables.PULL_REQUEST;
@@ -21,6 +22,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
 
     private static final String groupTitle = "Title";
     private static final String groupDescription = "Description";
+    private static final Boolean defaultGroup = false;
 
     @BeforeEach
     @Override
@@ -33,8 +35,8 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void newGroup_insertsGroup(DSLContext db){
-        GroupID groupID = eval(newGroup(dbPullId, groupTitle, groupDescription));
+    public void newGroup_insertsGroup(DSLContext db) {
+        GroupID groupID = eval(newGroup(dbPullId, groupTitle, groupDescription, defaultGroup));
         assertThat(groupID.id).isPositive();
 
         Integer groupCount = db.selectCount().from(GROUPS).fetchOne().value1();
@@ -51,7 +53,7 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
                 .execute();
 
 
-        GroupID groupID = eval(newGroup(dbPullId, groupTitle, groupDescription));
+        GroupID groupID = eval(newGroup(dbPullId, groupTitle, groupDescription, defaultGroup));
 
         GroupID insertedID = new GroupID(db.select(GROUPS.ID).from(GROUPS).where(
                 GROUPS.TITLE.eq(groupTitle).and(GROUPS.DESCRIPTION.eq(groupDescription))
@@ -61,8 +63,8 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void newGroup_canInsertDuplicates(DSLContext db){
-        NewGroup create = newGroup(dbPullId, groupTitle, groupDescription);
+    public void newGroup_canInsertDuplicates(DSLContext db) {
+        NewGroup create = newGroup(dbPullId, groupTitle, groupDescription, defaultGroup);
         eval(create.then(create));
 
         Integer groupCount = db.selectCount().from(GROUPS).fetchOne().value1();
@@ -70,8 +72,8 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void newGroup_insertsCorrectData(DSLContext db){
-        NewGroup create = newGroup(dbPullId, groupTitle, groupDescription);
+    public void newGroup_insertsCorrectData(DSLContext db) {
+        NewGroup create = newGroup(dbPullId, groupTitle, groupDescription, defaultGroup);
         eval(create);
 
         GroupsRecord groupsRecord = db.selectFrom(GROUPS).fetchOne();
@@ -79,13 +81,27 @@ public class DatabaseInterpreter_GroupTest extends DatabaseInterpreterTest {
         assertThat(groupsRecord.getPullRequestId()).isEqualTo(create.pullRequestId.id);
         assertThat(groupsRecord.getTitle()).isEqualTo(create.title);
         assertThat(groupsRecord.getDescription()).isEqualTo(create.description);
+        assertThat(groupsRecord.getDefaultGroup()).isEqualTo(null);
     }
+
+    @Test
+    public void newGroup_insertDefault(DSLContext db) throws Exception {
+        NewGroup create = newGroup(dbPullId, groupTitle, groupDescription, true);
+        eval(create);
+
+        GroupsRecord groupsRecord = db.selectFrom(GROUPS).fetchOne();
+
+        assertThat(groupsRecord.getDefaultGroup().booleanValue());
+        assertThat(groupsRecord.getDefaultGroup()).isEqualTo(true);
+
+    }
+
 
     @Test
     public void newGroup_pullRequestMustExist() {
         PullRequestID wrongID = new PullRequestID(0L);
         assertThatExceptionOfType(DataAccessException.class)
-                .isThrownBy(() -> eval(newGroup(wrongID, "A", "B")));
+                .isThrownBy(() -> eval(newGroup(wrongID, "A", "B", defaultGroup)));
     }
 
 

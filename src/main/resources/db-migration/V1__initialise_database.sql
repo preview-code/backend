@@ -21,7 +21,11 @@ CREATE TABLE preview_code.groups (
   id BIGINT DEFAULT nextval('preview_code.seq_pk_groups') NOT NULL CONSTRAINT pk_groups PRIMARY KEY,
   title VARCHAR NOT NULL,
   description VARCHAR NOT NULL,
-  pull_request_id BIGINT NOT NULL CONSTRAINT fk_groups_pull_request REFERENCES preview_code.pull_request(id)
+  pull_request_id BIGINT NOT NULL CONSTRAINT fk_groups_pull_request REFERENCES preview_code.pull_request(id),
+  default_group BOOLEAN,
+
+  CONSTRAINT unique_default_group UNIQUE (default_group, pull_request_id)
+
 );
 
 CREATE INDEX fk_group_pull_id ON preview_code.groups (pull_request_id);

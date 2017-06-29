@@ -32,21 +32,22 @@ public class DatabaseServiceTest {
     private final PullRequestID pullRequestID = new PullRequestID(new Long(number));
 
     private PullRequestIdentifier pullIdentifier = new PullRequestIdentifier(owner, name, number);
+    private Boolean defaultGroup = false;
 
     private List<PullRequestGroup> groups = List.of(
-            new PullRequestGroup(new GroupID(42L), "Group A", "Description A"),
-            new PullRequestGroup(new GroupID(24L), "Group B", "Description B")
+            new PullRequestGroup(new GroupID(42L), "Group A", "Description A", defaultGroup),
+            new PullRequestGroup(new GroupID(24L), "Group B", "Description B", defaultGroup)
     );
 
     private List<OrderingGroup> groupsWithoutHunks= groups.map(group ->
-        new OrderingGroupWithID(group, Lists.newLinkedList())
+            new OrderingGroupWithID(group, Lists.newLinkedList())
     );
 
     private List<HunkChecksum> hunkIDs = List.of(
             new HunkChecksum("abcd"), new HunkChecksum("efgh"), new HunkChecksum("ijkl"));
 
     private List<OrderingGroup> groupsWithHunks = groups.map(group ->
-        new OrderingGroupWithID(group, hunkIDs.map(id -> id.checksum).toJavaList())
+            new OrderingGroupWithID(group, hunkIDs.map(id -> id).toJavaList())
     );
 
     private ApproveRequest approveStatus = new ApproveRequest("checksum", ApproveStatus.DISAPPROVED, "txsmith");
@@ -76,9 +77,9 @@ public class DatabaseServiceTest {
 
         Interpreter interpreter =
                 interpret()
-                .on(InsertPullIfNotExists.class).returnA(pullRequestID)
-                .on(FetchGroupsForPull.class).returnA(groups)
-                .on(DeleteGroup.class).apply(toUnit(action -> {
+                        .on(InsertPullIfNotExists.class).returnA(pullRequestID)
+                        .on(FetchGroupsForPull.class).returnA(groups)
+                        .on(DeleteGroup.class).apply(toUnit(action -> {
                     assertThat(groups).extracting("id").contains(action.groupID);
                     removedGroups.add(groups.find(group -> group.id.equals(action.groupID)).get());
                 }));
@@ -95,8 +96,8 @@ public class DatabaseServiceTest {
 
         Interpreter interpreter =
                 interpret()
-                .on(InsertPullIfNotExists.class).returnA(pullRequestID)
-                .on(FetchGroupsForPull.class).returnA(List.empty());
+                        .on(InsertPullIfNotExists.class).returnA(pullRequestID)
+                        .on(FetchGroupsForPull.class).returnA(List.empty());
 
         interpreter.unsafeEvaluate(dbAction);
     }
@@ -109,9 +110,9 @@ public class DatabaseServiceTest {
 
         Interpreter interpreter =
                 interpret()
-                .on(InsertPullIfNotExists.class).returnA(pullRequestID)
-                .on(FetchGroupsForPull.class).returnA(List.empty())
-                .on(NewGroup.class).apply(action -> {
+                        .on(InsertPullIfNotExists.class).returnA(pullRequestID)
+                        .on(FetchGroupsForPull.class).returnA(List.empty())
+                        .on(NewGroup.class).apply(action -> {
                     assertThat(action.pullRequestId).isEqualTo(pullRequestID);
                     PullRequestGroup group = groups.find(g -> g.title.equals(action.title)).get();
                     assertThat(group.description).isEqualTo(action.description);
@@ -133,11 +134,11 @@ public class DatabaseServiceTest {
 
         Interpreter interpreter =
                 interpret()
-                .on(InsertPullIfNotExists.class).returnA(pullRequestID)
-                .on(FetchGroupsForPull.class).returnA(List.empty())
-                .on(NewGroup.class).apply(action ->
-                    groups.find(g -> g.title.equals(action.title)).get().id)
-                .on(AssignHunkToGroup.class).apply(toUnit(action -> {
+                        .on(InsertPullIfNotExists.class).returnA(pullRequestID)
+                        .on(FetchGroupsForPull.class).returnA(List.empty())
+                        .on(NewGroup.class).apply(action ->
+                        groups.find(g -> g.title.equals(action.title)).get().id)
+                        .on(AssignHunkToGroup.class).apply(toUnit(action -> {
                     assertThat(groups.find(g -> g.id.equals(action.groupID))).isNotEmpty();
                     Option<HunkChecksum> hunkID = hunkIDs.find(id -> id.checksum.equals(action.hunkChecksum));
                     assertThat(hunkID).isNotEmpty();
@@ -151,22 +152,50 @@ public class DatabaseServiceTest {
     }
 
     @Test
-    public void insertApproval(){
+    public void insertsDefaultGroup() throws Exception {
+        PullRequestGroup group = new PullRequestGroup(new GroupID(42L), "Group A", "Description A", true);
+        OrderingGroup defaultGroup = new OrderingGroupWithID(group, hunkIDs.map(id -> id).toJavaList());
+        Action<Unit> dbAction = service.insertDefaultGroup(pullIdentifier, defaultGroup);
+
+        Collection<PullRequestGroup> groupsAdded = Lists.newArrayList();
+
+        Interpreter interpreter =
+                interpret()
+                .on(InsertPullIfNotExists.class).returnA(pullRequestID)
+                .on(NewGroup.class).apply(action -> {
+                    assertThat(action.defaultGroup).isEqualTo(true);
+                    groupsAdded.add(group);
+                    return group.id;
+                })
+                .on(AssignHunkToGroup.class).apply(toUnit(action -> {
+                    assertThat(List.of(group).find(g -> g.id.equals(action.groupID))).isNotEmpty();
+                    Option<HunkChecksum> hunkID = hunkIDs.find(id -> id.checksum.equals(action.hunkChecksum));
+                    assertThat(hunkID).isNotEmpty();
+                }));
+
+        interpreter.unsafeEvaluate(dbAction);
+        assertThat(groupsAdded)
+                .hasSameElementsAs(List.of(group))
+                .hasSameSizeAs(List.of(group));
+    }
+
+    @Test
+    public void insertApproval() {
         Action<Unit> dbAction = service.setApproval(pullIdentifier, approveStatus);
 
         Interpreter interpreter =
                 interpret()
-                        .on(InsertPullIfNotExists.class).returnA(pullRequestID)
-                        .on(ApproveHunk.class).stop(approveHunk -> {
-                            assertThat(approveHunk.status)
-                                    .isEqualTo(ApproveStatus.DISAPPROVED);
-                            assertThat(approveHunk.githubUser)
-                                    .isEqualTo("txsmith");
-                            assertThat(approveHunk.hunkChecksum)
-                                    .isEqualTo("checksum");
-                            assertThat(approveHunk.pullRequestID)
-                                    .isEqualTo(pullRequestID);
-                        });
+                .on(InsertPullIfNotExists.class).returnA(pullRequestID)
+                .on(ApproveHunk.class).stop(approveHunk -> {
+                    assertThat(approveHunk.status)
+                            .isEqualTo(ApproveStatus.DISAPPROVED);
+                    assertThat(approveHunk.githubUser)
+                            .isEqualTo("txsmith");
+                    assertThat(approveHunk.hunkChecksum)
+                            .isEqualTo("checksum");
+                    assertThat(approveHunk.pullRequestID)
+                            .isEqualTo(pullRequestID);
+                });
 
         assertThatExceptionOfType(Interpreter.StoppedException.class)
                 .isThrownBy(() -> interpreter.unsafeEvaluate(dbAction));
@@ -199,7 +228,7 @@ public class DatabaseServiceTest {
         Action<?> dbAction = service.getApproval(pullIdentifier);
 
         List<PullRequestGroup> oneGroup = List.of(
-                new PullRequestGroup(new GroupID(42L), "Group A", "Description A")
+                new PullRequestGroup(new GroupID(42L), "Group A", "Description A", defaultGroup)
         );
 
         Interpreter.Stepper<?> stepper = interpret()
@@ -258,7 +287,7 @@ public class DatabaseServiceTest {
         Action<?> dbAction = service.getHunkApprovals(pullIdentifier);
 
         List<PullRequestGroup> oneGroup = List.of(
-                new PullRequestGroup(new GroupID(42L), "Group A", "Description A")
+                new PullRequestGroup(new GroupID(42L), "Group A", "Description A", defaultGroup)
         );
 
         Interpreter.Stepper<?> stepper = interpret()

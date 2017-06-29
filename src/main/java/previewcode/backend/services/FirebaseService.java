@@ -54,7 +54,7 @@ public class FirebaseService {
      */
     public void setApproved(String owner, String name, String number, ApproveRequest LGTM) {
         this.ref.child(owner).child(name).child("pulls").child(number)
-                .child("hunkApprovals").child(LGTM.hunkId).child(String.valueOf(LGTM.githubLogin)).setValue(LGTM.isApproved);
+                .child("hunkApprovals").child(LGTM.hunkChecksum).child(String.valueOf(LGTM.githubLogin)).setValue(LGTM.isApproved);
     }
 
     /**

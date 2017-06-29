@@ -25,7 +25,7 @@ public class SchemaTest {
 
     @Test
     public void groupsTable_isEmpty(DSLContext db) {
-        int rows = db.select(GROUPS.ID, GROUPS.TITLE, GROUPS.DESCRIPTION)
+        int rows = db.select(GROUPS.ID, GROUPS.TITLE, GROUPS.DESCRIPTION, GROUPS.DEFAULT_GROUP)
                     .from(GROUPS).execute();
         assertThat(rows).isZero();
     }

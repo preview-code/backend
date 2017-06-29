@@ -29,7 +29,7 @@ public class HttpRequestExecutor implements IHttpRequestExecutor {
             if (response.isSuccessful()) {
                 return body;
             } else {
-                throw new HttpApiException(body, response.code());
+                throw new HttpApiException(body, response.code(), request.url());
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

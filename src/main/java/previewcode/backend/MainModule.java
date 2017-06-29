@@ -7,6 +7,7 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.inject.Provides;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import com.google.inject.servlet.RequestScoped;
 import com.jolbox.bonecp.BoneCPDataSource;
 import org.jboss.resteasy.plugins.providers.jackson.ResteasyJackson2Provider;
@@ -22,6 +23,7 @@ import previewcode.backend.api.filter.GitHubAccessTokenFilter;
 import previewcode.backend.api.filter.IJWTTokenCreator;
 import previewcode.backend.api.filter.JWTTokenCreator;
 import previewcode.backend.api.v1.*;
+import previewcode.backend.services.interpreters.DatabaseInterpreter;
 import previewcode.backend.services.interpreters.GitHubAuthInterpreter;
 import previewcode.backend.services.http.HttpRequestExecutor;
 import previewcode.backend.services.http.IHttpRequestExecutor;
@@ -29,6 +31,7 @@ import previewcode.backend.services.DatabaseService;
 import previewcode.backend.services.GithubService;
 import previewcode.backend.services.IDatabaseService;
 import previewcode.backend.services.actiondsl.ActionCache;
+import previewcode.backend.services.actiondsl.Interpreter;
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.sql.DataSource;
@@ -81,11 +84,12 @@ public class MainModule extends APIModule {
         }
         this.bind(IJWTTokenCreator.class).to(JWTTokenCreator.class);
 
-        ActionCache.Builder b = new ActionCache.Builder()
+        ActionCache.Builder b = new ActionCache.Builder();
         ActionCache cache = GitHubAuthInterpreter
                 .configure(b).maximumEntries(10000).build();
 
         this.bind(ActionCache.class).toInstance(cache);
+        this.bind(Interpreter.class).annotatedWith(Names.named("database-interp")).to(DatabaseInterpreter.class);
 
         initializeFireBase();
     }
@@ -124,9 +128,9 @@ public class MainModule extends APIModule {
             logger.info("Instantiating connection pool...");
             BoneCPDataSource result = new BoneCPDataSource();
             result.setDriverClass("org.postgresql.Driver");
-            result.setJdbcUrl("jdbc:postgresql:library");
-            result.setUsername("postgres");
-            result.setPassword("test");
+            result.setJdbcUrl("jdbc:postgresql://localhost:5432/preview_code");
+            result.setUsername("admin");
+            result.setPassword("password");
             result.setDefaultAutoCommit(true);
             result.setPartitionCount(4);
             result.setMinConnectionsPerPartition(1);

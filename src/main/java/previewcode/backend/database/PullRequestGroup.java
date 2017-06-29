@@ -1,7 +1,6 @@
 package previewcode.backend.database;
 
 import io.vavr.collection.List;
-import previewcode.backend.DTO.HunkChecksum;
 import previewcode.backend.database.model.tables.records.GroupsRecord;
 
 import static previewcode.backend.services.actiondsl.ActionDSL.*;
@@ -27,6 +26,10 @@ public class PullRequestGroup {
      */
     public final String description;
 
+    /**
+     * If the group is the default group or not
+     */
+    public final Boolean defaultGroup;
 
     /**
      * Evaluating this action should result in the list of
@@ -34,15 +37,16 @@ public class PullRequestGroup {
      */
     public final Action<List<Hunk>> fetchHunks;
 
-    public PullRequestGroup(GroupID id, String title, String description) {
+    public PullRequestGroup(GroupID id, String title, String description, Boolean defaultGroup) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.fetchHunks = fetchHunks(id);
+        this.defaultGroup = defaultGroup;
     }
 
     public static PullRequestGroup fromRecord(GroupsRecord record) {
-        return new PullRequestGroup(new GroupID(record.getId()), record.getTitle(), record.getDescription());
+        return new PullRequestGroup(new GroupID(record.getId()), record.getTitle(), record.getDescription(), record.getDefaultGroup());
     }
 
     @Override
