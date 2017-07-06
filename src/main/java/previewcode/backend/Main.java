@@ -22,9 +22,14 @@ public class Main {
 
 
     public static void main(String[] args) throws Exception {
+        if (args.length < 1) {
+            logger.error("No configuration file specified");
+            System.exit(-1);
+        }
+
         Config config = null;
         try {
-            config = Config.loadConfiguration();
+            config = Config.loadConfiguration(args[0]);
         } catch (Exception e) {
             logger.error("Unable to load config file: ", e);
             System.exit(-1);

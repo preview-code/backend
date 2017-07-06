@@ -17,8 +17,6 @@ public class Config {
     public final DatabaseConfig database;
 
     private static final Logger logger = LoggerFactory.getLogger(Config.class);
-    private static final String CONFIG_FILE = "config.yaml";
-
 
     @JsonCreator
     public Config(@JsonProperty("port")Integer port,
@@ -36,10 +34,10 @@ public class Config {
         this.database = database;
     }
 
-    public static Config loadConfiguration() throws Exception {
-        logger.info("Reading " + CONFIG_FILE);
+    public static Config loadConfiguration(String filePath) throws Exception {
+        logger.info("Reading " + filePath);
         return new ObjectMapper(new YAMLFactory())
-                .readValue(new File(CONFIG_FILE), Config.class);
+                .readValue(new File(filePath), Config.class);
     }
 
     public static class IntegrationConfig {
