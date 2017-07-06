@@ -1,0 +1,21 @@
+# Configuration for local development
+---
+port: 8443
+webhook-secret-file: secrets/github-webhook-test-secret.txt
+firebase-auth-file: secrets/firebase-auth.json
+
+# GitHub Integration auth info
+integration:
+  id: 2152
+  key-file: secrets/integration-test.pkcs8
+
+database:
+  driver-class: org.postgresql.Driver
+  jdbc-url: jdbc:postgresql://localhost:5432/preview_code
+  username: admin
+  password: password
+
+  connection-pool:
+    partition-count: 4
+    min-connections-per-partition: 1
+    max-connections-per-partition: 10

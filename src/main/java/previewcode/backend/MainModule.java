@@ -50,12 +50,20 @@ import java.security.spec.PKCS8EncodedKeySpec;
  *
  */
 public class MainModule extends APIModule {
-
     private static final Logger logger = LoggerFactory.getLogger(MainModule.class);
-    private static final Algorithm RSA_PRIVATE_KEY = initPrivateRSAKey();
-    private static final SecretKeySpec GITHUB_WEBHOOK_SECRET = initGitHubWebhookSecret();
-    private static final String INTEGRATION_ID = initIntegrationId();
-    private static final DataSource DATA_SOURCE = initConnectionPool();
+    private final Algorithm RSA_PRIVATE_KEY;
+    private final SecretKeySpec GITHUB_WEBHOOK_SECRET;
+    private final String INTEGRATION_ID;
+    private final DataSource DATA_SOURCE;
+
+
+    public MainModule(Config config) {
+        RSA_PRIVATE_KEY = initPrivateRSAKey(config);
+        GITHUB_WEBHOOK_SECRET = initGitHubWebhookSecret(config);
+        INTEGRATION_ID = initIntegrationId(config);
+        DATA_SOURCE = initConnectionPool(config);
+        initializeFireBase(config);
+    }
 
     @SuppressWarnings("PointlessBinding")
     @Override
@@ -90,30 +98,26 @@ public class MainModule extends APIModule {
 
         this.bind(ActionCache.class).toInstance(cache);
         this.bind(Interpreter.class).annotatedWith(Names.named("database-interp")).to(DatabaseInterpreter.class);
-
-        initializeFireBase();
     }
 
-    private void initializeFireBase() {
+    private void initializeFireBase(Config config) {
         try {
             logger.info("Loading Firebase auth...");
-            FileInputStream file = new FileInputStream(System.getenv("FIREBASE_AUTH"));
+            FileInputStream file = new FileInputStream(config.firebaseAuthFile);
             // Initialize the app with a service account, granting admin privileges
             FirebaseOptions options = new FirebaseOptions.Builder()
                     .setServiceAccount(file)
                     .setDatabaseUrl("https://preview-code.firebaseio.com/").build();
             FirebaseApp.initializeApp(options);
-        } catch (NullPointerException e) {
-            logger.error("FIREBASE_AUTH environmental variable was not set");
-            System.exit(-1);
         } catch (FileNotFoundException e) {
             logger.error("Failed to load Firebase config", e);
             System.exit(-1);
         }
     }
 
+
     @Provides
-    private static DSLContext provideJooqDSL() {
+    private DSLContext provideJooqDSL() {
         Settings settings = new Settings().withExecuteLogging(true);
         return DSL.using(DATA_SOURCE, SQLDialect.POSTGRES, settings);
     }
@@ -123,18 +127,18 @@ public class MainModule extends APIModule {
         return DATA_SOURCE;
     }
 
-    private static DataSource initConnectionPool() {
+    private DataSource initConnectionPool(Config config) {
         try {
             logger.info("Instantiating connection pool...");
             BoneCPDataSource result = new BoneCPDataSource();
-            result.setDriverClass("org.postgresql.Driver");
-            result.setJdbcUrl("jdbc:postgresql://localhost:5432/preview_code");
-            result.setUsername("admin");
-            result.setPassword("password");
+            result.setDriverClass(config.database.driverClass);
+            result.setJdbcUrl(config.database.jdbcUrl);
+            result.setUsername(config.database.username);
+            result.setPassword(config.database.password);
             result.setDefaultAutoCommit(true);
-            result.setPartitionCount(4);
-            result.setMinConnectionsPerPartition(1);
-            result.setMaxConnectionsPerPartition(10);
+            result.setPartitionCount(config.database.connectionPool.partitionCount);
+            result.setMinConnectionsPerPartition(config.database.connectionPool.minConsPerPartition);
+            result.setMaxConnectionsPerPartition(config.database.connectionPool.maxConsPerPartition);
             return result;
         } catch (Exception e) {
             logger.error("Unable to create JDBC DataSource: ", e);
@@ -152,10 +156,10 @@ public class MainModule extends APIModule {
         return RSA_PRIVATE_KEY;
     }
 
-    private static Algorithm initPrivateRSAKey() {
+    private Algorithm initPrivateRSAKey(Config config) {
         try {
             logger.info("Loading GitHub Integration RSA key...");
-            File file = new File(System.getenv("INTEGRATION_KEY"));
+            File file = new File(config.integration.keyFile);
             String key = Files.toString(file, Charsets.UTF_8)
                     .replace("-----END PRIVATE KEY-----", "")
                     .replace("-----BEGIN PRIVATE KEY-----", "")
@@ -163,8 +167,6 @@ public class MainModule extends APIModule {
             PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(Base64.decode(key));
             KeyFactory kf = KeyFactory.getInstance("RSA");
             return Algorithm.RSA256((RSAPrivateKey) kf.generatePrivate(keySpec));
-        } catch (NullPointerException e) {
-            logger.error("Environmental variable for GitHub Integration RSA not set");
         } catch (Exception e) {
             logger.error("Failed to load GitHub Integration RSA key:", e);
         }
@@ -181,16 +183,14 @@ public class MainModule extends APIModule {
         return GITHUB_WEBHOOK_SECRET;
     }
 
-    private static SecretKeySpec initGitHubWebhookSecret() {
+    private SecretKeySpec initGitHubWebhookSecret(Config config) {
         try {
             logger.info("Loading GitHub Integration Webhook key...");
-            File file = new File(System.getenv("WEBHOOK_SECRET"));
+            File file = new File(config.webhookSecretFile);
             final String secret = Files.toString(file, Charsets.UTF_8).trim();
             return new SecretKeySpec(secret.getBytes(), "HmacSHA1");
         } catch (IOException e) {
             logger.error("Failed to load GitHub Integration webhook secret:", e);
-        } catch (NullPointerException e){
-            logger.error("Environmental variable for GitHub Integration webhook secret not set");
         }
         System.exit(-1);
         return null;
@@ -205,22 +205,13 @@ public class MainModule extends APIModule {
         return INTEGRATION_ID;
     }
 
-    private static String initIntegrationId() {
-        try {
-            logger.info("Loading GitHub Integration ID...");
-            return Files.toString(new File(System.getenv("INTEGRATION_ID")), Charsets.UTF_8).trim();
-        } catch (IOException e) {
-            logger.error("Failed to load GitHub Integration ID:", e);
-        } catch (NullPointerException e){
-            logger.error("Environmental variable for the GitHub Integration ID not set");
-        }
-        System.exit(-1);
-        return null;
+    private String initIntegrationId(Config config) {
+        return config.integration.id;
     }
 
     /**
      * Method to declare Named key "github.user" to obtain the current GitHub instance
-     * @throws Exception if key was not set
+     * @throws NotAuthorizedException if key was not set
      */
     @Provides
     @Named("github.user")
@@ -231,7 +222,7 @@ public class MainModule extends APIModule {
 
     /**
      * Method to declare Named key "github.token.builder" to amend a OKHTTP Request with authorization info.
-     * @throws Exception if not set via GitHubAccessTokenFilter.
+     * @throws NotAuthorizedException if not set via GitHubAccessTokenFilter.
      */
     @Provides
     @Named("github.token.builder")

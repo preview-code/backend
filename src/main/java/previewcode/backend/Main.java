@@ -1,6 +1,5 @@
 package previewcode.backend;
 
-import com.google.common.base.Strings;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
@@ -19,9 +18,17 @@ import org.slf4j.LoggerFactory;
 
 public class Main {
 
-    private static Logger logger = LoggerFactory.getLogger(Main.class);
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+
 
     public static void main(String[] args) throws Exception {
+        Config config = null;
+        try {
+            config = Config.loadConfiguration();
+        } catch (Exception e) {
+            logger.error("Unable to load config file: ", e);
+            System.exit(-1);
+        }
 
         // jetty.xml config
         QueuedThreadPool threadPool = new QueuedThreadPool();
@@ -50,20 +57,14 @@ public class Main {
         ServerConnector http = new ServerConnector(server, new HttpConnectionFactory(http_config));
         http.setHost("localhost");
 
-        String portConfig = System.getenv("PORT");
-        if (Strings.isNullOrEmpty(portConfig)) {
-            logger.error("PORT env variable missing.");
-            System.exit(-1);
-        }
-
-        http.setPort(Integer.parseInt(portConfig));
+        http.setPort(config.port);
         http.setIdleTimeout(30000);
         server.addConnector(http);
 
 
         // Configure RESTEasy and Guice
         ServletContextHandler servletHandler = new ServletContextHandler();
-        Injector injector = Guice.createInjector(new MainModule());
+        Injector injector = Guice.createInjector(new MainModule(config));
         servletHandler.addEventListener(injector.getInstance(GuiceResteasyBootstrapServletContextListener.class));
 
         ServletHolder sh = new ServletHolder(HttpServletDispatcher.class);
