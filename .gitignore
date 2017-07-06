@@ -42,4 +42,4 @@ secrets/
 
 ### Generated sources ###
 src/main/java/previewcode/backend/database/model
-*database.mv.db
+build.properties
