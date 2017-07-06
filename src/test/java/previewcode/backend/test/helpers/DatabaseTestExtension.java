@@ -7,6 +7,7 @@ import org.jooq.impl.DSL;
 import org.junit.jupiter.api.extension.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import previewcode.backend.Config;
 import previewcode.backend.database.model.DefaultCatalog;
 
 import java.sql.DriverManager;
@@ -14,11 +15,6 @@ import java.sql.SQLException;
 
 public class DatabaseTestExtension extends TestStore<DSLContext> implements ParameterResolver, AfterEachCallback {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseTestExtension.class);
-
-    private static final String userName = "admin";
-    private static final String password = "password";
-    private static final String url = "jdbc:postgresql://localhost:5432/preview_code";
-
 
     @Override
     public boolean supports(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
@@ -33,10 +29,11 @@ public class DatabaseTestExtension extends TestStore<DSLContext> implements Para
 
         logger.debug("Obtaining database connection from DriverManager...");
         try {
-            DSLContext dslContext = DSL.using(DriverManager.getConnection(url, userName, password), SQLDialect.POSTGRES_9_5, settings);
+            Config c = Config.loadConfiguration("config.yaml");
+            DSLContext dslContext = DSL.using(DriverManager.getConnection(c.database.jdbcUrl, c.database.username, c.database.password), SQLDialect.POSTGRES_9_5, settings);
             putObjectToStore(extensionContext, dslContext);
             return dslContext;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
