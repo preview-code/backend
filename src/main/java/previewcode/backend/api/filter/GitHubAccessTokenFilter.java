@@ -1,9 +1,9 @@
 package previewcode.backend.api.filter;
 
 import org.jboss.resteasy.core.interception.jaxrs.PreMatchContainerRequestContext;
+import previewcode.backend.services.IGithubService;
 import previewcode.backend.services.interpreters.RequestContextActionInterpreter;
 import previewcode.backend.services.interpreters.GitHubAuthInterpreter;
-import previewcode.backend.services.GithubService;
 import previewcode.backend.services.actiondsl.Interpreter;
 
 import javax.inject.Inject;
@@ -23,7 +23,7 @@ public class GitHubAccessTokenFilter implements ContainerRequestFilter {
     private GitHubAuthInterpreter gitHubAuthInterpreter;
 
     @Inject
-    private GithubService.V2 authService;
+    private IGithubService.V2 authService;
 
     @Override
     public void filter(ContainerRequestContext ctx) throws IOException {

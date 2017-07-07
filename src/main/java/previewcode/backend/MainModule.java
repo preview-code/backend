@@ -23,6 +23,7 @@ import previewcode.backend.api.filter.GitHubAccessTokenFilter;
 import previewcode.backend.api.filter.IJWTTokenCreator;
 import previewcode.backend.api.filter.JWTTokenCreator;
 import previewcode.backend.api.v1.*;
+import previewcode.backend.services.IGithubService;
 import previewcode.backend.services.interpreters.DatabaseInterpreter;
 import previewcode.backend.services.interpreters.GitHubAuthInterpreter;
 import previewcode.backend.services.http.HttpRequestExecutor;
@@ -66,7 +67,6 @@ public class MainModule extends APIModule {
         this.bind(StatusAPI.class);
         this.bind(PullRequestAPI.class);
         this.bind(CommentsAPI.class);
-        this.bind(AssigneesAPI.class);
         this.bind(TrackerAPI.class);
         this.bind(WebhookAPI.class);
 
@@ -74,6 +74,7 @@ public class MainModule extends APIModule {
         this.bind(ResteasyJackson2Provider.class);
 
         this.bind(IDatabaseService.class).to(DatabaseService.class);
+        this.bind(IGithubService.class).to(GithubService.class);
 
         try {
             HttpRequestExecutor http = new HttpRequestExecutor();

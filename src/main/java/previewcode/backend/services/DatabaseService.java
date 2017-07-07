@@ -7,6 +7,7 @@ import previewcode.backend.DTO.*;
 import previewcode.backend.database.*;
 import previewcode.backend.services.actions.DatabaseActions;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -66,34 +67,35 @@ public class DatabaseService implements IDatabaseService {
                 .map(unit -> dbPullId);
     }
 
-    @Override
-    public Action<List<HunkApprovals>> getHunkApprovals(PullRequestIdentifier pull) {
-
-        return fetchPullRequestGroups(pull)
-                .then(traverse(group -> fetchHunks(group.id)))
-                .map(flatten())
-                .then(traverse(hunk -> hunk.fetchApprovals.map(approvals -> {
-                    Map<String, ApproveStatus> m = new HashMap<>();
-                    approvals.forEach(approval -> m.put(approval.approver, approval.approveStatus));
-                    return new HunkApprovals(hunk.checksum, m);
-                })));
-    }
-
     private static Action<ApprovedGroup> getGroupApproval(GroupID groupID) {
         return fetchHunks(groupID).then(
                 hunks -> traverse(hunks, (Hunk h) -> h.fetchApprovals.map(approvals -> {
-                    Map<String, ApproveStatus> map = new HashMap<>();
-                    map.put(h.checksum.checksum, isHunkApproved(approvals.map(a -> a.approveStatus)));
+                    Map<String, ApproveStatus> approvalMap = new HashMap<>();
+                    approvals.forEach(approval -> approvalMap.put(approval.approver, approval.approveStatus));
+
+                    Map<String, HunkApprovals> map = new HashMap<>();
+                    HunkApprovals hApprovals = new HunkApprovals(h.checksum, isHunkApproved(approvals.map(a -> a.approveStatus)), approvalMap);
+                    map.put(h.checksum.checksum, hApprovals);
                     return map;
                 }))
-                .map(DatabaseService::combineMaps)
-                .map(approvals -> new ApprovedGroup(
-                        isGroupApproved(hunks.length(), approvals),
-                        approvals,
-                        groupID)
-                )
+                        .map(DatabaseService::combineMaps)
+                        .map(approvals -> {
+                            Map<String, ApproveStatus> approvalMap = new HashMap<>();
+                            java.util.List<HunkApprovals> hunkList = new ArrayList();
+                            approvals.forEach((hunk, approval) -> {
+                                approvalMap.put(hunk, approval.approved);
+                                hunkList.add(approval);
+                            });
+
+                            return new ApprovedGroup(
+                                    isGroupApproved(hunks.length(), approvalMap),
+                                    hunkList,
+                                    groupID);
+                        })
         );
     }
+
+
 
     private static <A,B> Map<A,B> combineMaps(List<Map<A,B>> maps) {
         return maps.fold(new HashMap<>(), (a, b) -> {

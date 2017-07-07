@@ -65,7 +65,7 @@ public class WebhookAPI {
             if (action.equals("opened")) {
                 Pair<GitHubRepository, GitHubPullRequest> repoAndPull = readRepoAndPullFromWebhook(body);
                 PRComment comment = new PRComment(constructMarkdownComment(repoAndPull.first, repoAndPull.second));
-                OrderingStatus pendingStatus = new OrderingStatus(repoAndPull.second, repoAndPull.first);
+                OrderingStatus pendingStatus = new OrderingStatus(repoAndPull.second);
 
                 firebaseService.addDefaultData(new PullRequestIdentifier(repoAndPull.first, repoAndPull.second));
 
@@ -80,7 +80,7 @@ public class WebhookAPI {
 
             } else if (action.equals("synchronize")) {
                 Pair<GitHubRepository, GitHubPullRequest> repoAndPull = readRepoAndPullFromWebhook(body);
-                OrderingStatus pendingStatus = new OrderingStatus(repoAndPull.second, repoAndPull.first);
+                OrderingStatus pendingStatus = new OrderingStatus(repoAndPull.second);
                 githubService.setOrderingStatus(repoAndPull.second, pendingStatus);
             }
         } else if (eventType.equals("pull_request_review")) {
@@ -98,9 +98,9 @@ public class WebhookAPI {
     }
 
     private String constructMarkdownComment(GitHubRepository repo, GitHubPullRequest pullRequest) {
-        return "This pull request can be reviewed with [Preview Code](" + pullRequest.previewCodeUrl(repo) + ").\n" +
+        return "This pull request can be reviewed with [Preview Code](" + pullRequest.previewCodeUrl() + ").\n" +
                "To speed up the review process and get better feedback on your changes, " +
-               "please **[order your changes](" + pullRequest.previewCodeUrl(repo) + ").**\n";
+               "please **[order your changes](" + pullRequest.previewCodeUrl() + ").**\n";
     }
 
     private Pair<GitHubRepository, GitHubPullRequest> readRepoAndPullFromWebhook(JsonNode body) throws JsonProcessingException {

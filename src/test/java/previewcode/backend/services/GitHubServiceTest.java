@@ -19,7 +19,7 @@ import static previewcode.backend.services.actions.RequestContextActions.*;
 
 public class GitHubServiceTest {
 
-    GithubService.V2 ghService = new GithubService.V2();
+    IGithubService.V2 ghService = new IGithubService.V2();
 
     Action<Unit> authAction = ghService.authenticate();
 

@@ -18,6 +18,4 @@ public interface IDatabaseService {
     Action<List<PullRequestGroup>> fetchPullRequestGroups(PullRequestIdentifier pull);
 
     Action<ApprovedPullRequest> getApproval(PullRequestIdentifier pull);
-
-    Action<List<HunkApprovals>> getHunkApprovals(PullRequestIdentifier pull);
 }

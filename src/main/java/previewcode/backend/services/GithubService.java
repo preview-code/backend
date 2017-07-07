@@ -39,34 +39,7 @@ import static previewcode.backend.services.actions.RequestContextActions.*;
  * An abstract class that connects with GitHub
  */
 @RequestScoped
-public class GithubService {
-
-    public static class V2 {
-
-        private static final String GITHUB_WEBHOOK_SECRET_HEADER = "X-Hub-Signature";
-        private static final String TOKEN_PARAMETER = "access_token";
-
-        public Action<Unit> authenticate() {
-            return getUserAgent.then(isWebHookUserAgent).then(isWebHook -> {
-                if (isWebHook) {
-                    return with(getRequestBody)
-                            .and(getHeader(GITHUB_WEBHOOK_SECRET_HEADER))
-                            .then(verifyWebHookSecret)
-                            .then(getJsonBody)
-                            .map(InstallationID::fromJson)
-                            .then(authenticateInstallation);
-                } else {
-                    return getQueryParam(TOKEN_PARAMETER)
-                            .map(o -> o.getOrElseThrow(NoTokenException::new))
-                            .map(GitHubUserToken::fromString)
-                            .then(getUser)
-                            .toUnit();
-                }
-            });
-        }
-
-
-    }
+public class GithubService implements IGithubService {
 
     private static final Logger logger = LoggerFactory.getLogger(GithubService.class);
     private static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient();
@@ -92,6 +65,7 @@ public class GithubService {
         githubProvider = gitHubProvider;
     }
 
+    @Override
     public GHMyself getLoggedInUser() throws IOException {
         return this.githubProvider.get().getMyself();
     }
@@ -109,6 +83,7 @@ public class GithubService {
      *            The body of the pull request
      * @return The number of the newly made pull request
      */
+    @Override
     public PrNumber createPullRequest(String owner, String name, PRbody body) {
         try {
 
@@ -221,6 +196,7 @@ public class GithubService {
      * @param identifier The identifier object containing owner, name and number of the pull to fetch.
      * @throws IOException when the request fails
      */
+    @Override
     public GitHubPullRequest fetchPullRequest(PullRequestIdentifier identifier) throws IOException {
         logger.info("Fetching pull request from GitHub API...");
 
@@ -269,10 +245,28 @@ public class GithubService {
      * @throws IOException when the request fails
      */
     public void setOrderingStatus(GitHubPullRequest pullRequest, OrderingStatus status) throws IOException {
-        logger.info("Setting pull request status to: " + status);
+        logger.info("Setting pull request ordering status to: " + status);
         Request createStatus = tokenBuilder.addToken(new Request.Builder())
                 .url(pullRequest.links.statuses)
                 .post(toJson(status))
+                .build();
+
+        this.execute(createStatus);
+    }
+
+    @Override
+    public void setPRStatus(GitHubPullRequest pullRequest, ApproveStatus status) throws IOException {
+        logger.info("Setting pull request approval status to: " + status);
+        GHApproveStatus ghStatus = new GHApproveStatus(pullRequest);
+        if(status == ApproveStatus.APPROVED){
+            ghStatus = ghStatus.complete();
+        }
+        else if(status == ApproveStatus.DISAPPROVED){
+            ghStatus = ghStatus.failure();
+        }
+        Request createStatus = tokenBuilder.addToken(new Request.Builder())
+                .url(pullRequest.links.statuses)
+                .post(toJson(ghStatus))
                 .build();
 
         this.execute(createStatus);
