@@ -60,6 +60,9 @@ public class DatabaseInterpreter extends Interpreter {
                                 .from(GROUPS)
                                 .where(GROUPS.ID.eq(action.groupID.id))
                 )
+                .onConflict(HUNK.CHECKSUM, HUNK.PULL_REQUEST_ID)
+                .doUpdate()
+                .set(HUNK.GROUP_ID, action.groupID.id)
                 .execute();
 
         if (result == 0) {

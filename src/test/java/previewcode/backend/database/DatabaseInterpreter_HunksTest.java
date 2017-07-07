@@ -47,11 +47,11 @@ public class DatabaseInterpreter_HunksTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void assignHunk_cannotAssignTwice_toSameGroup() {
+    public void assignHunk_cannotAssignTwice_toSameGroup(DSLContext db) {
         AssignHunkToGroup assign = assignToGroup(group_A_id, hunkChecksum);
+        eval(assign.then(assign));
 
-        assertThatExceptionOfType(DataAccessException.class)
-                .isThrownBy(() -> eval(assign.then(assign)));
+        assertThat(db.selectCount().from(HUNK).fetchOneInto(Integer.class)).isOne();
     }
 
     @Test
@@ -64,12 +64,11 @@ public class DatabaseInterpreter_HunksTest extends DatabaseInterpreterTest {
     }
 
     @Test
-    public void assignHunk_cannotAssignTwice_toDifferentGroup(DSLContext db){
+    void assignHunk_whenAlreadyAssigned_hunkSwitchesGroup(DSLContext db) {
         Action<?> assignDouble = assignToGroup(group_A_id, hunkChecksum).then(assignToGroup(group_B_id, hunkChecksum));
-        assertThatExceptionOfType(DataAccessException.class)
-                .isThrownBy(() ->
-                        eval(assignDouble)
-        );
+        eval(assignDouble);
+        assertThat(db.selectCount().from(HUNK).fetchOneInto(Integer.class)).isOne();
+        assertThat(db.selectFrom(HUNK).fetchOne(HUNK.GROUP_ID)).isEqualTo(group_B_id.id);
     }
 
     @Test
