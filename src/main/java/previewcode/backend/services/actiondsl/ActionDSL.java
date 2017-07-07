@@ -277,6 +277,11 @@ public class ActionDSL {
         };
     }
 
+    @SuppressWarnings("unchecked")
+    public static <T extends Throwable, R> R sneakyThrow(Throwable t) throws T {
+        throw (T) t;
+    }
+
     public static Interpreter interpret() {
         return new Interpreter();
     }

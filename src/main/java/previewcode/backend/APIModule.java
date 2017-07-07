@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.inject.servlet.ServletModule;
 import io.atlassian.fugue.Unit;
+import io.vavr.jackson.datatype.VavrModule;
 import org.jboss.resteasy.plugins.guice.ext.JaxrsModule;
 import previewcode.backend.api.exceptionmapper.*;
 import previewcode.backend.api.v2.ApprovalsAPI;
@@ -61,6 +62,7 @@ public class APIModule extends ServletModule {
         private static ObjectMapper createDefaultMapper() {
             ObjectMapper mapper = new ObjectMapper();
             mapper.registerModule(new UnitSerializerModule());
+            mapper.registerModule(new VavrModule());
             return mapper;
         }
 
