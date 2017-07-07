@@ -42,13 +42,13 @@ public class Config {
 
     public static class IntegrationConfig {
         public final String keyFile;
-        public final String id;
+        public final String idFile;
 
         @JsonCreator
         public IntegrationConfig(@JsonProperty("key-file") String keyFile,
-                                 @JsonProperty("id") String id) {
+                                 @JsonProperty("id-file") String idFile) {
             this.keyFile = keyFile;
-            this.id = id;
+            this.idFile = idFile;
         }
     }
 

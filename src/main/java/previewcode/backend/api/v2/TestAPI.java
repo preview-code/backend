@@ -26,7 +26,6 @@ public class TestAPI {
         public Response() { }
     }
 
-
     @GET
     @Produces("application/json")
     public Response get() {

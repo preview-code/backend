@@ -206,7 +206,15 @@ public class MainModule extends APIModule {
     }
 
     private String initIntegrationId(Config config) {
-        return config.integration.id;
+        try {
+            logger.info("Loading Integration ID...");
+            File file = new File(config.integration.idFile);
+            return Files.toString(file, Charsets.UTF_8).trim();
+        } catch (IOException e) {
+            logger.error("Failed to load Integration ID:", e);
+        }
+        System.exit(-1);
+        return null;
     }
 
     /**
