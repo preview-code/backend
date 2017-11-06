@@ -1,13 +1,14 @@
 package previewcode.backend.services;
 
 
+import io.vavr.collection.List;
 import jregex.Matcher;
 import jregex.Pattern;
 import org.apache.commons.codec.binary.Base64;
 import previewcode.backend.DTO.HunkChecksum;
 
 import java.util.ArrayList;
-import java.util.List;
+
 
 /**
  * Parser for GitHub diffs
@@ -62,7 +63,7 @@ public class DiffParser {
                 }
             }
         }
-        return hunkChecksums;
+        return List.ofAll(hunkChecksums);
     }
 
     /**

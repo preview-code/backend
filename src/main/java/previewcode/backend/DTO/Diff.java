@@ -1,8 +1,8 @@
 package previewcode.backend.DTO;
 
+import io.vavr.collection.List;
 import previewcode.backend.services.DiffParser;
 
-import java.util.List;
 
 /**
  * Diff from GitHub, calculates hunkChecksums
