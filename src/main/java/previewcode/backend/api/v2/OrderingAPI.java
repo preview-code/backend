@@ -3,6 +3,7 @@ package previewcode.backend.api.v2;
 import com.google.inject.Inject;
 import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
+import previewcode.backend.DTO.Ordering;
 import previewcode.backend.DTO.OrderingGroup;
 import previewcode.backend.DTO.PullRequestIdentifier;
 import previewcode.backend.services.IDatabaseService;
@@ -11,6 +12,7 @@ import previewcode.backend.services.actiondsl.Interpreter;
 import static previewcode.backend.services.actiondsl.ActionDSL.*;
 
 import javax.inject.Named;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -41,4 +43,16 @@ public class OrderingAPI {
         return interpreter.evaluateToResponse(action);
     }
 
+
+    @GET
+    public Response getOrdering(
+            @PathParam("owner") String owner,
+            @PathParam("name") String name,
+            @PathParam("number") Integer number
+    ){
+
+        PullRequestIdentifier pull = new PullRequestIdentifier(owner, name, number);
+        Action<Ordering> action = databaseService.getOrdering(pull);
+        return interpreter.evaluateToResponse(action);
+    }
 }

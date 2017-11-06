@@ -126,6 +126,11 @@ class TestModule extends APIModule implements IDatabaseService, IGithubService {
         return new NoOp<>();
     }
 
+    @Override
+    public Action<Ordering> getOrdering(PullRequestIdentifier pull) {
+        return new NoOp<>();
+    }
+
 
 
     @Override

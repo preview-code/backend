@@ -5,8 +5,10 @@ import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
 import previewcode.backend.DTO.*;
 import previewcode.backend.database.*;
+import previewcode.backend.database.model.tables.PullRequest;
 import previewcode.backend.services.actions.DatabaseActions;
 
+import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,12 +22,38 @@ public class DatabaseService implements IDatabaseService {
     public Action<Unit> updateOrdering(PullRequestIdentifier pull, List<OrderingGroup> newGroups) {
         return insertPullIfNotExists(pull).then(pullID ->
                 fetchGroups(pullID).then(existingGroups ->
-                    traverse(newGroups, createGroup(pullID, false)).then(
-                        traverse(existingGroups, g -> delete(g.id))
-                    )
+                        traverse(newGroups, createGroup(pullID, false)).then(
+                                traverse(existingGroups, g -> delete(g.id))
+                        )
                 )
         ).toUnit();
     }
+
+    @Override
+    public Action<Ordering> getOrdering(PullRequestIdentifier pull) {
+
+        return fetchPullRequestGroups(pull).then(this::fetchPullOrdering);
+    }
+
+    public Action<List<HunkChecksum>> fetchGroupHunks(PullRequestGroup group) {
+        return fetchHunks(group.id).map(hunks -> hunks.map(hunk -> hunk.checksum));
+    }
+
+    public Action<OrderingGroup> fetchGroupOrdering(PullRequestGroup group) {
+        return fetchGroupHunks(group).map(hunkChecksums ->
+                new OrderingGroup(group.title, group.description, hunkChecksums, group.defaultGroup));
+    }
+
+    public Ordering createOrdering(List<OrderingGroup> orderingGroups) {
+       return new Ordering(
+                orderingGroups.find(group -> group.defaultGroup).get(),
+                orderingGroups.filter(group -> !group.defaultGroup));
+    }
+
+    public Action<Ordering> fetchPullOrdering(List<PullRequestGroup> pullRequestGroups) {
+        return traverse(pullRequestGroups, this::fetchGroupOrdering).map(this::createOrdering);
+    }
+
 
     @Override
     public Action<Unit> insertDefaultGroup(PullRequestIdentifier pull, OrderingGroup group) {
@@ -46,7 +74,7 @@ public class DatabaseService implements IDatabaseService {
 
     @Override
     public Action<ApprovedPullRequest> getApproval(PullRequestIdentifier pull) {
-        Function<ApprovedGroup, Map<Long, ApprovedGroup>>  toMap = approvedGroup -> {
+        Function<ApprovedGroup, Map<Long, ApprovedGroup>> toMap = approvedGroup -> {
             Map<Long, ApprovedGroup> map = new HashMap<>();
             map.put(approvedGroup.groupID.id, approvedGroup);
             return map;
@@ -61,7 +89,7 @@ public class DatabaseService implements IDatabaseService {
     public Function<OrderingGroup, Action<Unit>> createGroup(PullRequestID dbPullId, Boolean defaultGroup) {
         return group ->
                 newGroup(dbPullId, group.info.title, group.info.description, defaultGroup).then(
-                    groupID -> traverse(List.ofAll(group.hunkChecksums), hunkId -> assignToGroup(groupID, hunkId.checksum))
+                        groupID -> traverse(List.ofAll(group.hunkChecksums), hunkId -> assignToGroup(groupID, hunkId.checksum))
                 ).toUnit();
     }
 
@@ -94,8 +122,7 @@ public class DatabaseService implements IDatabaseService {
     }
 
 
-
-    private static <A,B> Map<A,B> combineMaps(List<Map<A,B>> maps) {
+    private static <A, B> Map<A, B> combineMaps(List<Map<A, B>> maps) {
         return maps.fold(new HashMap<>(), (a, b) -> {
             a.putAll(b);
             return a;
@@ -129,5 +156,6 @@ public class DatabaseService implements IDatabaseService {
             return ApproveStatus.NONE;
         }
     }
-
 }
+
+

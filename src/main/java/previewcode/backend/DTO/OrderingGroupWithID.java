@@ -2,9 +2,9 @@ package previewcode.backend.DTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.vavr.collection.List;
 import previewcode.backend.database.PullRequestGroup;
 
-import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class OrderingGroupWithID extends OrderingGroup {
