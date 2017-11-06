@@ -88,7 +88,9 @@ public class Interpreter {
      */
     public Interpreter(Interpreter ... interpreters) {
         this();
-        List.of(interpreters).forEach(interpreter -> handlers.putAll(interpreter.handlers));
+        List.of(interpreters).forEach(interpreter -> interpreter.handlers.forEach(((actionClass, __) -> {
+            handlers.put(actionClass, (Function<Action<Object>, Object>) interpreter::unsafeEvaluate);
+        })));
     }
 
     /**
