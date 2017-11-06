@@ -24,7 +24,7 @@ public class GuiceResteasyExtension extends TestStore<Tuple2<ResteasyClient, Ser
 
 
     @Override
-    public void beforeAll(ContainerExtensionContext context) throws Exception {
+    public void beforeAll(ExtensionContext context) throws Exception {
 
         ServletModule guiceModule = getServletModule(context);
 
@@ -49,7 +49,7 @@ public class GuiceResteasyExtension extends TestStore<Tuple2<ResteasyClient, Ser
         putObjectToStore(context, new Tuple2<>(new ResteasyClientBuilder().build(), server));
     }
 
-    private ServletModule getServletModule(ContainerExtensionContext context) {
+    private ServletModule getServletModule(ExtensionContext context) {
         return Try.of(() -> context.getTestClass().get())
                 .flatMap(cls -> instantiateAnnotationValue(ApiEndPointTest.class, cls))
                 .get();
@@ -57,7 +57,7 @@ public class GuiceResteasyExtension extends TestStore<Tuple2<ResteasyClient, Ser
 
 
     @Override
-    public void afterAll(ContainerExtensionContext context) throws Exception {
+    public void afterAll(ExtensionContext context) throws Exception {
         Tuple2<ResteasyClient, Server> t = getFromStore(context);
         ResteasyClient client = t._1;
         Server server = t._2;
@@ -67,18 +67,18 @@ public class GuiceResteasyExtension extends TestStore<Tuple2<ResteasyClient, Ser
         }
     }
 
+
     @Override
-    public boolean supports(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         return WebTarget.class.isAssignableFrom(parameterContext.getParameter().getType());
     }
 
     @Override
-    public Object resolve(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         Tuple2<ResteasyClient, Server> t = getFromStore(extensionContext.getParent().get());
         ResteasyClient client = t._1;
         Server server = t._2;
         return client.target(server.getURI());
     }
-
 }
 

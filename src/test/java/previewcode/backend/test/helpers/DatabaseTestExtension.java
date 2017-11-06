@@ -17,13 +17,13 @@ public class DatabaseTestExtension extends TestStore<DSLContext> implements Para
     private static final Logger logger = LoggerFactory.getLogger(DatabaseTestExtension.class);
 
     @Override
-    public boolean supports(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         Class<?> parameterType = parameterContext.getParameter().getType();
         return DSLContext.class.isAssignableFrom(parameterType);
     }
 
     @Override
-    public Object resolve(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         Settings settings = new Settings()
                 .withExecuteLogging(true);
 
@@ -39,7 +39,7 @@ public class DatabaseTestExtension extends TestStore<DSLContext> implements Para
     }
 
     @Override
-    public void afterEach(TestExtensionContext context) throws Exception {
+    public void afterEach(ExtensionContext context) throws Exception {
         DSLContext db = getFromStore(context);
         if (db != null) {
             logger.debug("Commence database cleanup.");
