@@ -9,6 +9,7 @@ import org.kohsuke.github.GHMyself;
 import previewcode.backend.APIModule;
 import previewcode.backend.DTO.*;
 import previewcode.backend.services.IGithubService;
+import previewcode.backend.services.actiondsl.ActionDSL;
 import previewcode.backend.services.actiondsl.Interpreter;
 import previewcode.backend.test.helpers.ApiEndPointTest;
 import previewcode.backend.database.PullRequestGroup;
@@ -131,6 +132,10 @@ class TestModule extends APIModule implements IDatabaseService, IGithubService {
         return new NoOp<>();
     }
 
+    @Override
+    public Action<Unit> mergeNewHunks(PullRequestIdentifier pull, List<HunkChecksum> newHunks) {
+        return new NoOp<>();
+    }
 
 
     @Override

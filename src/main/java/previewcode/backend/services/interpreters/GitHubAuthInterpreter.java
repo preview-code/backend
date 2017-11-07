@@ -74,8 +74,8 @@ public class GitHubAuthInterpreter extends CachingInterpreter {
     }
 
     public static ActionCache.Builder configure(ActionCache.Builder b) {
-        return b.expire(GetUser.class).afterWrite(15, TimeUnit.MINUTES)
-                .expire(AuthenticateInstallation.class).afterWrite(1, TimeUnit.HOURS);
+        return b.expire(GetUser.class).afterWrite(15, TimeUnit.MINUTES);
+                //.expire(AuthenticateInstallation.class).afterWrite(1, TimeUnit.HOURS);
     }
 
     protected Unit authInstallation(AuthenticateInstallation action) throws IOException {

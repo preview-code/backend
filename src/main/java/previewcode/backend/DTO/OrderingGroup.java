@@ -51,13 +51,18 @@ public class OrderingGroup {
         this.defaultGroup = false;
     }
 
-    public OrderingGroup(String title, String description, List<HunkChecksum> hunks, boolean defaultGroup) {
+    public OrderingGroup(String title, String description, List<HunkChecksum> hunks, Boolean defaultGroup) {
         this.hunkChecksums = hunks;
         if(title == null){
             title = "";
         }
+
+        if(defaultGroup == null) {
+            this.defaultGroup = false;
+        } else {
+            this.defaultGroup = defaultGroup;
+        }
         this.info = new TitleDescription(title, description);
-        this.defaultGroup = defaultGroup;
 
     }
 
