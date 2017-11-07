@@ -20,11 +20,21 @@ public class DatabaseService implements IDatabaseService {
     public Action<Unit> updateOrdering(PullRequestIdentifier pull, List<OrderingGroup> newGroups) {
         return insertPullIfNotExists(pull).then(pullID ->
                 fetchGroups(pullID).then(existingGroups ->
-                        traverse(newGroups, createGroup(pullID)).then(
-                                traverse(existingGroups, g -> delete(g.id))
-                        )
+                        traverse(newGroups, createGroup(pullID))
+                        .then(deriveDefaultGroup(existingGroups, newGroups)
+                             .then(createGroup(pullID)))
+                        .then(traverse(existingGroups, g -> delete(g.id)))
                 )
         ).toUnit();
+    }
+
+    private Action<OrderingGroup> deriveDefaultGroup(List<PullRequestGroup> existingGroups, List<OrderingGroup> newGroups) {
+        List<HunkChecksum> newHunks = newGroups.flatMap(orderingGroup -> orderingGroup.hunkChecksums);
+        return traverse(existingGroups, g -> g.fetchHunks)
+                .map(flatten())
+                .map(hunks -> hunks.map(hunk -> hunk.checksum))
+                .map(existingHunks -> existingHunks.removeAll(newHunks))
+                .map(OrderingGroup::newDefaultGoup);
     }
 
     public Action<Unit> mergeNewHunks(PullRequestIdentifier pull, List<HunkChecksum> newHunks) {
