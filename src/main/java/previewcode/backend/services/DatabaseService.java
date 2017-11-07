@@ -5,10 +5,8 @@ import io.atlassian.fugue.Unit;
 import io.vavr.collection.List;
 import previewcode.backend.DTO.*;
 import previewcode.backend.database.*;
-import previewcode.backend.database.model.tables.PullRequest;
 import previewcode.backend.services.actions.DatabaseActions;
 
-import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,11 +20,29 @@ public class DatabaseService implements IDatabaseService {
     public Action<Unit> updateOrdering(PullRequestIdentifier pull, List<OrderingGroup> newGroups) {
         return insertPullIfNotExists(pull).then(pullID ->
                 fetchGroups(pullID).then(existingGroups ->
-                        traverse(newGroups, createGroup(pullID, false)).then(
+                        traverse(newGroups, createGroup(pullID)).then(
                                 traverse(existingGroups, g -> delete(g.id))
                         )
                 )
         ).toUnit();
+    }
+
+    public Action<Unit> mergeNewHunks(PullRequestIdentifier pull, List<HunkChecksum> newHunks) {
+        Function<List<OrderingGroup>, List<OrderingGroup>> merge = existingGroups ->
+                existingGroups.map(g -> g.intersect(newHunks)).filter(OrderingGroup::isEmpty);
+
+        return insertPullIfNotExists(pull).then(pullID ->
+                fetchGroups(pullID).then(existingGroups ->
+                        traverse(existingGroups, g -> fetchGroupOrdering(g).then(o -> delete(g.id).pure(o)))
+                        .map(merge)
+                        .then(newGroups -> traverse(newGroups, createGroup(pullID)).pure(newGroups))
+                        .map(newGroups ->
+                                newHunks.removeAll(newGroups.flatMap(g -> g.hunkChecksums))
+                        )
+                        .map(OrderingGroup::newDefaultGoup)
+                        .then(defaultGroup -> insertGroup(pull, defaultGroup))
+                )
+        );
     }
 
     @Override
@@ -56,9 +72,9 @@ public class DatabaseService implements IDatabaseService {
 
 
     @Override
-    public Action<Unit> insertDefaultGroup(PullRequestIdentifier pull, OrderingGroup group) {
+    public Action<Unit> insertGroup(PullRequestIdentifier pull, OrderingGroup group) {
         return insertPullIfNotExists(pull)
-                .then(dbPullId -> createGroup(dbPullId, true).apply(group)).toUnit();
+                .then(dbPullId -> createGroup(dbPullId).apply(group)).toUnit();
     }
 
     @Override
@@ -86,9 +102,9 @@ public class DatabaseService implements IDatabaseService {
         );
     }
 
-    public Function<OrderingGroup, Action<Unit>> createGroup(PullRequestID dbPullId, Boolean defaultGroup) {
+    public Function<OrderingGroup, Action<Unit>> createGroup(PullRequestID dbPullId) {
         return group ->
-                newGroup(dbPullId, group.info.title, group.info.description, defaultGroup).then(
+                newGroup(dbPullId, group.info.title, group.info.description, group.defaultGroup).then(
                         groupID -> traverse(List.ofAll(group.hunkChecksums), hunkId -> assignToGroup(groupID, hunkId.checksum))
                 ).toUnit();
     }

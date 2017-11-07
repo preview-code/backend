@@ -107,7 +107,7 @@ class TestModule extends APIModule implements IDatabaseService, IGithubService {
     }
 
     @Override
-    public Action<Unit> insertDefaultGroup(PullRequestIdentifier pullRequestIdentifier, OrderingGroup body) {
+    public Action<Unit> insertGroup(PullRequestIdentifier pullRequestIdentifier, OrderingGroup body) {
         return new NoOp<>();
     }
 

@@ -12,7 +12,9 @@ public interface IDatabaseService {
 
     Action<Ordering> getOrdering(PullRequestIdentifier pullRequestIdentifier);
 
-    Action<Unit> insertDefaultGroup(PullRequestIdentifier pullRequestIdentifier, OrderingGroup body);
+    Action<Unit> mergeNewHunks(PullRequestIdentifier pull, List<HunkChecksum> newHunks);
+
+    Action<Unit> insertGroup(PullRequestIdentifier pullRequestIdentifier, OrderingGroup body);
 
     Action<Unit> setApproval(PullRequestIdentifier pullRequestIdentifier, ApproveRequest approval);
 

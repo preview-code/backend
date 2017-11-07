@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import previewcode.backend.DTO.*;
 import previewcode.backend.database.*;
 import previewcode.backend.DTO.HunkChecksum;
-import previewcode.backend.database.model.tables.PullRequest;
 import previewcode.backend.services.actiondsl.Interpreter;
 
 import java.util.Collection;
@@ -178,7 +177,7 @@ public class DatabaseServiceTest {
     public void insertsDefaultGroup() throws Exception {
         PullRequestGroup group = new PullRequestGroup(new GroupID(42L), "Group A", "Description A", true);
         OrderingGroup defaultGroup = new OrderingGroupWithID(group, hunkIDs.map(id -> id));
-        Action<Unit> dbAction = service.insertDefaultGroup(pullIdentifier, defaultGroup);
+        Action<Unit> dbAction = service.insertGroup(pullIdentifier, defaultGroup);
 
         Collection<PullRequestGroup> groupsAdded = Lists.newArrayList();
 

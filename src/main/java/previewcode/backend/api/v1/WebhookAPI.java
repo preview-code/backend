@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.atlassian.fugue.Unit;
+import io.vavr.collection.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import previewcode.backend.DTO.*;
@@ -11,6 +12,7 @@ import previewcode.backend.services.FirebaseService;
 import previewcode.backend.services.GithubService;
 import previewcode.backend.services.IDatabaseService;
 import previewcode.backend.services.actiondsl.ActionDSL;
+import previewcode.backend.services.actiondsl.ActionDSL.Action;
 import previewcode.backend.services.actiondsl.Interpreter;
 import previewcode.backend.services.interpreters.DatabaseInterpreter;
 
@@ -74,14 +76,19 @@ public class WebhookAPI {
 
                 //Add hunks to database
                 Diff diff = githubService.fetchDiff(repoAndPull.second);
-                OrderingGroup defaultGroup = new OrderingGroup("Default group", "Default group", diff.getHunkChecksums());
-                ActionDSL.Action<Unit> groupAction = databaseService.insertDefaultGroup(new PullRequestIdentifier(repoAndPull.first, repoAndPull.second), defaultGroup);
-                interpreter.evaluateToResponse(groupAction);
+                OrderingGroup defaultGroup = OrderingGroup.newDefaultGoup(diff.getHunkChecksums());
+                Action<Unit> groupAction = databaseService.insertGroup(new PullRequestIdentifier(repoAndPull.first, repoAndPull.second), defaultGroup);
+                return interpreter.evaluateToResponse(groupAction);
 
             } else if (action.equals("synchronize")) {
                 Pair<GitHubRepository, GitHubPullRequest> repoAndPull = readRepoAndPullFromWebhook(body);
+
+                Diff diff = githubService.fetchDiff(repoAndPull.second);
+                List<HunkChecksum> hunkChecksums = diff.getHunkChecksums();
+                Action<Unit> mergeWithExistingGroups = databaseService.mergeNewHunks(new PullRequestIdentifier(repoAndPull.first, repoAndPull.second), hunkChecksums);
                 OrderingStatus pendingStatus = new OrderingStatus(repoAndPull.second);
                 githubService.setOrderingStatus(repoAndPull.second, pendingStatus);
+                return interpreter.evaluateToResponse(mergeWithExistingGroups);
             }
         } else if (eventType.equals("pull_request_review")) {
             // Respond to a review event

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.vavr.collection.List;
+import io.vavr.collection.Set;
 
 /**
  * The ordering of the pull request
@@ -24,6 +25,7 @@ public class OrderingGroup {
     @JsonProperty("info")
     public final TitleDescription info;
 
+    @JsonProperty("isDefault")
     public final Boolean defaultGroup;
 
 
@@ -57,6 +59,20 @@ public class OrderingGroup {
         this.info = new TitleDescription(title, description);
         this.defaultGroup = defaultGroup;
 
+    }
+
+    public OrderingGroup intersect(List<HunkChecksum> newhunkChecksums) {
+        Set<HunkChecksum> a = this.hunkChecksums.toSortedSet();
+        Set<HunkChecksum> b = newhunkChecksums.toSortedSet();
+        return new OrderingGroup(a.intersect(b).toList(), this.info);
+    }
+
+    public Boolean isEmpty() {
+        return this.hunkChecksums.isEmpty();
+    }
+
+    public static OrderingGroup newDefaultGoup(List<HunkChecksum> hunks) {
+        return  new OrderingGroup("Default group", "Default group", hunks, true);
     }
 
     @Override
