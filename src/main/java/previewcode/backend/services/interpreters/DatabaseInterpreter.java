@@ -124,6 +124,7 @@ public class DatabaseInterpreter extends Interpreter {
 
     protected GroupID insertNewGroup(NewGroup newGroup) {
         Boolean defaultGroup = newGroup.defaultGroup;
+        //Needed for the uniqueness constraint, as there should only be one default group
         if(!newGroup.defaultGroup) {
             defaultGroup = null;
         }

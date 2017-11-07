@@ -6,6 +6,7 @@ import io.atlassian.fugue.Unit;
 import io.vavr.CheckedFunction1;
 import io.vavr.collection.List;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
@@ -170,7 +171,7 @@ public class Interpreter {
      * @return The response built from the action result.
      */
     public Response evaluateToResponse(Action<?> action) {
-        return Response.ok().entity(unsafeEvaluate(action)).build();
+        return Response.ok().type(MediaType.APPLICATION_JSON_TYPE).entity(unsafeEvaluate(action)).build();
     }
 
     protected <A, X> Try<A> run(Action<A> action) {

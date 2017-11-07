@@ -21,12 +21,12 @@ public class DatabaseService implements IDatabaseService {
         return insertPullIfNotExists(pull).then(pullID ->
                 fetchGroups(pullID).then(existingGroups ->
                         traverse(newGroups, createGroup(pullID))
-                        .then(deriveDefaultGroup(existingGroups, newGroups)
-                             .then(defaultGroup -> {
+                            .then(deriveDefaultGroup(existingGroups, newGroups)
+                            .then(defaultGroup -> traverse(existingGroups, g -> delete(g.id)).pure(defaultGroup))
+                            .then(defaultGroup -> {
                                  if (!defaultGroup.isEmpty()) return createGroup(pullID).apply(defaultGroup);
                                  else return pure(unit);
                              }))
-                        .then(traverse(existingGroups, g -> delete(g.id)))
                 )
         ).toUnit();
     }
