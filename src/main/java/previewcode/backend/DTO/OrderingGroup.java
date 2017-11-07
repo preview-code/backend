@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.vavr.collection.List;
 import io.vavr.collection.Set;
+import previewcode.backend.database.PullRequestGroup;
 
 /**
  * The ordering of the pull request
@@ -43,12 +44,11 @@ public class OrderingGroup {
     }
 
     public OrderingGroup(String title, String description, List<HunkChecksum> hunks) {
-        this.hunkChecksums = hunks;
-        if(title == null){
-            title = "";
-        }
-        this.info = new TitleDescription(title, description);
-        this.defaultGroup = false;
+        this(title, description, hunks, false);
+    }
+
+    public OrderingGroup(PullRequestGroup dbGroup, List<HunkChecksum> hunkIds) {
+        this(dbGroup.title, dbGroup.description, hunkIds, dbGroup.defaultGroup);
     }
 
     public OrderingGroup(String title, String description, List<HunkChecksum> hunks, Boolean defaultGroup) {

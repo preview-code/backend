@@ -21,12 +21,14 @@ public class DatabaseService implements IDatabaseService {
         return insertPullIfNotExists(pull).then(pullID ->
                 fetchGroups(pullID).then(existingGroups ->
                         traverse(newGroups, createGroup(pullID))
-                            .then(deriveDefaultGroup(existingGroups, newGroups)
-                            .then(defaultGroup -> traverse(existingGroups, g -> delete(g.id)).pure(defaultGroup))
-                            .then(defaultGroup -> {
-                                 if (!defaultGroup.isEmpty()) return createGroup(pullID).apply(defaultGroup);
-                                 else return pure(unit);
-                             }))
+                        .then(deriveDefaultGroup(existingGroups, newGroups)
+                        .then(defaultGroup -> traverse(existingGroups, g -> delete(g.id)).pure(defaultGroup))
+                        .then(defaultGroup -> {
+                             if (!defaultGroup.isEmpty())
+                                 return createGroup(pullID).apply(defaultGroup);
+                             else
+                                 return pure(unit);
+                         }))
                 )
         ).toUnit();
     }
@@ -36,7 +38,8 @@ public class DatabaseService implements IDatabaseService {
         return traverse(existingGroups, g -> g.fetchHunks)
                 .map(flatten())
                 .map(hunks -> hunks.map(hunk -> hunk.checksum))
-                .map(existingHunks -> existingHunks.removeAll(newHunks))
+                .map(existingHunks ->
+                        existingHunks.removeAll(newHunks))
                 .map(OrderingGroup::newDefaultGoup);
     }
 
