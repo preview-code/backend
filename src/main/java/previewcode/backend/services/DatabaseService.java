@@ -22,7 +22,10 @@ public class DatabaseService implements IDatabaseService {
                 fetchGroups(pullID).then(existingGroups ->
                         traverse(newGroups, createGroup(pullID))
                         .then(deriveDefaultGroup(existingGroups, newGroups)
-                             .then(createGroup(pullID)))
+                             .then(defaultGroup -> {
+                                 if (!defaultGroup.isEmpty()) return createGroup(pullID).apply(defaultGroup);
+                                 else return pure(unit);
+                             }))
                         .then(traverse(existingGroups, g -> delete(g.id)))
                 )
         ).toUnit();
@@ -50,7 +53,7 @@ public class DatabaseService implements IDatabaseService {
                                 newHunks.removeAll(newGroups.flatMap(g -> g.hunkChecksums))
                         )
                         .map(OrderingGroup::newDefaultGoup)
-                        .then(defaultGroup -> insertGroup(pull, defaultGroup))
+                        .then(defaultGroup -> createGroup(pullID).apply(defaultGroup))
                 )
         );
     }
