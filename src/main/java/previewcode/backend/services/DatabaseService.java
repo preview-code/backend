@@ -10,6 +10,7 @@ import previewcode.backend.services.actions.DatabaseActions;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.function.Function;
 import static previewcode.backend.services.actiondsl.ActionDSL.*;
 import static previewcode.backend.services.actions.DatabaseActions.*;
@@ -77,9 +78,15 @@ public class DatabaseService implements IDatabaseService {
     }
 
     public Ordering createOrdering(List<OrderingGroup> orderingGroups) {
-       return new Ordering(
-                orderingGroups.find(group -> group.defaultGroup).get(),
-                orderingGroups.filter(group -> !group.defaultGroup));
+        List<OrderingGroup> nonDefaultGroups = orderingGroups.filter(group -> !group.defaultGroup);
+        try {
+            return new Ordering(
+                    orderingGroups.find(group -> group.defaultGroup).get(),
+                    nonDefaultGroups);
+        } catch (NoSuchElementException noSuchElementException) {
+            return new Ordering(null,
+                    nonDefaultGroups);
+        }
     }
 
     public Action<Ordering> fetchPullOrdering(List<PullRequestGroup> pullRequestGroups) {
