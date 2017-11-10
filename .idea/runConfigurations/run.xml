@@ -8,7 +8,7 @@
     </extension>
     <option name="MAIN_CLASS_NAME" value="previewcode.backend.Main" />
     <option name="VM_PARAMETERS" value="" />
-    <option name="PROGRAM_PARAMETERS" value="" />
+    <option name="PROGRAM_PARAMETERS" value="config.yaml" />
     <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
     <option name="ALTERNATIVE_JRE_PATH" />
@@ -16,13 +16,7 @@
     <option name="ENV_VARIABLES" />
     <option name="PASS_PARENT_ENVS" value="true" />
     <module name="backend-api" />
-    <envs>
-      <env name="INTEGRATION_ID" value="secrets/integration-id.txt" />
-      <env name="INTEGRATION_KEY" value="secrets/integration-test.pkcs8" />
-      <env name="WEBHOOK_SECRET" value="secrets/github-webhook-test-secret.txt" />
-      <env name="FIREBASE_AUTH" value="secrets/firebase-auth.json" />
-      <env name="PORT" value="8443" />
-    </envs>
+    <envs />
     <method />
   </configuration>
 </component>

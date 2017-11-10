@@ -39,3 +39,10 @@ hs_err_pid*
 
 ### certificates ###
 secrets/
+
+### Generated sources ###
+src/main/java/previewcode/backend/database/model
+
+# Stuff with passwords
+build.properties
+config.yaml

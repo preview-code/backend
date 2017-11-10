@@ -3,28 +3,26 @@ package previewcode.backend.api.v1;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.atlassian.fugue.Unit;
+import io.vavr.collection.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import previewcode.backend.DTO.GitHubPullRequest;
-import previewcode.backend.DTO.GitHubRepository;
-import previewcode.backend.DTO.OrderingStatus;
-import previewcode.backend.DTO.PRComment;
-import previewcode.backend.DTO.PullRequestIdentifier;
+import previewcode.backend.DTO.*;
 import previewcode.backend.services.FirebaseService;
 import previewcode.backend.services.GithubService;
+import previewcode.backend.services.IDatabaseService;
+import previewcode.backend.services.actiondsl.ActionDSL;
+import previewcode.backend.services.actiondsl.ActionDSL.Action;
+import previewcode.backend.services.actiondsl.Interpreter;
+import previewcode.backend.services.interpreters.DatabaseInterpreter;
 
 import javax.inject.Inject;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 
-
-@Path("webhook/")
+@Path("v1/webhook")
 public class WebhookAPI {
     private static  final Logger logger = LoggerFactory.getLogger(WebhookAPI.class);
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -35,18 +33,28 @@ public class WebhookAPI {
     private static final Response BAD_REQUEST = Response.status(Response.Status.BAD_REQUEST).build();
     private static final Response OK = Response.ok().build();
 
+    private final IDatabaseService databaseService;
+    private final Interpreter interpreter;
+
+
     @Inject
     private GithubService githubService;
 
     @Inject
     private FirebaseService firebaseService;
 
+    @Inject
+    public WebhookAPI(IDatabaseService databaseService, DatabaseInterpreter interpreter) {
+        this.databaseService = databaseService;
+        this.interpreter = interpreter;
+    }
+
     @POST
     public Response onWebhookPost(
             String postData,
             @HeaderParam(GITHUB_WEBHOOK_EVENT_HEADER) String eventType,
             @HeaderParam(GITHUB_WEBHOOK_DELIVERY_HEADER) String delivery)
-            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException {
+            throws Exception {
 
         logger.info("Receiving Webhook call {" + delivery + "} for event {" + eventType + "}");
 
@@ -59,17 +67,28 @@ public class WebhookAPI {
             if (action.equals("opened")) {
                 Pair<GitHubRepository, GitHubPullRequest> repoAndPull = readRepoAndPullFromWebhook(body);
                 PRComment comment = new PRComment(constructMarkdownComment(repoAndPull.first, repoAndPull.second));
-                OrderingStatus pendingStatus = new OrderingStatus(repoAndPull.second, repoAndPull.first);
+                OrderingStatus pendingStatus = new OrderingStatus(repoAndPull.second);
 
                 firebaseService.addDefaultData(new PullRequestIdentifier(repoAndPull.first, repoAndPull.second));
 
                 githubService.placePullRequestComment(repoAndPull.second, comment);
                 githubService.setOrderingStatus(repoAndPull.second, pendingStatus);
 
+                //Add hunks to database
+                Diff diff = githubService.fetchDiff(repoAndPull.second);
+                OrderingGroup defaultGroup = OrderingGroup.newDefaultGoup(diff.getHunkChecksums());
+                Action<Unit> groupAction = databaseService.insertGroup(new PullRequestIdentifier(repoAndPull.first, repoAndPull.second), defaultGroup);
+                return interpreter.evaluateToResponse(groupAction);
+
             } else if (action.equals("synchronize")) {
                 Pair<GitHubRepository, GitHubPullRequest> repoAndPull = readRepoAndPullFromWebhook(body);
-                OrderingStatus pendingStatus = new OrderingStatus(repoAndPull.second, repoAndPull.first);
+
+                Diff diff = githubService.fetchDiff(repoAndPull.second);
+                List<HunkChecksum> hunkChecksums = diff.getHunkChecksums();
+                Action<Unit> mergeWithExistingGroups = databaseService.mergeNewHunks(new PullRequestIdentifier(repoAndPull.first, repoAndPull.second), hunkChecksums);
+                OrderingStatus pendingStatus = new OrderingStatus(repoAndPull.second);
                 githubService.setOrderingStatus(repoAndPull.second, pendingStatus);
+                return interpreter.evaluateToResponse(mergeWithExistingGroups);
             }
         } else if (eventType.equals("pull_request_review")) {
             // Respond to a review event
@@ -86,9 +105,9 @@ public class WebhookAPI {
     }
 
     private String constructMarkdownComment(GitHubRepository repo, GitHubPullRequest pullRequest) {
-        return "This pull request can be reviewed with [Preview Code](" + pullRequest.previewCodeUrl(repo) + ").\n" +
+        return "This pull request can be reviewed with [Preview Code](" + pullRequest.previewCodeUrl() + ").\n" +
                "To speed up the review process and get better feedback on your changes, " +
-               "please **[order your changes](" + pullRequest.previewCodeUrl(repo) + ").**\n";
+               "please **[order your changes](" + pullRequest.previewCodeUrl() + ").**\n";
     }
 
     private Pair<GitHubRepository, GitHubPullRequest> readRepoAndPullFromWebhook(JsonNode body) throws JsonProcessingException {

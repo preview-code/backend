@@ -34,6 +34,19 @@ public class PullRequestLinks {
         this.reviewComment = reviewComment.href;
         this.statuses = statuses.href;
     }
+
+    public PullRequestLinks(String self, String html, String issue,
+                            String comments, String statuses, String reviewComments,
+                            String reviewComment, String commits) {
+        this.self = self;
+        this.html = html;
+        this.issue = issue;
+        this.comments = comments;
+        this.commits = commits;
+        this.reviewComments = reviewComments;
+        this.reviewComment = reviewComment;
+        this.statuses = statuses;
+    }
 }
 
 class HRef {

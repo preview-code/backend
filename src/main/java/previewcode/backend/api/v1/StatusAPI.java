@@ -14,7 +14,7 @@ import com.google.inject.Inject;
 /**
  * API endpoint for the status of a pull request
  */
-@Path("{owner}/{name}/pulls/{branch}/status/")
+@Path("v1/{owner}/{name}/pulls/{branch}/status")
 public class StatusAPI {
 
     @Inject
