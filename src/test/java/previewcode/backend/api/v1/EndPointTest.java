@@ -1,4 +1,4 @@
-package previewcode.backend.api.v2;
+package previewcode.backend.api.v1;
 
 import com.google.inject.name.Names;
 import io.atlassian.fugue.Try;
@@ -9,7 +9,6 @@ import org.kohsuke.github.GHMyself;
 import previewcode.backend.APIModule;
 import previewcode.backend.DTO.*;
 import previewcode.backend.services.IGithubService;
-import previewcode.backend.services.actiondsl.ActionDSL;
 import previewcode.backend.services.actiondsl.Interpreter;
 import previewcode.backend.test.helpers.ApiEndPointTest;
 import previewcode.backend.database.PullRequestGroup;
@@ -31,20 +30,20 @@ public class EndPointTest {
     @Test
     public void testApiIsReachable(WebTarget target) {
         Response response = target
-                .path("/v2/test")
+                .path("/v1/test")
                 .request("application/json")
                 .get();
 
         assertThat(response.getStatus()).isEqualTo(200);
 
         TestAPI.Response apiResponse = response.readEntity(TestAPI.Response.class);
-        assertThat(apiResponse.apiVersion).isEqualTo("v2");
+        assertThat(apiResponse.apiVersion).isEqualTo("v1");
     }
 
     @Test
     public void orderingApiIsReachable(WebTarget target) {
         Response response = target
-                .path("/v2/preview-code/backend/pulls/42/ordering")
+                .path("/v1/preview-code/backend/pulls/42/ordering")
                 .request("application/json")
                 .post(Entity.json(new ArrayList<>()));
 
@@ -55,7 +54,7 @@ public class EndPointTest {
     @Test
     public void setApprovedApiIsReachable(WebTarget target) {
         Response response = target
-                .path("/v2/preview-code/backend/pulls/42/setApprove")
+                .path("/v1/preview-code/backend/pulls/42/setApprove")
                 .request("application/json")
                 .post(Entity.json("{}"));
 
@@ -66,7 +65,7 @@ public class EndPointTest {
     @Test
     public void getApprovalsApiIsReachable(WebTarget target) {
         Response response = target
-                .path("/v2/preview-code/backend/pulls/42/getApprovals")
+                .path("/v1/preview-code/backend/pulls/42/getApprovals")
                 .request("application/json")
                 .get();
 
