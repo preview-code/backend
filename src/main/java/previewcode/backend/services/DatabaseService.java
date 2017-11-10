@@ -74,7 +74,7 @@ public class DatabaseService implements IDatabaseService {
 
     public Action<OrderingGroup> fetchGroupOrdering(PullRequestGroup group) {
         return fetchGroupHunks(group).map(hunkChecksums ->
-                new OrderingGroup(group.title, group.description, hunkChecksums, group.defaultGroup));
+                new OrderingGroupWithID(group.id.id, group.title, group.description, hunkChecksums, group.defaultGroup));
     }
 
     public Ordering createOrdering(List<OrderingGroup> orderingGroups) {
