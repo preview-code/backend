@@ -1,4 +1,4 @@
-package previewcode.backend.api.v2;
+package previewcode.backend.api.v1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;

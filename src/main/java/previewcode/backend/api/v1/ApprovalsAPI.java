@@ -1,4 +1,4 @@
-package previewcode.backend.api.v2;
+package previewcode.backend.api.v1;
 
 import com.google.inject.Inject;
 import io.atlassian.fugue.Unit;
@@ -18,7 +18,7 @@ import static previewcode.backend.services.actiondsl.ActionDSL.*;
 /**
  * API for getting and setting the approvals on a pullrequest
  */
-@Path("v2/{owner}/{name}/pulls/{number}/")
+@Path("v1/{owner}/{name}/pulls/{number}/")
 public class ApprovalsAPI {
 
     private Interpreter interpreter;

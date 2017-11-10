@@ -1,4 +1,4 @@
-package previewcode.backend.api.v2;
+package previewcode.backend.api.v1;
 
 import com.google.inject.Inject;
 import io.atlassian.fugue.Unit;
@@ -18,7 +18,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 
-@Path("v2/{owner}/{name}/pulls/{number}/ordering")
+@Path("v1/{owner}/{name}/pulls/{number}/ordering")
 public class OrderingAPI {
 
     private final Interpreter interpreter;

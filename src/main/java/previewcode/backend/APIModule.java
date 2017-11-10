@@ -10,9 +10,9 @@ import io.atlassian.fugue.Unit;
 import io.vavr.jackson.datatype.VavrModule;
 import org.jboss.resteasy.plugins.guice.ext.JaxrsModule;
 import previewcode.backend.api.exceptionmapper.*;
-import previewcode.backend.api.v2.ApprovalsAPI;
-import previewcode.backend.api.v2.OrderingAPI;
-import previewcode.backend.api.v2.TestAPI;
+import previewcode.backend.api.v1.ApprovalsAPI;
+import previewcode.backend.api.v1.OrderingAPI;
+import previewcode.backend.api.v1.TestAPI;
 
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
