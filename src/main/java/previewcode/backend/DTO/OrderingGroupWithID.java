@@ -6,7 +6,7 @@ import previewcode.backend.database.PullRequestGroup;
 
 public class OrderingGroupWithID extends OrderingGroup {
 
-    @JsonProperty("groupID")
+    @JsonProperty("id")
     public final Long groupID;
 
     public OrderingGroupWithID(List<HunkChecksum> hunkChecksums, TitleDescription info) {
